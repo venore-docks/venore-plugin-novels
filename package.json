@@ -1,0 +1,29 @@
+{
+  "name": "@venore/plugin-graphic-novels",
+  "version": "0.1.0",
+  "description": "Graphic novels interativas: leitura webtoon, escolhas ramificadas e editor em grafo (plugin do Venore Docks).",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./manifest": "./manifest.ts",
+    "./route-table": "./routes/route-table.ts",
+    "./contributions": "./contributions.ts",
+    "./migrations/*": "./migrations/*",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "drizzle-orm": ">=0.45",
+    "lucide-react": ">=1",
+    "next": ">=16",
+    "react": ">=19",
+    "sonner": ">=2",
+    "zod": ">=4"
+  },
+  "dependencies": {
+    "@xyflow/react": "^12.8.2"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
+  }
+}
