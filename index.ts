@@ -1,6 +1,7 @@
 // Barrel público do plugin: o que páginas, actions, blocos e (no futuro) outros plugins podem
 // importar. Nomes sem o sufixo Handler, mesmo padrão do birthdays/academy.
-export { graphicNovelsBreadcrumbSegments, getCachedChapterGraph, getCachedPublishedStory, getCachedWork } from "./breadcrumbs";
+export { graphicNovelsBreadcrumbSegments } from "./breadcrumbs";
+export { getCachedChapterGraph, getCachedPublishedStory, getCachedWork } from "./shared/cached-queries";
 export { createWorkHandler as createWork } from "./features/works/create-work/handler";
 export { updateWorkHandler as updateWork } from "./features/works/update-work/handler";
 export { deleteWorkHandler as deleteWork } from "./features/works/delete-work/handler";
