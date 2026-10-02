@@ -1,5 +1,5 @@
 {
-  "name": "@venore/plugin-graphic-novels",
+  "name": "@venore/plugin-novels",
   "version": "0.1.1",
   "description": "Graphic novels interativas: leitura webtoon, escolhas ramificadas e editor em grafo (plugin do Venore Docks).",
   "private": true,
