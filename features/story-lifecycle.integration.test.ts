@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@venore/plugin-sdk";
 import { seedUser } from "@venore/plugin-sdk/testing";
-import { seedGraphicNovelsExample } from "../seeds/example";
+import { seedNovelsExample } from "../seeds/example";
 import { saveChapterGraph } from "./graph/save-chapter-graph/service";
 import { getChapterGraph } from "./graph/get-chapter-graph/service";
 import { publishWork } from "./publishing/publish-work/service";
@@ -14,18 +14,18 @@ import { saveReaderProgress } from "./reading/save-reader-progress/service";
 import { createWork } from "./works/create-work/service";
 import { deleteWork } from "./works/delete-work/service";
 import { getWork } from "./works/get-work/service";
-import { findGraphicNovelsMediaUsage } from "./media-usage/find-graphic-novels-media-usage/service";
+import { findNovelsMediaUsage } from "./media-usage/find-novels-media-usage/service";
 
-// Fluxo cruzando o schema graphic_novels com auth (progresso por usuário) contra Postgres real:
+// Fluxo cruzando o schema novels com auth (progresso por usuário) contra Postgres real:
 // seed completo, leitura publicada, progresso, edição que quebraria a obra publicada, exclusão.
-describe("graphic-novels — ciclo da obra (integração)", () => {
+describe("novels — ciclo da obra (integração)", () => {
   beforeEach(async () => {
-    await db.execute(sql.raw("TRUNCATE TABLE graphic_novels.works CASCADE"));
+    await db.execute(sql.raw("TRUNCATE TABLE novels.works CASCADE"));
   });
 
   it("seed publica O Farol e o leitor recebe o grafo inteiro", async () => {
-    expect((await seedGraphicNovelsExample()).success).toBe(true);
-    expect((await seedGraphicNovelsExample()).success).toBe(true);
+    expect((await seedNovelsExample()).success).toBe(true);
+    expect((await seedNovelsExample()).success).toBe(true);
 
     const listed = await listPublishedWorks({});
     expect(listed.success && listed.data.map((work) => work.slug)).toEqual(["o-farol"]);
@@ -40,7 +40,7 @@ describe("graphic-novels — ciclo da obra (integração)", () => {
   });
 
   it("salva e lê progresso do leitor; obra despublicada some da leitura", async () => {
-    await seedGraphicNovelsExample();
+    await seedNovelsExample();
     const story = await getPublishedStory({ slug: "o-farol" });
     if (!story.success) throw new Error("seed");
     const reader = await seedUser({ name: "Leitora" });
@@ -56,7 +56,7 @@ describe("graphic-novels — ciclo da obra (integração)", () => {
   });
 
   it("recusa grafo que quebraria obra publicada e aceita depois de despublicar", async () => {
-    await seedGraphicNovelsExample();
+    await seedNovelsExample();
     const story = await getPublishedStory({ slug: "o-farol" });
     if (!story.success) throw new Error("seed");
     const chapter = story.data.chapters[1];
@@ -97,7 +97,7 @@ describe("graphic-novels — ciclo da obra (integração)", () => {
       graph: { startSceneId: "gn-a", scenes: [scene("gn-a"), scene("gn-b", true)], choices: [choice] },
       actorId: "u",
     });
-    expect(await findGraphicNovelsMediaUsage("media-1")).toHaveLength(1);
+    expect(await findNovelsMediaUsage("media-1")).toHaveLength(1);
 
     await saveChapterGraph({ workId: created.data.id, chapterId, graph: { startSceneId: "gn-a", scenes: [scene("gn-a", true)], choices: [] }, actorId: "u" });
     const after = await getChapterGraph({ workId: created.data.id, chapterId });
@@ -105,6 +105,6 @@ describe("graphic-novels — ciclo da obra (integração)", () => {
     expect((await publishWork({ workId: created.data.id, actorId: "u" })).success).toBe(true);
 
     expect((await deleteWork({ workId: created.data.id, actorId: "u" })).success).toBe(true);
-    expect(await findGraphicNovelsMediaUsage("media-1")).toEqual([]);
+    expect(await findNovelsMediaUsage("media-1")).toEqual([]);
   });
 });

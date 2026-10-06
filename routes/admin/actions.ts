@@ -58,6 +58,7 @@ export type UpdateWorkPayload = {
   locales: string[];
   coverMediaId: string | null;
   variables: VariableDefinition[];
+  speechEnabled: boolean;
 };
 
 // Formulário de obra manda JSON (traduções e variáveis são listas dinâmicas no client).
@@ -81,6 +82,7 @@ export async function updateWorkAction(_prev: AdminActionState, formData: FormDa
     locales: Array.isArray(payload.locales) ? payload.locales.map(String) : [],
     coverMediaId: payload.coverMediaId ? String(payload.coverMediaId) : null,
     variables: Array.isArray(payload.variables) ? payload.variables : [],
+    speechEnabled: payload.speechEnabled === true,
   });
   if (!result.success) return { error: result.error.message };
   revalidateWork(payload.workId);

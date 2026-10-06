@@ -1,0 +1,1 @@
+ALTER TABLE "novels"."works" ADD COLUMN "speech_enabled" boolean DEFAULT false NOT NULL;

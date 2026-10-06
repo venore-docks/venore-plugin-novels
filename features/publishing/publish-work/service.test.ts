@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildStory } from "../../../shared/story-fixture.test-support";
 
 vi.mock("@venore/plugin-sdk/observability", () => ({ beginOperation: vi.fn(() => ({})), endOperation: vi.fn() }));
+const syncWorkSpeech = vi.fn();
+vi.mock("../../speech/sync-work-speech/service", () => ({ syncWorkSpeech: (...args: unknown[]) => syncWorkSpeech(...args) }));
 
 const findWorkById = vi.fn();
 const findStoryRecords = vi.fn();
@@ -27,13 +29,14 @@ describe("publishWork", () => {
     const { publishWork } = await import("./service");
     expect((await publishWork({ workId: "w1", actorId: "u1" })).success).toBe(true);
     expect(setWorkStatus).toHaveBeenCalledWith("w1", "published", expect.any(Date));
+    expect(syncWorkSpeech).toHaveBeenCalledWith("w1");
   });
 
   it("recusa obra com erro e não muda o status", async () => {
     findStoryRecords.mockResolvedValue({ work, chapters: [], scenes: [], choices: [] });
     const { publishWork } = await import("./service");
     const result = await publishWork({ workId: "w1", actorId: "u1" });
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "graphic-novels.not_publishable" }) });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.not_publishable" }) });
     expect(setWorkStatus).not.toHaveBeenCalled();
   });
 });

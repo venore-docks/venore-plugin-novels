@@ -4,13 +4,13 @@ import type { CreateWorkCommand, CreateWorkResult } from "./types";
 
 export async function createWork(command: CreateWorkCommand): Promise<CreateWorkResult> {
   const handle = beginOperation({
-    useCase: "graphic-novels.create-work",
+    useCase: "novels.create-work",
     actor: { id: command.actorId, type: "user" },
     kind: "write",
   });
 
   if (await findWorkBySlug(command.slug)) {
-    const error = { code: "graphic-novels.slug_taken", message: "Já existe uma obra com esse endereço." };
+    const error = { code: "novels.slug_taken", message: "Já existe uma obra com esse endereço." };
     endOperation(handle, { success: false, error });
     return { success: false, error };
   }

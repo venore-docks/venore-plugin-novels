@@ -3,10 +3,11 @@ import { normalizeLocalizedText } from "../../../shared/localized-text";
 import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
 import { findStoryRecords, findWorkById, findWorkBySlug, updateWorkRow } from "./store";
 import type { UpdateWorkCommand, UpdateWorkResult } from "./types";
+import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
 
 export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWorkResult> {
   const handle = beginOperation({
-    useCase: "graphic-novels.update-work",
+    useCase: "novels.update-work",
     actor: { id: command.actorId, type: "user" },
     kind: "write",
   });
@@ -17,10 +18,10 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
   };
 
   const current = await findWorkById(command.workId);
-  if (!current) return fail("graphic-novels.work_not_found", "Obra não encontrada.");
+  if (!current) return fail("novels.work_not_found", "Obra não encontrada.");
 
   const sameSlug = await findWorkBySlug(command.slug);
-  if (sameSlug && sameSlug.id !== current.id) return fail("graphic-novels.slug_taken", "Já existe uma obra com esse endereço.");
+  if (sameSlug && sameSlug.id !== current.id) return fail("novels.slug_taken", "Já existe uma obra com esse endereço.");
 
   const next = {
     slug: command.slug,
@@ -30,6 +31,7 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     locales: command.locales,
     coverMediaId: command.coverMediaId || null,
     variables: command.variables.map((variable) => ({ ...variable, label: variable.label.trim() || variable.key })),
+    speechEnabled: command.speechEnabled,
   };
 
   // Obra publicada não pode ficar quebrada por uma edição de variável/idioma: se a mudança
@@ -39,13 +41,15 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     const issues = validateStory(records);
     if (hasBlockingIssues(issues)) {
       return fail(
-        "graphic-novels.would_break_published",
+        "novels.would_break_published",
         `Essa mudança deixaria a obra publicada com erro: ${issues.find((issue) => issue.severity === "error")?.message}`,
       );
     }
   }
 
   const work = await updateWorkRow(current.id, next);
+  // Ligar/desligar o áudio ou mudar idiomas muda quais faixas existem.
+  await syncWorkSpeech(work.id);
   endOperation(handle, { success: true });
   return { success: true, data: work };
 }

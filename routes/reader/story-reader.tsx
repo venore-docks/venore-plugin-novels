@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { RotateCcw, Undo2 } from "lucide-react";
+import { Pause, Play, RotateCcw, Undo2, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@venore/plugin-sdk/ui";
 import type { ReaderState, Story, StoryScene } from "../../contracts/types";
 import { WorkCover } from "../../components/work-cover";
@@ -20,8 +20,9 @@ import { saveReaderProgressAction } from "./actions";
 
 type SavedProgress = { state: ReaderState; updatedAt: string };
 
-const LOCALE_KEY = "graphic-novels:locale";
-const progressKey = (workId: string) => `graphic-novels:progress:${workId}`;
+const LOCALE_KEY = "novels:locale";
+const AUTO_READ_KEY = "novels:auto-read";
+const progressKey = (workId: string) => `novels:progress:${workId}`;
 
 // localStorage pode lançar (aba anônima, cota, bloqueio): toda leitura/escrita é best-effort.
 function writeLocal(key: string, value: unknown) {
@@ -71,8 +72,15 @@ export function StoryReader({
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const storedLocale = useSyncExternalStore(subscribeStorage, () => readRaw(LOCALE_KEY), () => null);
   const storedProgress = useSyncExternalStore(subscribeStorage, () => readRaw(progressKey(story.work.id)), () => null);
+  const storedAutoRead = useSyncExternalStore(subscribeStorage, () => readRaw(AUTO_READ_KEY), () => null);
   const [chosenLocale, setChosenLocale] = useState<string | null>(null);
+  const [chosenAutoRead, setChosenAutoRead] = useState<boolean | null>(null);
   const [state, setState] = useState<ReaderState | null>(null);
+  // Um <audio> só para a obra inteira: tocar outra cena troca a fonte. playingSceneId == null é
+  // parado ou pausado.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioSceneRef = useRef<string | null>(null);
+  const [playingSceneId, setPlayingSceneId] = useState<string | null>(null);
   const lastSceneRef = useRef<HTMLElement | null>(null);
   const shouldScroll = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,6 +88,9 @@ export function StoryReader({
   const savedLocale = parse<string>(storedLocale);
   const locale =
     chosenLocale ?? (savedLocale && story.work.locales.includes(savedLocale) ? savedLocale : story.work.defaultLocale);
+  const autoRead = chosenAutoRead ?? parse<boolean>(storedAutoRead) === true;
+  const audioFor = (sceneId: string) => story.audio[sceneId]?.[locale] ?? null;
+  const hasAudio = story.scenes.some((scene) => audioFor(scene.id));
 
   // Progresso: o mais recente entre o do navegador e o da conta.
   const saved = useMemo(() => {
@@ -110,17 +121,70 @@ export function StoryReader({
     }, 800);
   }
 
+  // Chamado dentro do clique (escolha, continuar, ouvir): o Safari do iPhone só deixa tocar áudio
+  // a partir de um gesto, não de um effect depois do render.
+  function playScene(sceneId: string) {
+    const audio = audioRef.current;
+    const url = audioFor(sceneId);
+    if (!audio || !url) return;
+    // Trocar a fonte dispara "pause" do áudio anterior antes do "play" deste: o estado vem dos
+    // eventos do elemento (onPlay/onPause), não daqui.
+    audioSceneRef.current = sceneId;
+    if (audio.getAttribute("src") !== url) audio.setAttribute("src", url);
+    void audio.play().catch(() => setPlayingSceneId(null));
+  }
+
+  function stopAudio() {
+    audioRef.current?.pause();
+    setPlayingSceneId(null);
+  }
+
+  function toggleScene(sceneId: string) {
+    if (playingSceneId === sceneId) stopAudio();
+    else playScene(sceneId);
+  }
+
   function advance(next: ReaderState | null, scroll = true) {
     if (!next) return;
     shouldScroll.current = scroll;
     setState(next);
     persist(next);
+    const lastSceneId = next.path[next.path.length - 1];
+    if (autoRead && lastSceneId) playScene(lastSceneId);
+    else stopAudio();
   }
 
   function changeLocale(next: string) {
+    stopAudio();
     setChosenLocale(next);
     writeLocal(LOCALE_KEY, next);
   }
+
+  function setAutoRead(next: boolean) {
+    setChosenAutoRead(next);
+    writeLocal(AUTO_READ_KEY, next);
+  }
+
+  function toggleAutoRead() {
+    const next = !autoRead;
+    setAutoRead(next);
+    const lastSceneId = state?.path[state.path.length - 1];
+    if (next && lastSceneId) playScene(lastSceneId);
+    if (!next) stopAudio();
+  }
+
+  const audioElement = (
+    // Sem controles próprios: os botões de cada cena comandam. A transcrição é o próprio texto da
+    // cena, sempre visível.
+    <audio
+      ref={audioRef}
+      preload="none"
+      onPlay={() => setPlayingSceneId(audioSceneRef.current)}
+      onPause={() => setPlayingSceneId(null)}
+      onEnded={() => setPlayingSceneId(null)}
+      className="hidden"
+    />
+  );
 
   const { work } = story;
   const t = (text: Record<string, string>) => pickText(text, locale, work.defaultLocale);
@@ -129,12 +193,24 @@ export function StoryReader({
   if (!state) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-8">
+        {audioElement}
         <div className="grid gap-6 sm:grid-cols-[12rem_minmax(0,1fr)]">
           <WorkCover url={work.coverUrl} title={t(work.title)} className="mx-auto max-w-48 sm:max-w-none" />
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-foreground">{t(work.title)}</h1>
             {t(work.synopsis) && <p className="whitespace-pre-line text-muted-foreground">{t(work.synopsis)}</p>}
             <LocalePicker locales={work.locales} value={locale} onChange={changeLocale} />
+            {hasAudio && (
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={autoRead}
+                  onChange={(event) => setAutoRead(event.target.checked)}
+                  className="size-4 rounded-sm border-border"
+                />
+                Ler em voz alta enquanto avanço
+              </label>
+            )}
             <div className="flex flex-wrap gap-2">
               {hydrated && saved ? (
                 <>
@@ -174,10 +250,22 @@ export function StoryReader({
 
   return (
     <div className="mx-auto w-full max-w-2xl pb-24">
+      {audioElement}
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
         <p className="min-w-0 truncate text-sm font-medium text-foreground">{t(work.title)}</p>
         <div className="flex shrink-0 items-center gap-1">
           <LocalePicker locales={work.locales} value={locale} onChange={changeLocale} compact />
+          {hasAudio && (
+            <Button
+              size="icon"
+              variant={autoRead ? "secondary" : "ghost"}
+              aria-label={autoRead ? "Parar a leitura em voz alta" : "Ler em voz alta"}
+              aria-pressed={autoRead}
+              onClick={toggleAutoRead}
+            >
+              {autoRead ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+            </Button>
+          )}
           <Button
             size="icon"
             variant="ghost"
@@ -217,6 +305,19 @@ export function StoryReader({
               {scene.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={scene.imageUrl} alt="" loading={position < 2 ? "eager" : "lazy"} className="block w-full" />
+              )}
+              {audioFor(scene.id) && (
+                <div className="px-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-pressed={playingSceneId === scene.id}
+                    onClick={() => toggleScene(scene.id)}
+                  >
+                    {playingSceneId === scene.id ? <Pause className="size-4" /> : <Play className="size-4" />}
+                    {playingSceneId === scene.id ? "Pausar" : "Ouvir"}
+                  </Button>
+                </div>
               )}
               <div className="space-y-4 px-4 font-serif text-lg leading-relaxed text-foreground">
                 {splitParagraphs(t(scene.body)).map((paragraph, paragraphIndex) => (

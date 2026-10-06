@@ -8,10 +8,10 @@ import { pickText } from "./shared/localized-text";
 // por import dinâmico só na hora de resolver o rótulo.
 const queries = () => import("./shared/cached-queries");
 
-export const graphicNovelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
-  staticBreadcrumbSegment({ key: "graphic-novels.public", segments: ["novels"], label: "Graphic Novels" }),
+export const novelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
+  staticBreadcrumbSegment({ key: "novels.public", segments: ["novels"], label: "Graphic Novels" }),
   dynamicBreadcrumbSegment({
-    key: "graphic-novels.public.work",
+    key: "novels.public.work",
     segments: ["novels", ":workSlug"],
     paramName: "workSlug",
     resolveLabel: async (slug) => {
@@ -19,16 +19,16 @@ export const graphicNovelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
       return result.success ? pickText(result.data.work.title, result.data.work.defaultLocale, result.data.work.defaultLocale) : null;
     },
   }),
-  staticBreadcrumbSegment({ key: "graphic-novels.admin", segments: ["admin", "graphic-novels"], label: "Graphic Novels" }),
+  staticBreadcrumbSegment({ key: "novels.admin", segments: ["admin", "novels"], label: "Graphic Novels" }),
   staticBreadcrumbSegment({
-    key: "graphic-novels.admin.works",
-    segments: ["admin", "graphic-novels", "works"],
+    key: "novels.admin.works",
+    segments: ["admin", "novels", "works"],
     label: "Obras",
-    href: "/admin/graphic-novels",
+    href: "/admin/novels",
   }),
   dynamicBreadcrumbSegment({
-    key: "graphic-novels.admin.work",
-    segments: ["admin", "graphic-novels", "works", ":workId"],
+    key: "novels.admin.work",
+    segments: ["admin", "novels", "works", ":workId"],
     paramName: "workId",
     resolveLabel: async (workId) => {
       const result = await (await queries()).getCachedWork(workId);
@@ -36,20 +36,20 @@ export const graphicNovelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
     },
   }),
   staticBreadcrumbSegment({
-    key: "graphic-novels.admin.chapters",
-    segments: ["admin", "graphic-novels", "works", ":workId", "chapters"],
+    key: "novels.admin.chapters",
+    segments: ["admin", "novels", "works", ":workId", "chapters"],
     label: "Capítulos",
     href: null,
   }),
   {
-    key: "graphic-novels.admin.chapter",
-    segments: ["admin", "graphic-novels", "works", ":workId", "chapters", ":chapterId"],
+    key: "novels.admin.chapter",
+    segments: ["admin", "novels", "works", ":workId", "chapters", ":chapterId"],
     resolve: async (params) => {
       const result = await (await queries()).getCachedChapterGraph(params.workId, params.chapterId);
       if (!result.success) return null;
       return {
         label: `Capítulo ${result.data.chapterNumber}`,
-        href: `/admin/graphic-novels/works/${params.workId}/chapters/${params.chapterId}`,
+        href: `/admin/novels/works/${params.workId}/chapters/${params.chapterId}`,
       };
     },
   },

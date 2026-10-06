@@ -6,7 +6,7 @@ import type { GetChapterGraphInput, GetChapterGraphResult } from "./types";
 export async function getChapterGraph(input: GetChapterGraphInput): Promise<GetChapterGraphResult> {
   const found = await findChapterWithWork(input.chapterId);
   if (!found || found.work.id !== input.workId) {
-    return { success: false, error: { code: "graphic-novels.chapter_not_found", message: "Capítulo não encontrado." } };
+    return { success: false, error: { code: "novels.chapter_not_found", message: "Capítulo não encontrado." } };
   }
   const records = await findStoryRecords(found.work);
   const scenes = records.scenes.filter((scene) => scene.chapterId === found.chapter.id);

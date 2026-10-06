@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildStory } from "../../../shared/story-fixture.test-support";
 
 vi.mock("@venore/plugin-sdk/observability", () => ({ beginOperation: vi.fn(() => ({})), endOperation: vi.fn() }));
+const syncWorkSpeech = vi.fn();
+vi.mock("../../speech/sync-work-speech/service", () => ({ syncWorkSpeech: (...args: unknown[]) => syncWorkSpeech(...args) }));
 
 const findWorkById = vi.fn();
 const findWorkBySlug = vi.fn();
@@ -59,7 +61,7 @@ describe("updateWork", () => {
     }));
     const { updateWork } = await import("./service");
     const result = await updateWork({ ...input, title: { "pt-BR": "Obra" } });
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "graphic-novels.would_break_published" }) });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.would_break_published" }) });
     expect(updateWorkRow).not.toHaveBeenCalled();
   });
 });

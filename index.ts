@@ -1,6 +1,6 @@
 // Barrel público do plugin: o que páginas, actions, blocos e (no futuro) outros plugins podem
 // importar. Nomes sem o sufixo Handler, mesmo padrão do birthdays/academy.
-export { graphicNovelsBreadcrumbSegments } from "./breadcrumbs";
+export { novelsBreadcrumbSegments } from "./breadcrumbs";
 export { getCachedChapterGraph, getCachedPublishedStory, getCachedWork } from "./shared/cached-queries";
 export { createWorkHandler as createWork } from "./features/works/create-work/handler";
 export { updateWorkHandler as updateWork } from "./features/works/update-work/handler";
@@ -21,7 +21,7 @@ export { getReaderProgressHandler as getReaderProgress } from "./features/readin
 export { saveReaderProgressHandler as saveReaderProgress } from "./features/reading/save-reader-progress/handler";
 
 export { blockDefinitions, blockRenderers } from "./blocks";
-export { graphicNovelsSeeds } from "./seeds";
+export { novelsSeeds } from "./seeds";
 
 export type * from "./contracts/types";
 export type { StoryIssue } from "./shared/story-validation";

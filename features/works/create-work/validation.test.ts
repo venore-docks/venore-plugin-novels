@@ -6,8 +6,8 @@ describe("validateCreateWorkInput", () => {
     expect(validateCreateWorkInput({ title: "Obra", slug: "obra-1", defaultLocale: "pt-BR" })).toBeNull();
   });
   it("recusa título vazio, slug inválido e idioma desconhecido", () => {
-    expect(validateCreateWorkInput({ title: " ", slug: "obra", defaultLocale: "pt-BR" })?.code).toBe("graphic-novels.invalid_title");
-    expect(validateCreateWorkInput({ title: "Obra", slug: "Obra 1", defaultLocale: "pt-BR" })?.code).toBe("graphic-novels.invalid_slug");
-    expect(validateCreateWorkInput({ title: "Obra", slug: "obra", defaultLocale: "xx" })?.code).toBe("graphic-novels.invalid_locale");
+    expect(validateCreateWorkInput({ title: " ", slug: "obra", defaultLocale: "pt-BR" })?.code).toBe("novels.invalid_title");
+    expect(validateCreateWorkInput({ title: "Obra", slug: "Obra 1", defaultLocale: "pt-BR" })?.code).toBe("novels.invalid_slug");
+    expect(validateCreateWorkInput({ title: "Obra", slug: "obra", defaultLocale: "xx" })?.code).toBe("novels.invalid_locale");
   });
 });
