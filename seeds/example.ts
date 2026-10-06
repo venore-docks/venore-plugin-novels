@@ -209,6 +209,8 @@ export async function seedNovelsExample(): Promise<OperationResult<void>> {
     locales: ["pt-BR", "en"],
     coverMediaId: null,
     variables: EXAMPLE_VARIABLES,
+    // Áudio é escolha do autor (opção "Gerar áudio" da obra); o exemplo nasce sem.
+    speechEnabled: false,
     actorId: SEED_ACTOR_ID,
   });
   if (!updated.success) return updated;

@@ -40,6 +40,9 @@ export const works = novelsSchema.table(
     variables: jsonb("variables").$type<VariableDefinition[]>().notNull().default([]),
     status: text("status").notNull().default("draft"),
     authorUserId: text("author_user_id"),
+    // Leitura em voz alta: o autor escolhe por obra (desligado por padrão). Ligado e publicada, cada
+    // cena ganha uma faixa por idioma (features/speech/sync-work-speech).
+    speechEnabled: boolean("speech_enabled").notNull().default(false),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

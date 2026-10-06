@@ -10,7 +10,15 @@ import { updateWorkAction, type AdminActionState } from "../admin/actions";
 
 const initialState: AdminActionState = { error: null };
 
-export function WorkSettingsForm({ work, coverUrl }: { work: WorkRecord; coverUrl: string | null }) {
+export function WorkSettingsForm({
+  work,
+  coverUrl,
+  speechStatus,
+}: {
+  work: WorkRecord;
+  coverUrl: string | null;
+  speechStatus: string | null;
+}) {
   const [state, formAction, pending] = useActionState(updateWorkAction, initialState);
   useActionToast({ pending, error: state.error, successMessage: "Obra salva." });
 
@@ -22,8 +30,19 @@ export function WorkSettingsForm({ work, coverUrl }: { work: WorkRecord; coverUr
   const [synopsis, setSynopsis] = useState<LocalizedText>(work.synopsis);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(work.coverMediaId);
   const [variables, setVariables] = useState<VariableDefinition[]>(work.variables);
+  const [speechEnabled, setSpeechEnabled] = useState(work.speechEnabled);
 
-  const payload = JSON.stringify({ workId: work.id, slug, title, synopsis, defaultLocale, locales, coverMediaId, variables });
+  const payload = JSON.stringify({
+    workId: work.id,
+    slug,
+    title,
+    synopsis,
+    defaultLocale,
+    locales,
+    coverMediaId,
+    variables,
+    speechEnabled,
+  });
   const editingLocale = locales.includes(activeLocale) ? activeLocale : defaultLocale;
 
   function toggleLocale(code: string) {
@@ -188,6 +207,22 @@ export function WorkSettingsForm({ work, coverUrl }: { work: WorkRecord; coverUr
           Variável
         </Button>
       </fieldset>
+
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <input
+            type="checkbox"
+            checked={speechEnabled}
+            onChange={(event) => setSpeechEnabled(event.target.checked)}
+            className="size-4 rounded-sm border-border"
+          />
+          Gerar áudio (leitura em voz alta)
+        </label>
+        <p className="text-xs text-muted-foreground">
+          {speechStatus ??
+            "Cada cena ganha uma faixa em cada idioma com texto próprio, depois de publicada. Desligar apaga o áudio desta obra."}
+        </p>
+      </div>
 
       <Button type="submit" disabled={pending} className="w-full">
         Salvar obra

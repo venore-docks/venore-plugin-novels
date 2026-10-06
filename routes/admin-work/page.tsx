@@ -19,7 +19,16 @@ export default async function WorkEditorPage({ params }: { params: Promise<{ wor
   const { workId } = await params;
   const result = await getCachedWork(workId);
   if (!result.success) notFound();
-  const { work, coverUrl, chapters, issues } = result.data;
+  const { work, coverUrl, chapters, issues, speech } = result.data;
+  const speechStatus = !work.speechEnabled
+    ? null
+    : speech.expected === 0
+      ? "Nenhuma cena com texto ainda."
+      : work.status !== "published"
+        ? "O áudio será gerado quando a obra for publicada."
+        : speech.ready >= speech.expected
+          ? `Áudio pronto: ${speech.expected} ${speech.expected === 1 ? "faixa" : "faixas"}.`
+          : `${speech.ready} de ${speech.expected} faixas prontas; o resto fica pronto em até ~15 minutos (com a leitura em voz alta ligada em Configurações).`;
   const title = pickText(work.title, work.defaultLocale, work.defaultLocale);
 
   return (
@@ -52,7 +61,7 @@ export default async function WorkEditorPage({ params }: { params: Promise<{ wor
         </section>
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Obra</h2>
-          <WorkSettingsForm work={work} coverUrl={coverUrl} />
+          <WorkSettingsForm work={work} coverUrl={coverUrl} speechStatus={speechStatus} />
         </section>
       </div>
     </div>

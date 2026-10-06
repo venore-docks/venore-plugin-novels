@@ -47,6 +47,7 @@ export type WorkRecord = {
   variables: VariableDefinition[];
   status: WorkStatus;
   authorUserId: string | null;
+  speechEnabled: boolean;
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;

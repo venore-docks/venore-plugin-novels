@@ -31,6 +31,7 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     locales: command.locales,
     coverMediaId: command.coverMediaId || null,
     variables: command.variables.map((variable) => ({ ...variable, label: variable.label.trim() || variable.key })),
+    speechEnabled: command.speechEnabled,
   };
 
   // Obra publicada não pode ficar quebrada por uma edição de variável/idioma: se a mudança
@@ -47,8 +48,8 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
   }
 
   const work = await updateWorkRow(current.id, next);
-  // Idioma removido/adicionado muda quais faixas existem.
-  if (work.status === "published") await syncWorkSpeech(work.id);
+  // Ligar/desligar o áudio ou mudar idiomas muda quais faixas existem.
+  await syncWorkSpeech(work.id);
   endOperation(handle, { success: true });
   return { success: true, data: work };
 }
