@@ -22,6 +22,16 @@ parágrafos estilo livro, e as escolhas do leitor ramificam a história.
 
 Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 
+## Leitura em voz alta (0.3.0, exige core 2.1.0)
+
+Cada cena ganha o botão **Ouvir** em cada idioma que tem texto próprio, e o leitor tem o modo
+**Ler em voz alta** (ícone de alto-falante no topo, ou a opção na capa), que toca cada cena nova
+assim que a pessoa avança. O áudio vem de `@venore/plugin-sdk/speech`: publicar a obra (e salvar
+grafo, editar obra ou apagar capítulo dela publicada) sincroniza uma faixa por cena e idioma no
+scope `novels.work:<id>`; o core só gera o que é novo ou mudou. Despublicar mantém o áudio
+(republicar sem mudança é de graça); apagar a obra remove. Configuração e custo:
+`docs/speech/google-cloud-tts.md` no core.
+
 ## Próximas fases
 
 - **Fase 2**: autores (usuários comuns) criam obras; publicação passa por aprovação de um admin

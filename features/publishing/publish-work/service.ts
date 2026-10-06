@@ -2,6 +2,7 @@ import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
 import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
 import { findStoryRecords, findWorkById, setWorkStatus } from "./store";
 import type { PublishWorkCommand, PublishWorkResult } from "./types";
+import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
 
 // Fase 1: quem tem novels.works.manage publica direto. A aprovação por admin das obras
 // de autores (status "in_review") entra na Fase 2, reaproveitando este mesmo validador.
@@ -30,6 +31,7 @@ export async function publishWork(command: PublishWorkCommand): Promise<PublishW
   }
 
   const published = await setWorkStatus(work.id, "published", work.publishedAt ?? new Date());
+  await syncWorkSpeech(work.id);
   endOperation(handle, { success: true });
   return { success: true, data: published };
 }

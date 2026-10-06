@@ -19,6 +19,7 @@ export function toChapterGraphScene(scene: SceneRecord): ChapterGraphScene {
 export function buildStory(
   records: { work: WorkRecord; chapters: ChapterRecord[]; scenes: SceneRecord[]; choices: ChoiceRecord[] },
   mediaUrls: Record<string, string>,
+  audio: Story["audio"] = {},
 ): Story {
   const { work } = records;
   return {
@@ -44,6 +45,7 @@ export function buildStory(
       imageUrl: scene.imageMediaId ? (mediaUrls[scene.imageMediaId] ?? null) : null,
     })),
     choices: records.choices,
+    audio,
   };
 }
 

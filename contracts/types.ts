@@ -113,6 +113,9 @@ export type Story = {
   chapters: StoryChapter[];
   scenes: StoryScene[];
   choices: ChoiceRecord[];
+  // Leitura em voz alta: sceneId -> locale -> URL do MP3 já gerado. Cena/idioma sem entrada não
+  // tem áudio (ainda na fila, sem tradução ou leitura desligada).
+  audio: Record<string, Record<string, string>>;
 };
 
 // Estado de leitura de uma obra. `path` é a sequência de cenas visitadas (o feed vertical do

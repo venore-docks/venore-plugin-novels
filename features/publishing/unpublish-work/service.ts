@@ -16,6 +16,7 @@ export async function unpublishWork(command: UnpublishWorkCommand): Promise<Unpu
     endOperation(handle, { success: false, error });
     return { success: false, error };
   }
+  // O áudio fica: republicar sem mudança no texto não gera de novo (sync-work-speech).
   const updated = await setWorkStatus(work.id, "draft", work.publishedAt);
   endOperation(handle, { success: true });
   return { success: true, data: updated };

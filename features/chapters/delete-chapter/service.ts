@@ -2,6 +2,7 @@ import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
 import { blockingIssueForPublished } from "../../../shared/published-guard";
 import { deleteChapterAndCompact, findChapterWithWork, findStoryRecords } from "./store";
 import type { DeleteChapterCommand, DeleteChapterResult } from "./types";
+import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
 
 export async function deleteChapter(command: DeleteChapterCommand): Promise<DeleteChapterResult> {
   const handle = beginOperation({
@@ -29,6 +30,7 @@ export async function deleteChapter(command: DeleteChapterCommand): Promise<Dele
   if (blocking) return fail("novels.would_break_published", `A obra publicada ficaria com erro: ${blocking}`);
 
   await deleteChapterAndCompact(found.chapter.id, found.work.id, found.chapter.position);
+  if (found.work.status === "published") await syncWorkSpeech(found.work.id);
   endOperation(handle, { success: true });
   return { success: true, data: { workId: found.work.id } };
 }

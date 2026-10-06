@@ -3,6 +3,7 @@ import { normalizeLocalizedText } from "../../../shared/localized-text";
 import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
 import { findStoryRecords, findWorkById, findWorkBySlug, updateWorkRow } from "./store";
 import type { UpdateWorkCommand, UpdateWorkResult } from "./types";
+import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
 
 export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWorkResult> {
   const handle = beginOperation({
@@ -46,6 +47,8 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
   }
 
   const work = await updateWorkRow(current.id, next);
+  // Idioma removido/adicionado muda quais faixas existem.
+  if (work.status === "published") await syncWorkSpeech(work.id);
   endOperation(handle, { success: true });
   return { success: true, data: work };
 }

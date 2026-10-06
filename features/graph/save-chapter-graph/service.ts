@@ -11,6 +11,7 @@ import {
   replaceChapterGraph,
 } from "./store";
 import type { SaveChapterGraphCommand, SaveChapterGraphResult } from "./types";
+import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
 
 function normalizeGraph(graph: ChapterGraph, locales: string[]): ChapterGraph {
   return {
@@ -74,6 +75,7 @@ export async function saveChapterGraph(command: SaveChapterGraphCommand): Promis
   }
 
   const savedAt = await replaceChapterGraph(found.work.id, found.chapter.id, graph);
+  if (found.work.status === "published") await syncWorkSpeech(found.work.id);
   endOperation(handle, { success: true, detail: { scenes: graph.scenes.length, choices: graph.choices.length } });
   return { success: true, data: { savedAt, issues: validateStory(nextStory) } };
 }
