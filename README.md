@@ -26,7 +26,10 @@ Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 
 O autor escolhe por obra: **"Gerar áudio (leitura em voz alta)"** no formulário da obra
 (desligado por padrão; 0.4.0). Ligado, depois de publicada, cada cena ganha uma faixa em cada
-idioma com texto próprio, e a tela da obra mostra quantas faixas já estão prontas. No leitor, cada
+idioma com texto próprio. O bloco **Áudio** da tela da obra (0.5.0, exige core 2.2.0) mostra a
+produção: barra com as faixas prontas e o trecho da faixa em geração, o que está na fila, falhas e
+o que o worker do core está fazendo (preparando as vozes, gerando, parado), e se atualiza sozinho
+enquanto há fila; a obra aparece com título e link em Editorial → Áudios no core. No leitor, cada
 cena tem **Ouvir** e o modo **Ler em voz alta** (alto-falante no topo, ou a opção na capa) toca
 cada cena nova ao avançar. O áudio vem de `@venore/plugin-sdk/speech` (scope `novels.work:<id>`);
 o core só gera o que é novo ou mudou. Desligar a opção ou apagar a obra remove o áudio;

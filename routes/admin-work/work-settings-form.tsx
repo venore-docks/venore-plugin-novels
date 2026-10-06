@@ -13,11 +13,9 @@ const initialState: AdminActionState = { error: null };
 export function WorkSettingsForm({
   work,
   coverUrl,
-  speechStatus,
 }: {
   work: WorkRecord;
   coverUrl: string | null;
-  speechStatus: string | null;
 }) {
   const [state, formAction, pending] = useActionState(updateWorkAction, initialState);
   useActionToast({ pending, error: state.error, successMessage: "Obra salva." });
@@ -219,8 +217,7 @@ export function WorkSettingsForm({
           Gerar áudio (leitura em voz alta)
         </label>
         <p className="text-xs text-muted-foreground">
-          {speechStatus ??
-            "Cada cena ganha uma faixa em cada idioma com texto próprio, depois de publicada. Desligar apaga o áudio desta obra."}
+          Cada cena ganha uma faixa em cada idioma com texto próprio, depois de publicada. Desligar apaga o áudio desta obra.
         </p>
       </div>
 

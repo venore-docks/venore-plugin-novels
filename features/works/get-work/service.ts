@@ -1,4 +1,4 @@
-import { getSpeechAudio } from "@venore/plugin-sdk/speech";
+import { getSpeechProgress, getSpeechWorkerActivity } from "@venore/plugin-sdk/speech";
 import { resolveMediaUrls } from "../../../shared/resolve-media-urls";
 import { speechItemsForWork, workSpeechScope } from "../../../shared/speech";
 import { validateStory } from "../../../shared/story-validation";
@@ -11,10 +11,15 @@ export async function getWork(input: GetWorkInput): Promise<GetWorkResult> {
 
   const records = await findStoryRecords(work);
   const scope = workSpeechScope(work.id);
-  const audio = work.speechEnabled ? await getSpeechAudio({ scopes: [scope] }) : null;
+  // Produção do áudio (faixas = cena x idioma): quantas prontas, na fila, sendo geradas, e o que o
+  // worker está fazendo agora.
+  const [progress, worker] = work.speechEnabled
+    ? await Promise.all([getSpeechProgress({ scopes: [scope] }), getSpeechWorkerActivity()])
+    : [null, null];
   const speech = {
     expected: work.speechEnabled ? speechItemsForWork(work, records.scenes).length : 0,
-    ready: audio?.success ? (audio.data[scope]?.length ?? 0) : 0,
+    progress: progress?.success ? (progress.data[scope] ?? null) : null,
+    worker,
   };
   const urls = work.coverMediaId ? await resolveMediaUrls([work.coverMediaId]) : {};
   const sceneCounts = new Map<string, number>();

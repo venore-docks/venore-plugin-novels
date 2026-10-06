@@ -19,18 +19,26 @@ describe("syncWorkSpeech", () => {
   });
 
   it("opção ligada e obra publicada: uma faixa por cena e idioma", async () => {
-    findWorkById.mockResolvedValue({ id: "w1", status: "published", speechEnabled: true, locales: ["pt-BR"] });
+    findWorkById.mockResolvedValue({
+      id: "w1",
+      status: "published",
+      speechEnabled: true,
+      locales: ["pt-BR"],
+      defaultLocale: "pt-BR",
+      title: { "pt-BR": "O Farol" },
+    });
     await syncWorkSpeech("w1");
     expect(syncSpeechAudio).toHaveBeenCalledWith({
       scope: "novels.work:w1",
       items: [{ itemKey: "scene:s1", locale: "pt-BR", text: "Olá" }],
+      source: { label: "O Farol", href: "/admin/novels/works/w1" },
     });
   });
 
   it("opção desligada: apaga o áudio da obra, publicada ou não", async () => {
-    findWorkById.mockResolvedValue({ id: "w1", status: "draft", speechEnabled: false, locales: ["pt-BR"] });
+    findWorkById.mockResolvedValue({ id: "w1", status: "draft", speechEnabled: false, locales: ["pt-BR"], defaultLocale: "pt-BR", title: { "pt-BR": "O Farol" } });
     await syncWorkSpeech("w1");
-    expect(syncSpeechAudio).toHaveBeenCalledWith({ scope: "novels.work:w1", items: [] });
+    expect(syncSpeechAudio).toHaveBeenCalledWith(expect.objectContaining({ scope: "novels.work:w1", items: [] }));
   });
 
   it("opção ligada em rascunho: não mexe (republicar não gera de novo)", async () => {

@@ -1,4 +1,5 @@
 import { syncSpeechAudio } from "@venore/plugin-sdk/speech";
+import { pickText } from "../../../shared/localized-text";
 import { speechItemsForWork, workSpeechScope } from "../../../shared/speech";
 import { findStoryRecords, findWorkById } from "./store";
 
@@ -12,7 +13,9 @@ export async function syncWorkSpeech(workId: string): Promise<void> {
     const work = await findWorkById(workId);
     if (work && work.speechEnabled && work.status !== "published") return;
     const items = work?.speechEnabled ? speechItemsForWork(work, (await findStoryRecords(work)).scenes) : [];
-    await syncSpeechAudio({ scope: workSpeechScope(workId), items });
+    // `source`: título e link do editor no painel de áudios do core (Editorial → Áudios).
+    const source = work ? { label: pickText(work.title, work.defaultLocale, work.defaultLocale), href: `/admin/novels/works/${workId}` } : undefined;
+    await syncSpeechAudio({ scope: workSpeechScope(workId), items, ...(source ? { source } : {}) });
   } catch (error) {
     console.warn(`[novels] não deu pra sincronizar o áudio da obra ${workId}:`, error);
   }
