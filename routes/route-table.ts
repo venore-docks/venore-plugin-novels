@@ -5,7 +5,7 @@ import AdminWorkPage from "./admin-work/page";
 import CatalogPage from "./catalog/page";
 import ReaderPage, { generateStoryMetadata } from "./reader/page";
 
-export const graphicNovelsRouteTable: PluginRouteTable = {
+export const novelsRouteTable: PluginRouteTable = {
   admin: [
     { pattern: "", Component: asPluginPage(AdminPage) },
     { pattern: "works/:workId", Component: asPluginPage(AdminWorkPage) },

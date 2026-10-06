@@ -1,12 +1,12 @@
 {
-  "id": "104a2dab-58bd-4f51-be51-14bcd6aa3f3f",
+  "id": "c35b71d1-a295-48e5-b042-99908024b748",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "graphic_novels.chapters": {
+    "novels.chapters": {
       "name": "chapters",
-      "schema": "graphic_novels",
+      "schema": "novels",
       "columns": {
         "id": {
           "name": "id",
@@ -81,7 +81,7 @@
           "name": "chapters_work_id_works_id_fk",
           "tableFrom": "chapters",
           "tableTo": "works",
-          "schemaTo": "graphic_novels",
+          "schemaTo": "novels",
           "columnsFrom": [
             "work_id"
           ],
@@ -98,9 +98,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "graphic_novels.choices": {
+    "novels.choices": {
       "name": "choices",
-      "schema": "graphic_novels",
+      "schema": "novels",
       "columns": {
         "id": {
           "name": "id",
@@ -170,7 +170,7 @@
           "name": "choices_scene_id_scenes_id_fk",
           "tableFrom": "choices",
           "tableTo": "scenes",
-          "schemaTo": "graphic_novels",
+          "schemaTo": "novels",
           "columnsFrom": [
             "scene_id"
           ],
@@ -184,7 +184,7 @@
           "name": "choices_target_scene_id_scenes_id_fk",
           "tableFrom": "choices",
           "tableTo": "scenes",
-          "schemaTo": "graphic_novels",
+          "schemaTo": "novels",
           "columnsFrom": [
             "target_scene_id"
           ],
@@ -201,9 +201,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "graphic_novels.reader_progress": {
+    "novels.reader_progress": {
       "name": "reader_progress",
-      "schema": "graphic_novels",
+      "schema": "novels",
       "columns": {
         "user_id": {
           "name": "user_id",
@@ -237,7 +237,7 @@
           "name": "reader_progress_work_id_works_id_fk",
           "tableFrom": "reader_progress",
           "tableTo": "works",
-          "schemaTo": "graphic_novels",
+          "schemaTo": "novels",
           "columnsFrom": [
             "work_id"
           ],
@@ -262,9 +262,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "graphic_novels.scenes": {
+    "novels.scenes": {
       "name": "scenes",
-      "schema": "graphic_novels",
+      "schema": "novels",
       "columns": {
         "id": {
           "name": "id",
@@ -391,7 +391,7 @@
           "name": "scenes_work_id_works_id_fk",
           "tableFrom": "scenes",
           "tableTo": "works",
-          "schemaTo": "graphic_novels",
+          "schemaTo": "novels",
           "columnsFrom": [
             "work_id"
           ],
@@ -405,7 +405,7 @@
           "name": "scenes_chapter_id_chapters_id_fk",
           "tableFrom": "scenes",
           "tableTo": "chapters",
-          "schemaTo": "graphic_novels",
+          "schemaTo": "novels",
           "columnsFrom": [
             "chapter_id"
           ],
@@ -422,9 +422,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "graphic_novels.works": {
+    "novels.works": {
       "name": "works",
-      "schema": "graphic_novels",
+      "schema": "novels",
       "columns": {
         "id": {
           "name": "id",
@@ -551,7 +551,7 @@
       "checkConstraints": {
         "works_status_check": {
           "name": "works_status_check",
-          "value": "\"graphic_novels\".\"works\".\"status\" in ('draft', 'in_review', 'published', 'rejected')"
+          "value": "\"novels\".\"works\".\"status\" in ('draft', 'in_review', 'published', 'rejected')"
         }
       },
       "isRLSEnabled": false
@@ -559,7 +559,7 @@
   },
   "enums": {},
   "schemas": {
-    "graphic_novels": "graphic_novels"
+    "novels": "novels"
   },
   "sequences": {},
   "roles": {},

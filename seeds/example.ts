@@ -190,7 +190,7 @@ export function chapterTwo(prefix: string): ChapterGraph {
 }
 
 // Idempotente: se a obra "o-farol" já existe, não faz nada.
-export async function seedGraphicNovelsExample(): Promise<OperationResult<void>> {
+export async function seedNovelsExample(): Promise<OperationResult<void>> {
   if (await findWorkRowBySlug(SLUG)) return { success: true, data: undefined };
 
   const created = await createWork({ title: "O Farol", slug: SLUG, defaultLocale: "pt-BR", actorId: SEED_ACTOR_ID });

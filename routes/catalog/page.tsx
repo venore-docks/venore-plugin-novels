@@ -4,7 +4,7 @@ import { listPublishedWorks } from "../../index";
 import { WorkCardGrid } from "../../components/work-card-grid";
 import { PLUGIN_KEY } from "../../shared/constants";
 
-export default async function GraphicNovelsCatalogPage() {
+export default async function NovelsCatalogPage() {
   if (!(await isPluginActive(PLUGIN_KEY))) notFound();
   const result = await listPublishedWorks({});
   const works = result.success ? result.data : [];

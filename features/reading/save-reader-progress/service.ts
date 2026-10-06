@@ -6,7 +6,7 @@ import type { SaveReaderProgressCommand, SaveReaderProgressResult } from "./type
 export async function saveReaderProgress(command: SaveReaderProgressCommand): Promise<SaveReaderProgressResult> {
   const work = await findWorkById(command.workId);
   if (!work || work.status !== "published") {
-    return { success: false, error: { code: "graphic-novels.work_not_found", message: "Obra não encontrada." } };
+    return { success: false, error: { code: "novels.work_not_found", message: "Obra não encontrada." } };
   }
   const updatedAt = await upsertReaderProgress(command.userId, work.id, command.state);
   return { success: true, data: { updatedAt } };

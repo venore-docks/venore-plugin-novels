@@ -5,7 +5,7 @@ import { getCachedChapterGraph } from "../../index";
 import { ChapterGraphEditor } from "./chapter-graph-editor";
 
 export default async function ChapterGraphPage({ params }: { params: Promise<{ workId: string; chapterId: string }> }) {
-  const gate = await getPluginAdminPageData("graphic-novels");
+  const gate = await getPluginAdminPageData("novels");
   if (!gate.granted) return <AdminAccessDenied message="Você não tem permissão para gerenciar graphic novels." />;
 
   const { workId, chapterId } = await params;

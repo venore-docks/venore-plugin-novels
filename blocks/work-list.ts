@@ -1,9 +1,9 @@
 import type { BlockDefinition } from "@venore/plugin-sdk/cms";
 
 export const workListBlockDefinition: BlockDefinition = {
-  key: "graphic-novels.work.list",
+  key: "novels.work.list",
   label: "Graphic Novels — Vitrine de obras",
-  category: "graphic-novels",
+  category: "novels",
   structure: "leaf",
   allowedInRoot: true,
   defaultData: {

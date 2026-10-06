@@ -13,7 +13,7 @@ import { PublishControls } from "./publish-controls";
 import { WorkSettingsForm } from "./work-settings-form";
 
 export default async function WorkEditorPage({ params }: { params: Promise<{ workId: string }> }) {
-  const gate = await getPluginAdminPageData("graphic-novels");
+  const gate = await getPluginAdminPageData("novels");
   if (!gate.granted) return <AdminAccessDenied message="Você não tem permissão para gerenciar graphic novels." />;
 
   const { workId } = await params;

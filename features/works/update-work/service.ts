@@ -6,7 +6,7 @@ import type { UpdateWorkCommand, UpdateWorkResult } from "./types";
 
 export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWorkResult> {
   const handle = beginOperation({
-    useCase: "graphic-novels.update-work",
+    useCase: "novels.update-work",
     actor: { id: command.actorId, type: "user" },
     kind: "write",
   });
@@ -17,10 +17,10 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
   };
 
   const current = await findWorkById(command.workId);
-  if (!current) return fail("graphic-novels.work_not_found", "Obra não encontrada.");
+  if (!current) return fail("novels.work_not_found", "Obra não encontrada.");
 
   const sameSlug = await findWorkBySlug(command.slug);
-  if (sameSlug && sameSlug.id !== current.id) return fail("graphic-novels.slug_taken", "Já existe uma obra com esse endereço.");
+  if (sameSlug && sameSlug.id !== current.id) return fail("novels.slug_taken", "Já existe uma obra com esse endereço.");
 
   const next = {
     slug: command.slug,
@@ -39,7 +39,7 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     const issues = validateStory(records);
     if (hasBlockingIssues(issues)) {
       return fail(
-        "graphic-novels.would_break_published",
+        "novels.would_break_published",
         `Essa mudança deixaria a obra publicada com erro: ${issues.find((issue) => issue.severity === "error")?.message}`,
       );
     }

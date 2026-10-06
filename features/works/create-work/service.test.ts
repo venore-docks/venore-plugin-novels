@@ -19,7 +19,7 @@ describe("createWork", () => {
     findWorkBySlug.mockResolvedValue({ id: "w0" });
     const { createWork } = await import("./service");
     const result = await createWork({ title: "Obra", slug: "obra", defaultLocale: "pt-BR", actorId: "u1" });
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "graphic-novels.slug_taken" }) });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.slug_taken" }) });
     expect(insertWorkWithFirstChapter).not.toHaveBeenCalled();
   });
 

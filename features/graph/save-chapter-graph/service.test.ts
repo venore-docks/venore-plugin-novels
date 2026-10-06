@@ -73,6 +73,6 @@ describe("saveChapterGraph", () => {
     const { saveChapterGraph } = await import("./service");
     const broken = { ...ch1Graph(), startSceneId: null };
     const result = await saveChapterGraph({ workId: "w1", chapterId: "ch1", graph: broken, actorId: "u1" });
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "graphic-novels.would_break_published" }) });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.would_break_published" }) });
   });
 });

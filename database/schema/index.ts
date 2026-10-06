@@ -20,12 +20,12 @@ import type {
   VariableEffect,
 } from "../../contracts/types";
 
-export const graphicNovelsSchema = pgSchema("graphic_novels");
+export const novelsSchema = pgSchema("novels");
 
 // authorUserId é texto solto, sem FK pra auth.users: plugin não importa schema de context
 // (mesmo tratamento de academy.courses.createdBy e birthdays.createdByUserId). Usuário apagado
 // deixa o id órfão; a exibição tolera.
-export const works = graphicNovelsSchema.table(
+export const works = novelsSchema.table(
   "works",
   {
     id: text("id")
@@ -54,7 +54,7 @@ export const works = graphicNovelsSchema.table(
 // startSceneId sem FK pra scenes: cenas referenciam o capítulo, e um FK de volta fecharia ciclo
 // (capítulo <-> cena). Quem garante que a cena existe e pertence ao capítulo é o
 // save-chapter-graph e o validador de publicação (shared/story-validation.ts).
-export const chapters = graphicNovelsSchema.table(
+export const chapters = novelsSchema.table(
   "chapters",
   {
     id: text("id")
@@ -74,7 +74,7 @@ export const chapters = graphicNovelsSchema.table(
 
 // Uma cena = uma lâmina (imagem) + parágrafos de texto estilo livro. graphX/graphY são só a
 // posição do nó no editor em grafo, sem efeito na leitura.
-export const scenes = graphicNovelsSchema.table(
+export const scenes = novelsSchema.table(
   "scenes",
   {
     id: text("id").primaryKey(),
@@ -98,7 +98,7 @@ export const scenes = graphicNovelsSchema.table(
   (table) => [index("scenes_chapter_idx").on(table.chapterId), index("scenes_image_idx").on(table.imageMediaId)],
 );
 
-export const choices = graphicNovelsSchema.table(
+export const choices = novelsSchema.table(
   "choices",
   {
     id: text("id").primaryKey(),
@@ -117,7 +117,7 @@ export const choices = graphicNovelsSchema.table(
 );
 
 // Progresso de quem lê logado. Sem login, o leitor guarda o mesmo ReaderState em localStorage.
-export const readerProgress = graphicNovelsSchema.table(
+export const readerProgress = novelsSchema.table(
   "reader_progress",
   {
     userId: text("user_id").notNull(),

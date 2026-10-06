@@ -59,7 +59,7 @@ describe("updateWork", () => {
     }));
     const { updateWork } = await import("./service");
     const result = await updateWork({ ...input, title: { "pt-BR": "Obra" } });
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "graphic-novels.would_break_published" }) });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.would_break_published" }) });
     expect(updateWorkRow).not.toHaveBeenCalled();
   });
 });

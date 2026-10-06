@@ -10,8 +10,8 @@ import { localeLabel } from "../../shared/locales";
 import { StatusBadge } from "../../components/status-badge";
 import { CreateWorkDialog } from "./create-work-dialog";
 
-export default async function GraphicNovelsAdminPage() {
-  const gate = await getPluginAdminPageData("graphic-novels");
+export default async function NovelsAdminPage() {
+  const gate = await getPluginAdminPageData("novels");
   if (!gate.granted) return <AdminAccessDenied message="Você não tem permissão para gerenciar graphic novels." />;
 
   const result = await listWorks();

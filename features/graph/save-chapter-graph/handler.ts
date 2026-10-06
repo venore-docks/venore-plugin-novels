@@ -6,7 +6,7 @@ import type { SaveChapterGraphInput, SaveChapterGraphResult } from "./types";
 
 export async function saveChapterGraphHandler(input: SaveChapterGraphInput): Promise<SaveChapterGraphResult> {
   const parsed = parseChapterGraph(input.graph);
-  if (!parsed.ok) return { success: false, error: { code: "graphic-novels.invalid_graph", message: parsed.message } };
+  if (!parsed.ok) return { success: false, error: { code: "novels.invalid_graph", message: parsed.message } };
 
   const authz = await authorizeActor(MANAGE_PERMISSION);
   if (!authz.authorized) return { success: false, error: authz.error };

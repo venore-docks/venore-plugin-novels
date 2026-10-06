@@ -5,7 +5,7 @@ import type { GetWorkInput, GetWorkResult } from "./types";
 
 export async function getWork(input: GetWorkInput): Promise<GetWorkResult> {
   const work = await findWorkById(input.workId);
-  if (!work) return { success: false, error: { code: "graphic-novels.work_not_found", message: "Obra não encontrada." } };
+  if (!work) return { success: false, error: { code: "novels.work_not_found", message: "Obra não encontrada." } };
 
   const records = await findStoryRecords(work);
   const urls = work.coverMediaId ? await resolveMediaUrls([work.coverMediaId]) : {};

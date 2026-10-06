@@ -33,7 +33,7 @@ describe("publishWork", () => {
     findStoryRecords.mockResolvedValue({ work, chapters: [], scenes: [], choices: [] });
     const { publishWork } = await import("./service");
     const result = await publishWork({ workId: "w1", actorId: "u1" });
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "graphic-novels.not_publishable" }) });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.not_publishable" }) });
     expect(setWorkStatus).not.toHaveBeenCalled();
   });
 });

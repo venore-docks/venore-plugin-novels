@@ -20,8 +20,8 @@ import { saveReaderProgressAction } from "./actions";
 
 type SavedProgress = { state: ReaderState; updatedAt: string };
 
-const LOCALE_KEY = "graphic-novels:locale";
-const progressKey = (workId: string) => `graphic-novels:progress:${workId}`;
+const LOCALE_KEY = "novels:locale";
+const progressKey = (workId: string) => `novels:progress:${workId}`;
 
 // localStorage pode lançar (aba anônima, cota, bloqueio): toda leitura/escrita é best-effort.
 function writeLocal(key: string, value: unknown) {

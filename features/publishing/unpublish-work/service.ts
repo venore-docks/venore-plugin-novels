@@ -6,13 +6,13 @@ import type { UnpublishWorkCommand, UnpublishWorkResult } from "./types";
 // leitores, que reencontram a obra quando ela for republicada.
 export async function unpublishWork(command: UnpublishWorkCommand): Promise<UnpublishWorkResult> {
   const handle = beginOperation({
-    useCase: "graphic-novels.unpublish-work",
+    useCase: "novels.unpublish-work",
     actor: { id: command.actorId, type: "user" },
     kind: "write",
   });
   const work = await findWorkById(command.workId);
   if (!work) {
-    const error = { code: "graphic-novels.work_not_found", message: "Obra não encontrada." };
+    const error = { code: "novels.work_not_found", message: "Obra não encontrada." };
     endOperation(handle, { success: false, error });
     return { success: false, error };
   }

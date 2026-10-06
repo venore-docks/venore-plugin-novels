@@ -9,7 +9,7 @@ import type { GetPublishedStoryInput, GetPublishedStoryResult } from "./types";
 export async function getPublishedStory(input: GetPublishedStoryInput): Promise<GetPublishedStoryResult> {
   const work = await findWorkBySlug(input.slug);
   if (!work || work.status !== "published") {
-    return { success: false, error: { code: "graphic-novels.work_not_found", message: "Obra não encontrada." } };
+    return { success: false, error: { code: "novels.work_not_found", message: "Obra não encontrada." } };
   }
   const records = await findStoryRecords(work);
   const urls = await resolveMediaUrls(collectMediaIds(records));

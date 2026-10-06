@@ -27,7 +27,7 @@ function normalizeGraph(graph: ChapterGraph, locales: string[]): ChapterGraph {
 
 export async function saveChapterGraph(command: SaveChapterGraphCommand): Promise<SaveChapterGraphResult> {
   const handle = beginOperation({
-    useCase: "graphic-novels.save-chapter-graph",
+    useCase: "novels.save-chapter-graph",
     actor: { id: command.actorId, type: "user" },
     kind: "write",
   });
@@ -38,7 +38,7 @@ export async function saveChapterGraph(command: SaveChapterGraphCommand): Promis
   };
 
   const found = await findChapterWithWork(command.chapterId);
-  if (!found || found.work.id !== command.workId) return fail("graphic-novels.chapter_not_found", "Capítulo não encontrado.");
+  if (!found || found.work.id !== command.workId) return fail("novels.chapter_not_found", "Capítulo não encontrado.");
 
   const graph = normalizeGraph(command.graph, found.work.locales);
   const [foreignScenes, foreignChoices] = await Promise.all([
@@ -46,7 +46,7 @@ export async function saveChapterGraph(command: SaveChapterGraphCommand): Promis
     findForeignChoiceIds(graph.choices.map((choice) => choice.id), found.chapter.id),
   ]);
   if (foreignScenes.length > 0 || foreignChoices.length > 0) {
-    return fail("graphic-novels.foreign_ids", "Grafo inválido: ids pertencem a outro capítulo. Recarregue o editor.");
+    return fail("novels.foreign_ids", "Grafo inválido: ids pertencem a outro capítulo. Recarregue o editor.");
   }
 
   const records = await findStoryRecords(found.work);
@@ -70,7 +70,7 @@ export async function saveChapterGraph(command: SaveChapterGraphCommand): Promis
 
   const blocking = blockingIssueForPublished(found.work.status, nextStory);
   if (blocking) {
-    return fail("graphic-novels.would_break_published", `A obra está publicada e ficaria com erro: ${blocking}`);
+    return fail("novels.would_break_published", `A obra está publicada e ficaria com erro: ${blocking}`);
   }
 
   const savedAt = await replaceChapterGraph(found.work.id, found.chapter.id, graph);

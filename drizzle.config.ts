@@ -8,5 +8,5 @@ export default defineConfig({
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: { url: process.env.DATABASE_URL! },
-  migrations: { schema: "graphic_novels_migrations", table: "__drizzle_migrations" },
+  migrations: { schema: "novels_migrations", table: "__drizzle_migrations" },
 });
