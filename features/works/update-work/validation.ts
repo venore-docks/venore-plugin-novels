@@ -1,9 +1,8 @@
 import { isSupportedLocale } from "../../../shared/locales";
 import { isValidSlug } from "../../../shared/slug";
-import { validateVariableDefinitions } from "../../../shared/story-validation";
+import { isValidCoverFocus } from "../create-work/validation";
 import type { UpdateWorkInput } from "./types";
 
-const MAX_VARIABLES = 50;
 const MAX_SYNOPSIS = 4000;
 
 export function validateUpdateWorkInput(input: UpdateWorkInput): { code: string; message: string } | null {
@@ -26,13 +25,12 @@ export function validateUpdateWorkInput(input: UpdateWorkInput): { code: string;
   if (Object.values(input.title).some((value) => value.length > 160)) {
     return { code: "novels.invalid_title", message: "O título pode ter no máximo 160 caracteres." };
   }
+  if (Object.values(input.subtitle ?? {}).some((value) => value.length > 160)) {
+    return { code: "novels.invalid_subtitle", message: "O subtítulo pode ter no máximo 160 caracteres." };
+  }
   if (Object.values(input.synopsis).some((value) => value.length > MAX_SYNOPSIS)) {
     return { code: "novels.invalid_synopsis", message: `A sinopse pode ter no máximo ${MAX_SYNOPSIS} caracteres.` };
   }
-  if (input.variables.length > MAX_VARIABLES) {
-    return { code: "novels.too_many_variables", message: `No máximo ${MAX_VARIABLES} variáveis por obra.` };
-  }
-  const variableIssue = validateVariableDefinitions(input.variables)[0];
-  if (variableIssue) return { code: `novels.${variableIssue.code}`, message: variableIssue.message };
+  if (!isValidCoverFocus(input.coverFocus)) return { code: "novels.invalid_cover_focus", message: "Recorte da capa inválido." };
   return null;
 }

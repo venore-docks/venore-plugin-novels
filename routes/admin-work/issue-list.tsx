@@ -2,9 +2,9 @@ import Link from "next/link";
 import { AlertTriangle, CircleX } from "lucide-react";
 import type { WorkEditorChapter } from "../../features/works/get-work/types";
 import type { StoryIssue } from "../../shared/story-validation";
-import { adminChapterPath } from "../../shared/constants";
+import { adminChapterPath, adminWorkTabPath } from "../../shared/constants";
 
-const MAX_VISIBLE = 12;
+const MAX_VISIBLE = 60;
 
 export function IssueList({ workId, issues, chapters }: { workId: string; issues: StoryIssue[]; chapters: WorkEditorChapter[] }) {
   if (issues.length === 0) return null;
@@ -27,7 +27,11 @@ export function IssueList({ workId, issues, chapters }: { workId: string; issues
             ) : (
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-label="Aviso" />
             )}
-            {issue.chapterId && chapterIds.has(issue.chapterId) ? (
+            {issue.code === "missing_required_tag" ? (
+              <Link href={adminWorkTabPath(workId, "configuracoes")} className="text-foreground hover:underline">
+                {issue.message}
+              </Link>
+            ) : issue.chapterId && chapterIds.has(issue.chapterId) ? (
               <Link href={adminChapterPath(workId, issue.chapterId)} className="text-foreground hover:underline">
                 {issue.message}
               </Link>

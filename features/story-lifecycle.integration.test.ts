@@ -15,12 +15,18 @@ import { createWork } from "./works/create-work/service";
 import { deleteWork } from "./works/delete-work/service";
 import { getWork } from "./works/get-work/service";
 import { findNovelsMediaUsage } from "./media-usage/find-novels-media-usage/service";
+import { getTagCatalog } from "./tags/get-tag-catalog/service";
+import { installTagStarterPack, saveTagGroup } from "./tags/manage-tag-catalog/service";
+import { updateWork } from "./works/update-work/service";
 
 // Fluxo cruzando o schema novels com auth (progresso por usuário) contra Postgres real:
 // seed completo, leitura publicada, progresso, edição que quebraria a obra publicada, exclusão.
 describe("novels — ciclo da obra (integração)", () => {
   beforeEach(async () => {
     await db.execute(sql.raw("TRUNCATE TABLE novels.works CASCADE"));
+    // Volta o catálogo ao pacote inicial (um teste pode ter tornado um grupo obrigatório).
+    await db.execute(sql.raw("TRUNCATE TABLE novels.tag_groups CASCADE"));
+    await installTagStarterPack({ actorId: "u" });
   });
 
   it("seed publica O Farol e o leitor recebe o grafo inteiro", async () => {
@@ -28,7 +34,7 @@ describe("novels — ciclo da obra (integração)", () => {
     expect((await seedNovelsExample()).success).toBe(true);
 
     const listed = await listPublishedWorks({});
-    expect(listed.success && listed.data.map((work) => work.slug)).toEqual(["o-farol"]);
+    expect(listed.success && listed.data.works.map((work) => work.slug)).toEqual(["o-farol"]);
 
     const story = await getPublishedStory({ slug: "o-farol" });
     expect(story.success).toBe(true);
@@ -73,6 +79,46 @@ describe("novels — ciclo da obra (integração)", () => {
     expect((await publishWork({ workId: story.data.work.id, actorId: "u" })).success).toBe(false);
   });
 
+  it("catálogo de tags: tag livre nova, filtro por slug e grupo obrigatório bloqueando publicação", async () => {
+    await seedNovelsExample();
+    const story = await getPublishedStory({ slug: "o-farol" });
+    if (!story.success) throw new Error("seed");
+    expect(story.data.work.tags.map((group) => group.key)).toEqual(expect.arrayContaining(["genero", "classificacao"]));
+
+    const misterio = await listPublishedWorks({ tag: "misterio" });
+    expect(misterio.success && misterio.data.works.map((work) => work.slug)).toEqual(["o-farol"]);
+    expect(misterio.success && misterio.data.tag?.slug).toBe("misterio");
+    const nada = await listPublishedWorks({ tag: "nao-existe" });
+    expect(nada.success && nada.data.works).toEqual([]);
+
+    const catalog = await getTagCatalog();
+    if (!catalog.success) throw new Error("catalog");
+    const genero = catalog.data.groups.find((group) => group.key === "genero")!;
+    const work = await getWork({ workId: story.data.work.id });
+    if (!work.success) throw new Error("work");
+    const updated = await updateWork({
+      workId: story.data.work.id,
+      slug: "o-farol",
+      title: work.data.work.title,
+      synopsis: work.data.work.synopsis,
+      defaultLocale: "pt-BR",
+      locales: work.data.work.locales,
+      coverMediaId: null,
+      tags: { tagIds: work.data.tagIds, newTags: [{ groupId: genero.id, name: "Tibia" }] },
+      actorId: "u",
+    });
+    expect(updated.success).toBe(true);
+    const tibia = await listPublishedWorks({ tag: "tibia" });
+    expect(tibia.success && tibia.data.works).toHaveLength(1);
+    expect(tibia.success && tibia.data.tag?.custom).toBe(true);
+
+    const classificacao = catalog.data.groups.find((group) => group.key === "conteudo")!;
+    await saveTagGroup({ ...classificacao, id: classificacao.id, required: true, actorId: "u" });
+    await unpublishWork({ workId: story.data.work.id, actorId: "u" });
+    const refused = await publishWork({ workId: story.data.work.id, actorId: "u" });
+    expect(refused.success).toBe(false);
+  });
+
   it("apagar cena remove as escolhas ligadas a ela; excluir obra apaga tudo", async () => {
     const created = await createWork({ title: "Teste", slug: "teste", defaultLocale: "pt-BR", actorId: "u" });
     if (!created.success) throw new Error("create");
@@ -82,8 +128,10 @@ describe("novels — ciclo da obra (integração)", () => {
     const scene = (id: string, isEnding = false) => ({
       id,
       label: id,
-      imageMediaId: id === "gn-a" ? "media-1" : null,
-      body: { "pt-BR": id },
+      blocks: [
+        ...(id === "gn-a" ? [{ id: `${id}-i`, type: "image" as const, mediaId: "media-1", alt: {}, aspect: "auto" as const, bleed: true }] : []),
+        { id: `${id}-t`, type: "text" as const, text: { "pt-BR": id } },
+      ],
       isEnding,
       endingTitle: {},
       effects: [],
@@ -99,6 +147,7 @@ describe("novels — ciclo da obra (integração)", () => {
     });
     expect(await findNovelsMediaUsage("media-1")).toHaveLength(1);
 
+    // A cena inicial criada junto com a obra sai (não está no grafo salvo).
     await saveChapterGraph({ workId: created.data.id, chapterId, graph: { startSceneId: "gn-a", scenes: [scene("gn-a", true)], choices: [] }, actorId: "u" });
     const after = await getChapterGraph({ workId: created.data.id, chapterId });
     expect(after.success && after.data.graph.choices).toEqual([]);

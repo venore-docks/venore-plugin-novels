@@ -8,6 +8,8 @@ import { createWork } from "../features/works/create-work/service";
 import { getWork } from "../features/works/get-work/service";
 import { updateWork } from "../features/works/update-work/service";
 import { findWorkRowBySlug } from "../database/queries/story-records";
+import { findTagCatalog } from "../database/queries/tag-records";
+import { updateWorkVariables } from "../features/works/update-work-variables/service";
 
 // Seed rodado via /admin/plugins, sem sessão: chama service.ts direto (mesmo racional do seed do
 // birthdays). actorId é só rótulo de auditoria.
@@ -30,7 +32,17 @@ function sceneNode(
   y: number,
   extra: Partial<ChapterGraph["scenes"][number]> = {},
 ): ChapterGraph["scenes"][number] {
-  return { id, label, imageMediaId: null, body, isEnding: false, endingTitle: {}, effects: [], graphX: x, graphY: y, ...extra };
+  return {
+    id,
+    label,
+    blocks: [{ id: `${id}-t`, type: "text", text: body }],
+    isEnding: false,
+    endingTitle: {},
+    effects: [],
+    graphX: x,
+    graphY: y,
+    ...extra,
+  };
 }
 
 export function chapterOne(prefix: string): ChapterGraph {
@@ -198,6 +210,12 @@ export async function seedNovelsExample(): Promise<OperationResult<void>> {
   if (!created.success) return created;
   const workId = created.data.id;
 
+  // Tags do pacote inicial, se o admin não apagou: escolhidas por slug.
+  const catalog = await findTagCatalog();
+  const tagIds = ["misterio", "aventura", "livre", "texto-humanos"]
+    .map((slug) => catalog.tags.find((tag) => tag.slug === slug && !tag.archivedAt)?.id)
+    .filter((id): id is string => Boolean(id));
+
   const updated = await updateWork({
     workId,
     slug: SLUG,
@@ -209,10 +227,12 @@ export async function seedNovelsExample(): Promise<OperationResult<void>> {
     defaultLocale: "pt-BR",
     locales: ["pt-BR", "en"],
     coverMediaId: null,
-    variables: EXAMPLE_VARIABLES,
+    tags: { tagIds, newTags: [] },
     actorId: SEED_ACTOR_ID,
   });
   if (!updated.success) return updated;
+  const withVariables = await updateWorkVariables({ workId, variables: EXAMPLE_VARIABLES, actorId: SEED_ACTOR_ID });
+  if (!withVariables.success) return withVariables;
 
   const detail = await getWork({ workId });
   if (!detail.success) return detail;

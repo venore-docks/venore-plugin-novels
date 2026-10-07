@@ -1,23 +1,27 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { Button, Input, MediaPickerField, Textarea, useActionToast } from "@venore/plugin-sdk/ui";
-import type { LocalizedText, VariableDefinition, WorkRecord, WorkTags } from "../../contracts/types";
+import { Button, Input, Textarea, useActionToast, type PickableMedia } from "@venore/plugin-sdk/ui";
+import type { CoverFocus, LocalizedText, TagCatalog, WorkRecord, WorkTagInput } from "../../contracts/types";
+import { CoverField } from "../../components/cover-field";
 import { LocaleTabs } from "../../components/locale-tabs";
+import { TagPicker } from "../../components/tag-picker";
 import { localeLabel, SUPPORTED_LOCALES } from "../../shared/locales";
 import { updateWorkAction, type AdminActionState } from "../admin/actions";
-import { VariableDisplayFields } from "./variable-display-fields";
-import { WorkTagsFields } from "./work-tags-fields";
 
 const initialState: AdminActionState = { error: null };
 
+// Aba "Configurações": identidade (título, subtítulo, sinopse, capa), idiomas e tags.
 export function WorkSettingsForm({
   work,
   coverUrl,
+  tagCatalog,
+  tagIds,
 }: {
   work: WorkRecord;
   coverUrl: string | null;
+  tagCatalog: TagCatalog;
+  tagIds: string[];
 }) {
   const [state, formAction, pending] = useActionState(updateWorkAction, initialState);
   useActionToast({ pending, error: state.error, successMessage: "Obra salva." });
@@ -27,20 +31,24 @@ export function WorkSettingsForm({
   const [defaultLocale, setDefaultLocale] = useState(work.defaultLocale);
   const [activeLocale, setActiveLocale] = useState(work.defaultLocale);
   const [title, setTitle] = useState<LocalizedText>(work.title);
+  const [subtitle, setSubtitle] = useState<LocalizedText>(work.subtitle);
   const [synopsis, setSynopsis] = useState<LocalizedText>(work.synopsis);
-  const [coverMediaId, setCoverMediaId] = useState<string | null>(work.coverMediaId);
-  const [variables, setVariables] = useState<VariableDefinition[]>(work.variables);
-  const [tags, setTags] = useState<WorkTags>(work.tags);
+  const [cover, setCover] = useState<PickableMedia | null>(
+    work.coverMediaId && coverUrl ? { id: work.coverMediaId, url: coverUrl, filename: "capa", contentType: "image/*" } : null,
+  );
+  const [coverFocus, setCoverFocus] = useState<CoverFocus | null>(work.coverFocus);
+  const [tags, setTags] = useState<WorkTagInput>({ tagIds, newTags: [] });
 
   const payload = JSON.stringify({
     workId: work.id,
     slug,
     title,
+    subtitle,
     synopsis,
     defaultLocale,
     locales,
-    coverMediaId,
-    variables,
+    coverMediaId: cover?.id ?? null,
+    coverFocus: cover ? coverFocus : null,
     tags,
   });
   const editingLocale = locales.includes(activeLocale) ? activeLocale : defaultLocale;
@@ -50,60 +58,61 @@ export function WorkSettingsForm({
     setLocales((current) => (current.includes(code) ? current.filter((locale) => locale !== code) : [...current, code]));
   }
 
-  function updateVariable(index: number, patch: Partial<VariableDefinition>) {
-    setVariables((current) =>
-      current.map((variable, position) => {
-        if (position !== index) return variable;
-        const next = { ...variable, ...patch };
-        if (patch.type && patch.type !== variable.type) {
-          next.initial = patch.type === "number" ? 0 : false;
-          // Limites e capacidade só valem para número.
-          if (patch.type === "boolean") {
-            delete next.min;
-            delete next.max;
-            delete next.maxVariable;
-            delete next.capacity;
-          }
-        }
-        return next;
-      }),
-    );
-  }
-
   return (
-    <form action={formAction} className="space-y-5 rounded-lg border border-border bg-card p-4">
+    <form action={formAction} className="space-y-8">
       <input type="hidden" name="payload" value={payload} />
 
-      <MediaPickerField
-        name="coverMediaId"
-        label="Capa"
-        initialMedia={
-          work.coverMediaId && coverUrl ? { id: work.coverMediaId, url: coverUrl, filename: "capa", contentType: "image/*" } : null
-        }
-        onSelect={(media) => setCoverMediaId(media?.id ?? null)}
-      />
+      <section className="grid gap-8 rounded-xl border border-border bg-card p-4 sm:p-6 md:grid-cols-[minmax(0,1fr)_14rem]">
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Identidade</h2>
+          <LocaleTabs locales={locales} active={editingLocale} defaultLocale={defaultLocale} onChange={setActiveLocale} />
+          <label className="block space-y-1 text-sm">
+            <span className="font-medium text-foreground">Título</span>
+            <Input
+              value={title[editingLocale] ?? ""}
+              onChange={(event) => setTitle({ ...title, [editingLocale]: event.target.value })}
+              maxLength={160}
+              className="font-display text-lg"
+            />
+          </label>
+          <label className="block space-y-1 text-sm">
+            <span className="font-medium text-foreground">Subtítulo</span>
+            <Input value={subtitle[editingLocale] ?? ""} onChange={(event) => setSubtitle({ ...subtitle, [editingLocale]: event.target.value })} maxLength={160} />
+          </label>
+          <label className="block space-y-1 text-sm">
+            <span className="font-medium text-foreground">Sinopse</span>
+            <Textarea
+              rows={6}
+              value={synopsis[editingLocale] ?? ""}
+              onChange={(event) => setSynopsis({ ...synopsis, [editingLocale]: event.target.value })}
+              maxLength={4000}
+            />
+            <span className="block text-right text-xs tabular-nums text-muted-foreground">{(synopsis[editingLocale] ?? "").length} / 4000</span>
+          </label>
+          <label className="block space-y-1 text-sm">
+            <span className="font-medium text-foreground">Endereço</span>
+            <Input value={slug} onChange={(event) => setSlug(event.target.value)} maxLength={80} required />
+            <span className="text-xs text-muted-foreground">/novels/{slug}</span>
+          </label>
+        </div>
+        <div className="space-y-2">
+          <span className="text-sm font-medium text-foreground">Capa</span>
+          <CoverField media={cover} focus={coverFocus} onMedia={setCover} onFocus={setCoverFocus} />
+        </div>
+      </section>
 
-      <label className="block space-y-1 text-sm">
-        <span className="font-medium text-foreground">Endereço</span>
-        <Input value={slug} onChange={(event) => setSlug(event.target.value)} maxLength={80} required />
-      </label>
-
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-foreground">Idiomas</legend>
+      <section className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Idiomas</h2>
         <div className="flex flex-wrap gap-2">
           {SUPPORTED_LOCALES.map((locale) => (
             <label key={locale.code} className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-sm">
-              <input
-                type="checkbox"
-                checked={locales.includes(locale.code)}
-                disabled={locale.code === defaultLocale}
-                onChange={() => toggleLocale(locale.code)}
-              />
+              <input type="checkbox" checked={locales.includes(locale.code)} disabled={locale.code === defaultLocale} onChange={() => toggleLocale(locale.code)} />
+              <span aria-hidden>{locale.flag}</span>
               {locale.label}
             </label>
           ))}
         </div>
-        <label className="block space-y-1 text-sm">
+        <label className="block max-w-xs space-y-1 text-sm">
           <span className="text-muted-foreground">Idioma principal</span>
           <select
             value={defaultLocale}
@@ -117,118 +126,18 @@ export function WorkSettingsForm({
             ))}
           </select>
         </label>
-      </fieldset>
+      </section>
 
-      <div className="space-y-3">
-        <LocaleTabs locales={locales} active={editingLocale} defaultLocale={defaultLocale} onChange={setActiveLocale} />
-        <label className="block space-y-1 text-sm">
-          <span className="font-medium text-foreground">Título</span>
-          <Input
-            value={title[editingLocale] ?? ""}
-            onChange={(event) => setTitle({ ...title, [editingLocale]: event.target.value })}
-            maxLength={160}
-          />
-        </label>
-        <label className="block space-y-1 text-sm">
-          <span className="font-medium text-foreground">Sinopse</span>
-          <Textarea
-            rows={4}
-            value={synopsis[editingLocale] ?? ""}
-            onChange={(event) => setSynopsis({ ...synopsis, [editingLocale]: event.target.value })}
-            maxLength={4000}
-          />
-        </label>
-      </div>
+      <section className="space-y-4 rounded-xl border border-border bg-card p-4 sm:p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Tags</h2>
+        <TagPicker catalog={tagCatalog} value={tags} onChange={setTags} locale={defaultLocale} />
+      </section>
 
-      <WorkTagsFields tags={tags} multilingual={locales.length > 1} onChange={setTags} />
-
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium text-foreground">Variáveis</legend>
-        <p className="text-xs text-muted-foreground">
-          Guardam o estado da história (ex: hp, club_fighting, tem_clava). Escolhas podem exigir ou alterar esses valores. Em
-          &quot;Mostrar ao leitor&quot;, a variável entra no painel do personagem: status (com barra quando tem máximo),
-          habilidade ou item do inventário.
-        </p>
-        {variables.map((variable, index) => (
-          <div key={index} className="space-y-2 rounded-md border border-border p-2">
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                aria-label="Chave"
-                placeholder="chave"
-                value={variable.key}
-                onChange={(event) => updateVariable(index, { key: event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_") })}
-                maxLength={40}
-              />
-              <Input
-                aria-label="Nome"
-                placeholder="Nome"
-                value={variable.label}
-                onChange={(event) => updateVariable(index, { label: event.target.value })}
-                maxLength={80}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                aria-label="Tipo"
-                value={variable.type}
-                onChange={(event) => updateVariable(index, { type: event.target.value as VariableDefinition["type"] })}
-                className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground"
-              >
-                <option value="number">Número</option>
-                <option value="boolean">Sim/não</option>
-              </select>
-              <span className="text-xs text-muted-foreground">começa em</span>
-              {variable.type === "number" ? (
-                <Input
-                  aria-label="Valor inicial"
-                  type="number"
-                  value={String(variable.initial)}
-                  onChange={(event) => updateVariable(index, { initial: Number(event.target.value) || 0 })}
-                  className="w-20"
-                />
-              ) : (
-                <select
-                  aria-label="Valor inicial"
-                  value={variable.initial ? "true" : "false"}
-                  onChange={(event) => updateVariable(index, { initial: event.target.value === "true" })}
-                  className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground"
-                >
-                  <option value="false">Não</option>
-                  <option value="true">Sim</option>
-                </select>
-              )}
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="ml-auto"
-                aria-label="Remover variável"
-                onClick={() => setVariables(variables.filter((_, position) => position !== index))}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-            <VariableDisplayFields
-              variable={variable}
-              others={variables.filter((other, position) => position !== index && other.type === "number" && other.key)}
-              onChange={(patch) => updateVariable(index, patch)}
-            />
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setVariables([...variables, { key: "", label: "", type: "number", initial: 0 }])}
-        >
-          <Plus className="size-4" />
-          Variável
+      <div className="sticky bottom-0 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border">
+        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+          Salvar configurações
         </Button>
-      </fieldset>
-
-      <Button type="submit" disabled={pending} className="w-full">
-        Salvar obra
-      </Button>
+      </div>
     </form>
   );
 }

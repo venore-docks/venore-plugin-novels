@@ -13,12 +13,15 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type {
+  AccentColor,
+  CatalogBadges,
   ChoiceCondition,
+  CoverFocus,
   LocalizedText,
   ReaderState,
+  SceneBlock,
   VariableDefinition,
   VariableEffect,
-  WorkTags,
 } from "../../contracts/types";
 
 export const novelsSchema = pgSchema("novels");
@@ -34,18 +37,19 @@ export const works = novelsSchema.table(
       .$defaultFn(() => crypto.randomUUID()),
     slug: text("slug").notNull(),
     title: jsonb("title").$type<LocalizedText>().notNull(),
+    subtitle: jsonb("subtitle").$type<LocalizedText>().notNull().default({}),
     synopsis: jsonb("synopsis").$type<LocalizedText>().notNull().default({}),
     defaultLocale: text("default_locale").notNull().default("pt-BR"),
     locales: text("locales").array().notNull().default(sql`ARRAY['pt-BR']::text[]`),
     coverMediaId: text("cover_media_id"),
+    // Ponto da capa que fica no recorte 2:3; null = centro.
+    coverFocus: jsonb("cover_focus").$type<CoverFocus>(),
     variables: jsonb("variables").$type<VariableDefinition[]>().notNull().default([]),
     status: text("status").notNull().default("draft"),
     authorUserId: text("author_user_id"),
     // Leitura em voz alta: marcado pelas ações do bloco "Áudio" da obra
     // (features/speech/manage-work-speech) — o autor gerou ou apagou o áudio.
     speechEnabled: boolean("speech_enabled").notNull().default(false),
-    // Tags informativas e de produção (shared/tags.ts). Obra antiga fica com {} = sem tags.
-    tags: jsonb("tags").$type<Partial<WorkTags>>().notNull().default({}),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -78,8 +82,8 @@ export const chapters = novelsSchema.table(
   (table) => [index("chapters_work_idx").on(table.workId, table.position)],
 );
 
-// Uma cena = uma lâmina (imagem) + parágrafos de texto estilo livro. graphX/graphY são só a
-// posição do nó no editor em grafo, sem efeito na leitura.
+// Uma cena = sequência de blocos (texto, imagens, legenda, fala...; shared/scene-blocks.ts).
+// graphX/graphY são só a posição do nó no editor em grafo, sem efeito na leitura.
 export const scenes = novelsSchema.table(
   "scenes",
   {
@@ -91,8 +95,7 @@ export const scenes = novelsSchema.table(
       .notNull()
       .references(() => chapters.id, { onDelete: "cascade" }),
     label: text("label").notNull().default(""),
-    imageMediaId: text("image_media_id"),
-    body: jsonb("body").$type<LocalizedText>().notNull().default({}),
+    blocks: jsonb("blocks").$type<SceneBlock[]>().notNull().default([]),
     isEnding: boolean("is_ending").notNull().default(false),
     endingTitle: jsonb("ending_title").$type<LocalizedText>().notNull().default({}),
     effects: jsonb("effects").$type<VariableEffect[]>().notNull().default([]),
@@ -101,7 +104,7 @@ export const scenes = novelsSchema.table(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("scenes_chapter_idx").on(table.chapterId), index("scenes_image_idx").on(table.imageMediaId)],
+  (table) => [index("scenes_chapter_idx").on(table.chapterId)],
 );
 
 export const choices = novelsSchema.table(
@@ -134,4 +137,95 @@ export const readerProgress = novelsSchema.table(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.workId] })],
+);
+
+// ------------------------------------------------------------------ catálogo de tags (0.9.0)
+
+export const tagGroups = novelsSchema.table(
+  "tag_groups",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    key: text("key").notNull(),
+    name: jsonb("name").$type<LocalizedText>().notNull(),
+    category: text("category").notNull().default("info"),
+    selection: text("selection").notNull().default("multiple"),
+    required: boolean("required").notNull().default(false),
+    allowCustom: boolean("allow_custom").notNull().default(false),
+    showOnCard: boolean("show_on_card").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("tag_groups_key_unique").on(table.key),
+    check("tag_groups_category_check", sql`${table.category} in ('info', 'production')`),
+    check("tag_groups_selection_check", sql`${table.selection} in ('single', 'multiple')`),
+  ],
+);
+
+// slug único na instância inteira: é o endereço do filtro (/novels?tag=terror).
+export const tags = novelsSchema.table(
+  "tags",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => tagGroups.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    name: jsonb("name").$type<LocalizedText>().notNull(),
+    description: jsonb("description").$type<LocalizedText>().notNull().default({}),
+    position: integer("position").notNull().default(0),
+    custom: boolean("custom").notNull().default(false),
+    createdByUserId: text("created_by_user_id"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("tags_slug_unique").on(table.slug), index("tags_group_idx").on(table.groupId, table.position)],
+);
+
+export const workTags = novelsSchema.table(
+  "work_tags",
+  {
+    workId: text("work_id")
+      .notNull()
+      .references(() => works.id, { onDelete: "cascade" }),
+    tagId: text("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.workId, table.tagId] }), index("work_tags_tag_idx").on(table.tagId)],
+);
+
+// Configuração do catálogo que não é tag (hoje: textos dos selos calculados).
+export const catalogSettings = novelsSchema.table("catalog_settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<CatalogBadges | Record<string, unknown>>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ------------------------------------------------------------------ elenco (0.9.0)
+
+export const castMembers = novelsSchema.table(
+  "cast_members",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workId: text("work_id")
+      .notNull()
+      .references(() => works.id, { onDelete: "cascade" }),
+    name: jsonb("name").$type<LocalizedText>().notNull(),
+    color: text("color").$type<AccentColor>().notNull().default("primary"),
+    portraitMediaId: text("portrait_media_id"),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("cast_members_work_idx").on(table.workId, table.position)],
 );

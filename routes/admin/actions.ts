@@ -6,22 +6,55 @@ import { isPluginActive } from "@venore/plugin-sdk";
 import {
   createChapter,
   createWork,
+  deleteCastMember,
   deleteChapter,
+  deleteTag,
+  deleteTagGroup,
   deleteWorkSpeech,
   generateWorkSpeech,
   deleteWork,
+  installTagStarterPack,
   moveChapter,
+  promoteTag,
   publishWork,
+  reorderCast,
+  reorderTagGroups,
+  reorderTags,
+  saveCastMember,
   saveChapterGraph,
+  saveTag,
+  saveTagGroup,
+  setTagArchived,
+  setTagGroupArchived,
   unpublishWork,
   updateChapter,
+  updateTagBadges,
   updateWork,
+  updateWorkVariables,
   type StoryIssue,
 } from "../../index";
-import type { LocalizedText, VariableDefinition, WorkTags } from "../../contracts/types";
-import { ADMIN_BASE_PATH, adminChapterPath, adminWorkPath, PLUGIN_KEY, PUBLIC_BASE_PATH } from "../../shared/constants";
+import type {
+  AccentColor,
+  CatalogBadges,
+  CoverFocus,
+  LocalizedText,
+  TagCategory,
+  TagSelection,
+  VariableDefinition,
+  WorkTagInput,
+} from "../../contracts/types";
+import {
+  ADMIN_BASE_PATH,
+  adminChapterPath,
+  adminTagsPath,
+  adminWorkPath,
+  PLUGIN_KEY,
+  PUBLIC_BASE_PATH,
+} from "../../shared/constants";
 
 export type AdminActionState = { error: string | null };
+// Resultado das actions chamadas direto pelo client (sem <form>).
+export type DirectActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
 const PLUGIN_DISABLED_ERROR = "O plugin Graphic Novels está desabilitado.";
 
@@ -39,31 +72,77 @@ function revalidateWork(workId: string) {
   revalidatePath(PUBLIC_BASE_PATH, "layout");
 }
 
-export async function createWorkAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
-  if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
+function toDirect(result: { success: true; data: unknown } | { success: false; error: { message: string } }): DirectActionResult {
+  if (!result.success) return { ok: false, error: result.error.message };
+  const data = result.data as { id?: unknown } | null;
+  return { ok: true, id: data && typeof data.id === "string" ? data.id : undefined };
+}
+
+const localized = (value: unknown): LocalizedText =>
+  value && typeof value === "object"
+    ? Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, String(entry ?? "")]))
+    : {};
+const tagInput = (value: unknown): WorkTagInput | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const raw = value as { tagIds?: unknown; newTags?: unknown };
+  return {
+    tagIds: Array.isArray(raw.tagIds) ? raw.tagIds.map(String).slice(0, 200) : [],
+    newTags: Array.isArray(raw.newTags)
+      ? raw.newTags.slice(0, 50).map((tag) => ({ groupId: String((tag as { groupId?: unknown }).groupId ?? ""), name: String((tag as { name?: unknown }).name ?? "") }))
+      : [],
+  };
+};
+const focus = (value: unknown): CoverFocus | null =>
+  value && typeof value === "object" ? { x: Number((value as CoverFocus).x), y: Number((value as CoverFocus).y) } : null;
+
+// ------------------------------------------------------------------ obra
+
+export type CreateWorkPayload = {
+  title: string;
+  subtitle: string;
+  synopsis: string;
+  slug: string;
+  defaultLocale: string;
+  locales: string[];
+  coverMediaId: string | null;
+  coverFocus: CoverFocus | null;
+  tags: WorkTagInput;
+};
+
+// Assistente de criação: cria e leva direto ao editor do primeiro capítulo.
+export async function createWorkAction(payload: CreateWorkPayload): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  if (!payload || typeof payload !== "object") return { ok: false, error: "Dados do formulário inválidos." };
   const result = await createWork({
-    title: text(formData, "title"),
-    slug: text(formData, "slug"),
-    defaultLocale: text(formData, "defaultLocale") || "pt-BR",
+    title: String(payload.title ?? ""),
+    subtitle: String(payload.subtitle ?? ""),
+    synopsis: String(payload.synopsis ?? ""),
+    slug: String(payload.slug ?? ""),
+    defaultLocale: String(payload.defaultLocale ?? "pt-BR"),
+    locales: Array.isArray(payload.locales) ? payload.locales.map(String) : undefined,
+    coverMediaId: payload.coverMediaId ? String(payload.coverMediaId) : null,
+    coverFocus: focus(payload.coverFocus),
+    tags: tagInput(payload.tags),
   });
-  if (!result.success) return { error: result.error.message };
+  if (!result.success) return { ok: false, error: result.error.message };
   revalidatePath(ADMIN_BASE_PATH);
-  redirect(adminWorkPath(result.data.id));
+  redirect(adminChapterPath(result.data.id, result.data.firstChapterId));
 }
 
 export type UpdateWorkPayload = {
   workId: string;
   slug: string;
   title: LocalizedText;
+  subtitle: LocalizedText;
   synopsis: LocalizedText;
   defaultLocale: string;
   locales: string[];
   coverMediaId: string | null;
-  variables: VariableDefinition[];
-  tags: WorkTags;
+  coverFocus: CoverFocus | null;
+  tags: WorkTagInput;
 };
 
-// Formulário de obra manda JSON (traduções e variáveis são listas dinâmicas no client).
+// Aba Configurações: identidade, idiomas e tags (JSON: traduções e tags são listas dinâmicas no client).
 export async function updateWorkAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
   if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
   let payload: UpdateWorkPayload;
@@ -78,13 +157,33 @@ export async function updateWorkAction(_prev: AdminActionState, formData: FormDa
   const result = await updateWork({
     workId: payload.workId,
     slug: String(payload.slug ?? ""),
-    title: payload.title ?? {},
-    synopsis: payload.synopsis ?? {},
+    title: localized(payload.title),
+    subtitle: localized(payload.subtitle),
+    synopsis: localized(payload.synopsis),
     defaultLocale: String(payload.defaultLocale ?? ""),
     locales: Array.isArray(payload.locales) ? payload.locales.map(String) : [],
     coverMediaId: payload.coverMediaId ? String(payload.coverMediaId) : null,
+    coverFocus: focus(payload.coverFocus),
+    tags: tagInput(payload.tags),
+  });
+  if (!result.success) return { error: result.error.message };
+  revalidateWork(payload.workId);
+  return { error: null };
+}
+
+// Aba Sistema: variáveis da obra.
+export async function updateWorkVariablesAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
+  let payload: { workId: string; variables: VariableDefinition[] };
+  try {
+    payload = JSON.parse(text(formData, "payload"));
+  } catch {
+    return { error: "Dados do formulário inválidos." };
+  }
+  if (!payload || typeof payload.workId !== "string") return { error: "Dados do formulário inválidos." };
+  const result = await updateWorkVariables({
+    workId: payload.workId,
     variables: Array.isArray(payload.variables) ? payload.variables : [],
-    tags: payload.tags,
   });
   if (!result.success) return { error: result.error.message };
   revalidateWork(payload.workId);
@@ -107,6 +206,8 @@ export async function publishWorkAction(_prev: AdminActionState, formData: FormD
   revalidateWork(workId);
   return { error: null };
 }
+
+// ------------------------------------------------------------------ capítulos e grafo
 
 export async function createChapterAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
   if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
@@ -161,7 +262,9 @@ export async function saveChapterGraphAction(workId: string, chapterId: string, 
   return { ok: true, savedAt: result.data.savedAt.toISOString(), issues: result.data.issues };
 }
 
-// Bloco "Áudio" da obra: gerar o que falta ou mudou ("missing"), refazer tudo ("all") ou apagar.
+// ------------------------------------------------------------------ áudio
+
+// Aba "Áudio" da obra: gerar o que falta ou mudou ("missing"), refazer tudo ("all") ou apagar.
 export async function generateWorkSpeechAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
   if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
   const workId = text(formData, "workId");
@@ -178,4 +281,157 @@ export async function deleteWorkSpeechAction(_prev: AdminActionState, formData: 
   if (!result.success) return { error: result.error.message };
   revalidateWork(workId);
   return { error: null };
+}
+
+// ------------------------------------------------------------------ elenco
+
+export async function saveCastMemberAction(input: {
+  workId: string;
+  id: string | null;
+  name: LocalizedText;
+  color: AccentColor;
+  portraitMediaId: string | null;
+}): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const workId = String(input?.workId ?? "");
+  const result = await saveCastMember({
+    workId,
+    id: input?.id ? String(input.id) : null,
+    name: localized(input?.name),
+    color: String(input?.color ?? "primary") as AccentColor,
+    portraitMediaId: input?.portraitMediaId ? String(input.portraitMediaId) : null,
+  });
+  if (result.success) revalidateWork(workId);
+  return toDirect(result);
+}
+
+export async function deleteCastMemberAction(workId: string, id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await deleteCastMember({ workId: String(workId), id: String(id) });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function reorderCastAction(workId: string, orderedIds: string[]): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await reorderCast({ workId: String(workId), orderedIds: Array.isArray(orderedIds) ? orderedIds.map(String) : [] });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+// ------------------------------------------------------------------ catálogo de tags
+
+function revalidateTags() {
+  revalidatePath(adminTagsPath);
+  revalidatePath(ADMIN_BASE_PATH, "layout");
+  revalidatePath(PUBLIC_BASE_PATH, "layout");
+}
+
+export async function saveTagGroupAction(input: {
+  id: string | null;
+  key: string;
+  name: LocalizedText;
+  category: TagCategory;
+  selection: TagSelection;
+  required: boolean;
+  allowCustom: boolean;
+  showOnCard: boolean;
+}): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await saveTagGroup({
+    id: input?.id ? String(input.id) : null,
+    key: String(input?.key ?? ""),
+    name: localized(input?.name),
+    category: input?.category === "production" ? "production" : "info",
+    selection: input?.selection === "single" ? "single" : "multiple",
+    required: Boolean(input?.required),
+    allowCustom: Boolean(input?.allowCustom),
+    showOnCard: Boolean(input?.showOnCard),
+  });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function setTagGroupArchivedAction(id: string, archived: boolean): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await setTagGroupArchived({ id: String(id), archived: Boolean(archived) });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function deleteTagGroupAction(id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await deleteTagGroup({ id: String(id) });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function reorderTagGroupsAction(orderedIds: string[]): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await reorderTagGroups({ orderedIds: Array.isArray(orderedIds) ? orderedIds.map(String) : [] });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function saveTagAction(input: {
+  id: string | null;
+  groupId: string;
+  slug: string;
+  name: LocalizedText;
+  description: LocalizedText;
+}): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await saveTag({
+    id: input?.id ? String(input.id) : null,
+    groupId: String(input?.groupId ?? ""),
+    slug: String(input?.slug ?? ""),
+    name: localized(input?.name),
+    description: localized(input?.description),
+  });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function setTagArchivedAction(id: string, archived: boolean): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await setTagArchived({ id: String(id), archived: Boolean(archived) });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function deleteTagAction(id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await deleteTag({ id: String(id) });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function promoteTagAction(id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await promoteTag({ id: String(id) });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function reorderTagsAction(groupId: string, orderedIds: string[]): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await reorderTags({ groupId: String(groupId), orderedIds: Array.isArray(orderedIds) ? orderedIds.map(String) : [] });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function updateTagBadgesAction(badges: CatalogBadges): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await updateTagBadges({
+    badges: { interactive: localized(badges?.interactive), textOnly: localized(badges?.textOnly), aiAudio: localized(badges?.aiAudio) },
+  });
+  if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+export async function installTagStarterPackAction(): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await installTagStarterPack();
+  if (result.success) revalidateTags();
+  return toDirect(result);
 }

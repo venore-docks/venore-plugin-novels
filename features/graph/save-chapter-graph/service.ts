@@ -1,6 +1,7 @@
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
 import type { ChapterGraph } from "../../../contracts/types";
 import { normalizeLocalizedText } from "../../../shared/localized-text";
+import { normalizeBlocks } from "../../../shared/scene-blocks";
 import { blockingIssueForPublished } from "../../../shared/published-guard";
 import { validateStory } from "../../../shared/story-validation";
 import {
@@ -18,7 +19,7 @@ function normalizeGraph(graph: ChapterGraph, locales: string[]): ChapterGraph {
     scenes: graph.scenes.map((scene) => ({
       ...scene,
       label: scene.label.trim(),
-      body: normalizeLocalizedText(scene.body, locales),
+      blocks: normalizeBlocks(scene.blocks, locales),
       endingTitle: scene.isEnding ? normalizeLocalizedText(scene.endingTitle, locales) : {},
     })),
     choices: graph.choices.map((choice) => ({ ...choice, label: normalizeLocalizedText(choice.label, locales) })),

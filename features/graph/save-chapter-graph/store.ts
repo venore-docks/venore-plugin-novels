@@ -40,8 +40,7 @@ export async function replaceChapterGraph(workId: string, chapterId: string, gra
     for (const scene of graph.scenes) {
       const values = {
         label: scene.label,
-        imageMediaId: scene.imageMediaId,
-        body: scene.body,
+        blocks: scene.blocks,
         isEnding: scene.isEnding,
         endingTitle: scene.endingTitle,
         effects: scene.effects,

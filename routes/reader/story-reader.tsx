@@ -5,7 +5,7 @@ import { Pause, Play, RotateCcw, Undo2, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@venore/plugin-sdk/ui";
 import type { ReaderState, Story, StoryScene } from "../../contracts/types";
 import { WorkCover } from "../../components/work-cover";
-import { pickText, splitParagraphs } from "../../shared/localized-text";
+import { pickText } from "../../shared/localized-text";
 import { localeLabel } from "../../shared/locales";
 import {
   choose,
@@ -18,7 +18,9 @@ import {
   undoLastChoice,
   varsAlongPath,
 } from "../../shared/story-engine";
-import { describeTags } from "../../shared/tags";
+import { isInteractive } from "../../shared/build-story";
+import { computedBadges } from "../../shared/tag-catalog";
+import { SceneBlocksView } from "../../components/scene-blocks-view";
 import { characterSheet, describeChanges, hasCharacterSheet } from "../../shared/variables";
 import { WorkTagGroups } from "../../components/work-tags";
 import { ChangeChips, CharacterDialog, ReaderHud } from "./character-panel";
@@ -196,25 +198,22 @@ export function StoryReader({
   const { work } = story;
   const t = (text: Record<string, string>) => pickText(text, locale, work.defaultLocale);
   const endingsTotal = story.scenes.filter((scene) => scene.isEnding).length;
-  // Interativa = alguma cena com mais de uma escolha (calculado, nunca escolhido pelo autor).
-  const choicesPerScene = new Map<string, number>();
-  for (const choice of story.choices) choicesPerScene.set(choice.sceneId, (choicesPerScene.get(choice.sceneId) ?? 0) + 1);
-  const tagGroups = describeTags(work.tags, {
-    interactive: [...choicesPerScene.values()].some((count) => count > 1),
-    hasAudio,
-    multilingual: work.locales.length > 1,
-  });
+  // Selos calculados (interativa ou só texto, áudio gerado): o autor nunca escolhe.
+  const badges = computedBadges(story.badges, { interactive: isInteractive(story.choices), hasAudio });
 
   if (!state) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-8">
         {audioElement}
         <div className="grid gap-6 sm:grid-cols-[12rem_minmax(0,1fr)]">
-          <WorkCover url={work.coverUrl} title={t(work.title)} className="mx-auto max-w-48 sm:max-w-none" />
+          <WorkCover url={work.coverUrl} focus={work.coverFocus} title={t(work.title)} className="mx-auto max-w-48 sm:max-w-none" />
           <div className="space-y-4">
-            <h1 className="text-2xl font-semibold text-foreground">{t(work.title)}</h1>
+            <div className="space-y-1">
+              <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">{t(work.title)}</h1>
+              {t(work.subtitle) && <p className="text-lg text-muted-foreground">{t(work.subtitle)}</p>}
+            </div>
             {t(work.synopsis) && <p className="whitespace-pre-line text-muted-foreground">{t(work.synopsis)}</p>}
-            <WorkTagGroups groups={[...tagGroups.info, ...tagGroups.production]} />
+            <WorkTagGroups groups={work.tags} badges={badges} locale={locale} fallbackLocale={work.defaultLocale} />
             <LocalePicker locales={work.locales} value={locale} onChange={changeLocale} />
             {hasAudio && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -329,10 +328,6 @@ export function StoryReader({
               </h2>
             )}
             <article ref={isLast ? lastSceneRef : undefined} className="scroll-mt-24 space-y-5 pb-8">
-              {scene.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={scene.imageUrl} alt="" loading={position < 2 ? "eager" : "lazy"} className="block w-full" />
-              )}
               {audioFor(scene.id) && (
                 <div className="px-4">
                   <Button
@@ -346,13 +341,14 @@ export function StoryReader({
                   </Button>
                 </div>
               )}
-              <div className="space-y-4 px-4 font-serif text-lg leading-relaxed text-foreground">
-                {splitParagraphs(t(scene.body)).map((paragraph, paragraphIndex) => (
-                  <p key={paragraphIndex} className="whitespace-pre-line">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
+              <SceneBlocksView
+                blocks={scene.blocks}
+                locale={locale}
+                fallbackLocale={work.defaultLocale}
+                media={story.media}
+                cast={story.cast}
+                eager={position < 2}
+              />
               <ChangeChips changes={changesAt(position)} />
             </article>
           </Fragment>

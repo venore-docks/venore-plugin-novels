@@ -2,10 +2,12 @@ import type {
   ChoiceCondition,
   ChoiceRecord,
   LocalizedText,
+  SceneBlock,
   VariableDefinition,
   VariableEffect,
 } from "../contracts/types";
-import { CONDITION_OPERATORS, EFFECT_OPERATIONS, VARIABLE_DISPLAYS } from "../contracts/types";
+import { CAPTION_MAX_CHARS, CONDITION_OPERATORS, EFFECT_OPERATIONS, VARIABLE_DISPLAYS } from "../contracts/types";
+import { BLOCK_LABELS, blockTextFields } from "./scene-blocks";
 import { derivedVariables } from "./variables";
 
 // Validação do grafo da obra. "error" bloqueia a publicação; "warning" só avisa (tradução
@@ -27,7 +29,7 @@ type ValidatableScene = {
   id: string;
   chapterId: string;
   label: string;
-  body: LocalizedText;
+  blocks: SceneBlock[];
   isEnding: boolean;
   endingTitle: LocalizedText;
   effects: VariableEffect[];
@@ -40,6 +42,8 @@ export type ValidatableStory = {
   chapters: ValidatableChapter[];
   scenes: ValidatableScene[];
   choices: ChoiceRecord[];
+  // Elenco da obra: a fala precisa apontar para alguém que existe. Ausente = não confere.
+  cast?: { id: string }[];
 };
 
 const VARIABLE_KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
@@ -155,6 +159,49 @@ function missingLocales(text: LocalizedText, locales: string[]): string[] {
   return locales.filter((locale) => !text[locale]?.trim());
 }
 
+// Blocos da cena (0.9.0): tradução de cada texto, legenda curta, imagem escolhida e fala com
+// alguém do elenco. Bloco vazio é aviso (rascunho), nunca erro.
+function checkBlocks(
+  blocks: SceneBlock[],
+  locales: string[],
+  cast: { id: string }[] | undefined,
+  ref: Partial<StoryIssue>,
+  where: string,
+): StoryIssue[] {
+  const issues: StoryIssue[] = [];
+  if (blocks.length === 0) issues.push(warning("empty_scene", `${where}: cena sem conteúdo.`, ref));
+  const castIds = cast ? new Set(cast.map((member) => member.id)) : null;
+  blocks.forEach((block, position) => {
+    const name = `${where}, bloco ${position + 1} (${BLOCK_LABELS[block.type]})`;
+    for (const field of blockTextFields(block)) {
+      const written = Object.values(field).some((value) => value.trim());
+      if (!written) {
+        issues.push(warning("empty_block", `${name}: sem texto.`, ref));
+        continue;
+      }
+      for (const locale of missingLocales(field, locales)) {
+        issues.push(warning("missing_translation", `${name}: texto sem tradução (${locale}).`, ref));
+      }
+    }
+    if (block.type === "caption" && Object.values(block.caption).some((value) => value.length > CAPTION_MAX_CHARS)) {
+      issues.push(error("caption_too_long", `${name}: a legenda passa de ${CAPTION_MAX_CHARS} caracteres; use texto abaixo da imagem.`, ref));
+    }
+    if ((block.type === "image" || block.type === "caption" || block.type === "backdrop") && !block.mediaId) {
+      issues.push(warning("empty_image", `${name}: sem imagem escolhida.`, ref));
+    }
+    if (block.type === "gallery" && block.images.length < 2) {
+      issues.push(warning("small_gallery", `${name}: a galeria precisa de pelo menos duas imagens.`, ref));
+    }
+    if (block.type === "speech") {
+      if (!block.castId) issues.push(warning("speech_without_cast", `${name}: escolha quem fala.`, ref));
+      else if (castIds && !castIds.has(block.castId)) {
+        issues.push(error("unknown_cast", `${name}: a fala é de alguém que saiu do elenco.`, ref));
+      }
+    }
+  });
+  return issues;
+}
+
 export function validateStory(story: ValidatableStory): StoryIssue[] {
   const issues: StoryIssue[] = [...validateVariableDefinitions(story.work.variables)];
   const variables = new Map(story.work.variables.map((variable) => [variable.key, variable]));
@@ -217,9 +264,7 @@ export function validateStory(story: ValidatableStory): StoryIssue[] {
       if (start && !reachable.has(scene.id)) {
         issues.push(warning("unreachable_scene", `${where}: nenhuma escolha leva até ela.`, ref));
       }
-      for (const locale of missingLocales(scene.body, locales)) {
-        issues.push(warning("missing_translation", `${where}: texto sem tradução (${locale}).`, ref));
-      }
+      issues.push(...checkBlocks(scene.blocks, locales, story.cast, ref, where));
       if (scene.isEnding && sceneChoices.length > 0) {
         issues.push(error("ending_with_choices", `${where}: é um final, mas tem escolhas saindo dela.`, ref));
       }

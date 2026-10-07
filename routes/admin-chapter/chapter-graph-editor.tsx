@@ -21,9 +21,11 @@ import type { ChapterGraph, ChapterGraphChoice, ChapterGraphScene } from "../../
 import type { ChapterGraphEditorView } from "../../features/graph/get-chapter-graph/types";
 import { adminWorkPath } from "../../shared/constants";
 import { pickText } from "../../shared/localized-text";
+import { firstImageId, sceneExcerpt } from "../../shared/scene-blocks";
 import { validateStory, type StoryIssue } from "../../shared/story-validation";
 import { saveChapterGraphAction } from "../admin/actions";
 import { ChoiceInspector } from "./choice-inspector";
+import { SceneEditor } from "./scene-editor";
 import { SceneInspector } from "./scene-inspector";
 import { SceneNode, type SceneFlowNode } from "./scene-node";
 
@@ -71,6 +73,8 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
   const [startSceneId, setStartSceneId] = useState<string | null>(view.graph.startSceneId);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>(view.imageUrls);
   const [selection, setSelection] = useState<Selection>(null);
+  // Cena aberta no editor em tela cheia (texto e blocos).
+  const [editingSceneId, setEditingSceneId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, startSaving] = useTransition();
 
@@ -85,8 +89,9 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
       chapters,
       scenes: scenes.map((scene) => ({ ...scene, chapterId: chapter.id })),
       choices,
+      cast: view.cast,
     }).filter((issue) => issue.chapterId === chapter.id);
-  }, [scenes, choices, startSceneId, chapter, work, view.chapterNumber, view.chapterCount]);
+  }, [scenes, choices, startSceneId, chapter, work, view.chapterNumber, view.chapterCount, view.cast]);
 
   const errorSceneIds = useMemo(
     () => new Set(issues.filter((issue) => issue.severity === "error" && issue.sceneId).map((issue) => issue.sceneId!)),
@@ -102,11 +107,15 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
         selected: selection?.kind === "scene" && selection.id === scene.id,
         data: {
           label: scene.label,
-          excerpt: pickText(scene.body, locale, locale).slice(0, 120),
-          imageUrl: scene.imageMediaId ? (imageUrls[scene.imageMediaId] ?? null) : null,
+          excerpt: sceneExcerpt(scene.blocks, locale, locale),
+          imageUrl: (() => {
+            const imageId = firstImageId(scene.blocks);
+            return imageId ? (imageUrls[imageId] ?? null) : null;
+          })(),
           isStart: scene.id === startSceneId,
           isEnding: scene.isEnding,
           hasError: errorSceneIds.has(scene.id),
+          onOpen: () => setEditingSceneId(scene.id),
         },
       })),
     [scenes, selection, imageUrls, startSceneId, errorSceneIds, locale],
@@ -222,8 +231,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
     const scene: ChapterGraphScene = {
       id,
       label: `Cena ${scenes.length + 1}`,
-      imageMediaId: null,
-      body: {},
+      blocks: [{ id: newId(), type: "text", text: {} }],
       isEnding: false,
       endingTitle: {},
       effects: [],
@@ -279,6 +287,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
 
   const selectedScene = selection?.kind === "scene" ? scenes.find((scene) => scene.id === selection.id) : undefined;
   const selectedChoice = selection?.kind === "choice" ? choices.find((choice) => choice.id === selection.id) : undefined;
+  const editingScene = editingSceneId ? scenes.find((scene) => scene.id === editingSceneId) : undefined;
   const chapterTitle = pickText(chapter.title, locale, locale);
 
   return (
@@ -306,8 +315,8 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Arraste da bolinha de baixo de uma cena até outra para criar uma escolha. Cena sem escolhas e sem ser final
-        leva ao próximo capítulo. Selecione e aperte Delete para apagar.
+        Arraste da bolinha de baixo de uma cena até outra para criar uma escolha. Clique duas vezes numa cena para escrever.
+        Cena sem escolhas e sem ser final leva ao próximo capítulo. Selecione e aperte Delete para apagar.
       </p>
 
       <div className="flex flex-col gap-4 lg:flex-row">
@@ -323,6 +332,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onPaneClick={() => setSelection(null)}
+            zoomOnDoubleClick={false}
             fitView
             minZoom={0.2}
             deleteKeyCode={["Delete", "Backspace"]}
@@ -339,13 +349,10 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
               scene={selectedScene}
               work={work}
               isStart={selectedScene.id === startSceneId}
-              imageUrl={selectedScene.imageMediaId ? (imageUrls[selectedScene.imageMediaId] ?? null) : null}
+              media={imageUrls}
               outgoing={choices.filter((choice) => choice.sceneId === selectedScene.id).sort((a, b) => a.position - b.position)}
               onChange={(patch) => updateScene(selectedScene.id, patch)}
-              onImage={(media) => {
-                if (media) setImageUrls((current) => ({ ...current, [media.id]: media.url }));
-                updateScene(selectedScene.id, { imageMediaId: media?.id ?? null });
-              }}
+              onOpenEditor={() => setEditingSceneId(selectedScene.id)}
               onMakeStart={() => {
                 setStartSceneId(selectedScene.id);
                 markDirty();
@@ -378,6 +385,34 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
           <IssuesPanel issues={issues} onSelect={setSelection} />
         </aside>
       </div>
+
+      {editingScene && (
+        <SceneEditor
+          key={editingScene.id}
+          scene={editingScene}
+          work={work}
+          cast={view.cast}
+          media={imageUrls}
+          isStart={editingScene.id === startSceneId}
+          outgoing={choices.filter((choice) => choice.sceneId === editingScene.id).sort((a, b) => a.position - b.position)}
+          scenes={scenes}
+          onChange={(patch) => updateScene(editingScene.id, patch)}
+          onMedia={(media) => setImageUrls((current) => ({ ...current, [media.id]: media.url }))}
+          onMakeStart={() => {
+            setStartSceneId(editingScene.id);
+            markDirty();
+          }}
+          onSelectScene={(id) => {
+            setEditingSceneId(id);
+            setSelection({ kind: "scene", id });
+          }}
+          onSelectChoice={(id) => {
+            setEditingSceneId(null);
+            setSelection({ kind: "choice", id });
+          }}
+          onClose={() => setEditingSceneId(null)}
+        />
+      )}
     </div>
   );
 }

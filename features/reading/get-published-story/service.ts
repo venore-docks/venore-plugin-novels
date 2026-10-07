@@ -2,7 +2,8 @@ import { getSpeechAudio } from "@venore/plugin-sdk/speech";
 import { buildStory, collectMediaIds } from "../../../shared/build-story";
 import { resolveMediaUrls } from "../../../shared/resolve-media-urls";
 import { indexSceneAudio, workSpeechScope } from "../../../shared/speech";
-import { findStoryRecords, findWorkBySlug } from "./store";
+import { describeWorkTags } from "../../../shared/tag-catalog";
+import { findStoryRecords, findTagCatalog, findWorkBySlug, findWorkTagIds } from "./store";
 import type { GetPublishedStoryInput, GetPublishedStoryResult } from "./types";
 
 // A obra inteira vai pro client de uma vez (o motor roda no navegador). Obra com escolhas
@@ -14,9 +15,17 @@ export async function getPublishedStory(input: GetPublishedStoryInput): Promise<
     return { success: false, error: { code: "novels.work_not_found", message: "Obra não encontrada." } };
   }
   const scope = workSpeechScope(work.id);
-  const [records, speech] = await Promise.all([findStoryRecords(work), getSpeechAudio({ scopes: [scope] })]);
-  const urls = await resolveMediaUrls(collectMediaIds(records));
+  const [records, speech, catalog, tagIds] = await Promise.all([
+    findStoryRecords(work),
+    getSpeechAudio({ scopes: [scope] }),
+    findTagCatalog(),
+    findWorkTagIds(work.id),
+  ]);
+  const media = await resolveMediaUrls(collectMediaIds(records));
   // Áudio é acessório: sem ele (falha de leitura), a obra abre normal, só sem botão de ouvir.
   const audio = speech.success ? indexSceneAudio(speech.data[scope] ?? []) : {};
-  return { success: true, data: buildStory(records, urls, audio) };
+  return {
+    success: true,
+    data: buildStory(records, { media, audio, tags: describeWorkTags(catalog, tagIds), badges: catalog.badges }),
+  };
 }

@@ -1,22 +1,22 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@venore/plugin-sdk";
-import type { ChapterRecord, ChoiceRecord, SceneRecord, WorkRecord } from "../../contracts/types";
-import { chapters, choices, scenes, works } from "../schema";
-import { normalizeTags } from "../../shared/tags";
+import type { CastMemberRecord, ChapterRecord, ChoiceRecord, SceneRecord, WorkRecord } from "../../contracts/types";
+import { castMembers, chapters, choices, scenes, works } from "../schema";
 
 // Leituras compartilhadas pelos store.ts que precisam da obra inteira (validação, publicação,
 // leitor). Cada store.ts continua sendo o único ponto de acesso do seu caso de uso; este módulo
-// só evita repetir as mesmas quatro queries em cada um.
+// só evita repetir as mesmas queries em cada um.
 
 export type WorkStoryRecords = {
   work: WorkRecord;
   chapters: ChapterRecord[];
   scenes: SceneRecord[];
   choices: ChoiceRecord[];
+  cast: CastMemberRecord[];
 };
 
 export function toWorkRecord(row: typeof works.$inferSelect): WorkRecord {
-  return { ...row, status: row.status as WorkRecord["status"], tags: normalizeTags(row.tags) };
+  return { ...row, status: row.status as WorkRecord["status"], coverFocus: row.coverFocus ?? null };
 }
 
 export async function findWorkRowById(workId: string): Promise<WorkRecord | null> {
@@ -29,8 +29,22 @@ export async function findWorkRowBySlug(slug: string): Promise<WorkRecord | null
   return row ? toWorkRecord(row) : null;
 }
 
+export async function findCastRows(workId: string): Promise<CastMemberRecord[]> {
+  return db.select({
+    id: castMembers.id,
+    workId: castMembers.workId,
+    name: castMembers.name,
+    color: castMembers.color,
+    portraitMediaId: castMembers.portraitMediaId,
+    position: castMembers.position,
+  })
+    .from(castMembers)
+    .where(eq(castMembers.workId, workId))
+    .orderBy(asc(castMembers.position), asc(castMembers.createdAt));
+}
+
 export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecords> {
-  const [chapterRows, sceneRows, choiceRows] = await Promise.all([
+  const [chapterRows, sceneRows, choiceRows, cast] = await Promise.all([
     db.select().from(chapters).where(eq(chapters.workId, work.id)).orderBy(asc(chapters.position)),
     db.select().from(scenes).where(eq(scenes.workId, work.id)),
     db
@@ -47,6 +61,7 @@ export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecor
       .innerJoin(scenes, eq(scenes.id, choices.sceneId))
       .where(eq(scenes.workId, work.id))
       .orderBy(asc(choices.position)),
+    findCastRows(work.id),
   ]);
   return {
     work,
@@ -56,8 +71,7 @@ export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecor
       workId: row.workId,
       chapterId: row.chapterId,
       label: row.label,
-      imageMediaId: row.imageMediaId,
-      body: row.body,
+      blocks: row.blocks,
       isEnding: row.isEnding,
       endingTitle: row.endingTitle,
       effects: row.effects,
@@ -65,6 +79,7 @@ export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecor
       graphY: row.graphY,
     })),
     choices: choiceRows,
+    cast,
   };
 }
 

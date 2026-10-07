@@ -22,6 +22,20 @@
       "when": 1791335360056,
       "tag": "0002_work_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791401530243,
+      "tag": "0003_tag_catalog_blocks_cast",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791401535027,
+      "tag": "0004_drop_legacy_scene_body",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import { getSpeechState, syncSpeechAudio } from "@venore/plugin-sdk/speech";
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
-import { adminWorkPath } from "../../../shared/constants";
+import { adminWorkTabPath } from "../../../shared/constants";
 import { pickText } from "../../../shared/localized-text";
 import { speechItemsForWork, workSpeechScope } from "../../../shared/speech";
 import { findStoryRecords, findWorkById, setWorkSpeechEnabled } from "./store";
@@ -24,7 +24,8 @@ export async function generateWorkSpeech(command: GenerateWorkSpeechCommand): Pr
 
   const work = await findWorkById(command.workId);
   if (!work) return fail("novels.work_not_found", "Obra não encontrada.");
-  const items = speechItemsForWork(work, (await findStoryRecords(work)).scenes);
+  const records = await findStoryRecords(work);
+  const items = speechItemsForWork(work, records.scenes, records.cast);
   if (items.length === 0) return fail("novels.speech_no_text", "Nenhuma cena com texto para gerar áudio.");
 
   const scope = workSpeechScope(work.id);
@@ -39,7 +40,7 @@ export async function generateWorkSpeech(command: GenerateWorkSpeechCommand): Pr
     scope,
     items,
     regenerate: command.mode === "all",
-    source: { label: pickText(work.title, work.defaultLocale, work.defaultLocale), href: adminWorkPath(work.id) },
+    source: { label: pickText(work.title, work.defaultLocale, work.defaultLocale), href: adminWorkTabPath(work.id, "audio") },
   });
   if (!result.success) return fail(result.error.code, result.error.message);
   await setWorkSpeechEnabled(work.id, true);

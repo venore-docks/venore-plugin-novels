@@ -2,18 +2,32 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { getPluginAdminPageData } from "@venore/plugin-sdk/admin";
-import { AdminAccessDenied, AdminPageHeader, Button } from "@venore/plugin-sdk/ui";
+import { AdminAccessDenied, Button, cn } from "@venore/plugin-sdk/ui";
 import { getCachedWork, type WorkEditorView } from "../../index";
 import { StatusBadge } from "../../components/status-badge";
-import { publicWorkPath } from "../../shared/constants";
+import { WorkCover } from "../../components/work-cover";
+import { adminWorkTabPath, publicWorkPath } from "../../shared/constants";
 import { pickText } from "../../shared/localized-text";
+import { CastManager } from "./cast-manager";
 import { ChapterList } from "./chapter-list";
 import { IssueList } from "./issue-list";
 import { PublishControls } from "./publish-controls";
 import { SpeechProduction } from "./speech-production";
+import { VariablesForm } from "./variables-form";
 import { WorkSettingsForm } from "./work-settings-form";
 
 type SpeechView = WorkEditorView["speech"];
+
+// Abas da página da obra (0.9.0), no lugar da página única.
+const TABS = [
+  { key: "historia", label: "História" },
+  { key: "sistema", label: "Sistema" },
+  { key: "elenco", label: "Elenco" },
+  { key: "configuracoes", label: "Configurações" },
+  { key: "audio", label: "Áudio" },
+  { key: "publicacao", label: "Publicação" },
+] as const;
+type TabKey = (typeof TABS)[number]["key"];
 
 function timeAgo(iso: string | null): string | null {
   if (!iso) return null;
@@ -24,8 +38,8 @@ function timeAgo(iso: string | null): string | null {
   return hours < 48 ? `há ${hours} h` : `há ${Math.round(hours / 24)} dias`;
 }
 
-// Texto do bloco "Áudio": situação das faixas contra o texto atual e o que o worker de áudio do
-// core está fazendo. Salvar/publicar não mexe no áudio; as ações ficam no próprio bloco.
+// Texto da aba "Áudio": situação das faixas contra o texto atual e o que o worker de áudio do
+// core está fazendo. Salvar/publicar não mexe no áudio; as ações ficam na própria aba.
 function describeSpeech(speech: SpeechView) {
   const state = speech.state;
   const queued = (state?.pending ?? 0) + (state?.processing ?? 0);
@@ -65,51 +79,100 @@ function describeSpeech(speech: SpeechView) {
   return { status, state, hasAudio, workerText, workerBusy };
 }
 
-export default async function WorkEditorPage({ params }: { params: Promise<{ workId: string }> }) {
+export default async function WorkEditorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ workId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const gate = await getPluginAdminPageData("novels");
   if (!gate.granted) return <AdminAccessDenied message="Você não tem permissão para gerenciar graphic novels." />;
 
-  const { workId } = await params;
+  const [{ workId }, query] = await Promise.all([params, searchParams]);
   const result = await getCachedWork(workId);
   if (!result.success) notFound();
-  const { work, coverUrl, chapters, issues, speech } = result.data;
-  const speechView = describeSpeech(speech);
+  const view = result.data;
+  const { work, coverUrl, chapters, issues } = view;
+  const tab: TabKey = TABS.some((entry) => entry.key === query.tab) ? (query.tab as TabKey) : "historia";
   const title = pickText(work.title, work.defaultLocale, work.defaultLocale);
+  const subtitle = pickText(work.subtitle, work.defaultLocale, work.defaultLocale);
+  const errors = issues.filter((issue) => issue.severity === "error").length;
 
   return (
-    <div className="space-y-8">
-      <AdminPageHeader
-        title={title}
-        description={`/novels/${work.slug}`}
-        actions={
-          <>
+    <div className="space-y-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <WorkCover url={coverUrl} focus={work.coverFocus} title={title} className="w-20 shrink-0 sm:w-24" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{title}</h1>
+          {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <StatusBadge status={work.status} />
-            {work.status === "published" && (
-              <Button variant="outline" asChild>
-                <Link href={publicWorkPath(work.slug)} target="_blank">
-                  <ExternalLink className="size-4" />
-                  Ver no site
-                </Link>
-              </Button>
-            )}
-            <PublishControls workId={work.id} status={work.status} blocked={issues.some((issue) => issue.severity === "error")} />
-          </>
-        }
-      />
+            <span className="text-xs text-muted-foreground">/novels/{work.slug}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {work.status === "published" && (
+            <Button variant="outline" asChild>
+              <Link href={publicWorkPath(work.slug)} target="_blank">
+                <ExternalLink className="size-4" />
+                Ver no site
+              </Link>
+            </Button>
+          )}
+          <PublishControls workId={work.id} status={work.status} blocked={errors > 0} />
+        </div>
+      </header>
 
-      <IssueList workId={work.id} issues={issues} chapters={chapters} />
+      <nav aria-label="Seções da obra" className="-mx-4 overflow-x-auto border-b border-border px-4 sm:mx-0 sm:px-0">
+        <ul className="flex min-w-max gap-1">
+          {TABS.map((entry) => (
+            <li key={entry.key}>
+              <Link
+                href={adminWorkTabPath(work.id, entry.key)}
+                aria-current={tab === entry.key ? "page" : undefined}
+                className={cn(
+                  "inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition-colors",
+                  tab === entry.key ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {entry.label}
+                {entry.key === "publicacao" && errors > 0 && (
+                  <span className="rounded-full bg-destructive/10 px-1.5 text-xs font-medium text-destructive">{errors}</span>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      {tab === "historia" && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Capítulos</h2>
+          {errors > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {errors} {errors === 1 ? "problema impede" : "problemas impedem"} a publicação —{" "}
+              <Link href={adminWorkTabPath(work.id, "publicacao")} className="text-primary hover:underline">
+                ver na aba Publicação
+              </Link>
+              .
+            </p>
+          )}
           <ChapterList work={work} chapters={chapters} />
         </section>
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Obra</h2>
-          <SpeechProduction workId={work.id} {...speechView} />
-          <WorkSettingsForm work={work} coverUrl={coverUrl} />
+      )}
+      {tab === "sistema" && <VariablesForm work={work} />}
+      {tab === "elenco" && <CastManager work={work} cast={view.cast} media={view.media} />}
+      {tab === "configuracoes" && <WorkSettingsForm work={work} coverUrl={coverUrl} tagCatalog={view.tagCatalog} tagIds={view.tagIds} />}
+      {tab === "audio" && <SpeechProduction workId={work.id} {...describeSpeech(view.speech)} />}
+      {tab === "publicacao" && (
+        <section className="space-y-4">
+          {issues.length === 0 ? (
+            <p className="rounded-xl border border-border bg-card p-4 text-sm text-foreground">Nenhum problema: a obra pode ser publicada.</p>
+          ) : (
+            <IssueList workId={work.id} issues={issues} chapters={chapters} />
+          )}
         </section>
-      </div>
+      )}
     </div>
   );
 }

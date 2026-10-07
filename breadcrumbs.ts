@@ -20,6 +20,8 @@ export const novelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
     },
   }),
   staticBreadcrumbSegment({ key: "novels.admin", segments: ["admin", "novels"], label: "Graphic Novels" }),
+  staticBreadcrumbSegment({ key: "novels.admin.new", segments: ["admin", "novels", "new"], label: "Nova obra" }),
+  staticBreadcrumbSegment({ key: "novels.admin.tags", segments: ["admin", "novels", "tags"], label: "Tags" }),
   staticBreadcrumbSegment({
     key: "novels.admin.works",
     segments: ["admin", "novels", "works"],

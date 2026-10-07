@@ -1,23 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Flag, Trash2 } from "lucide-react";
-import { Button, Input, MediaPickerField, Switch, Textarea } from "@venore/plugin-sdk/ui";
-import type { PickableMedia } from "@venore/plugin-sdk/ui";
-import type { ChapterGraphChoice, ChapterGraphScene } from "../../contracts/types";
+import { Flag, PenLine, Trash2 } from "lucide-react";
+import { Button, Input, Switch } from "@venore/plugin-sdk/ui";
+import type { ChapterGraphChoice, ChapterGraphScene, SceneBlockType } from "../../contracts/types";
 import type { ChapterGraphEditorView } from "../../features/graph/get-chapter-graph/types";
-import { LocaleTabs } from "../../components/locale-tabs";
 import { pickText } from "../../shared/localized-text";
+import { BLOCK_LABELS, firstImageId, sceneExcerpt, sceneWordStats } from "../../shared/scene-blocks";
 import { EffectsEditor } from "./rule-editors";
 
+// Painel lateral do grafo para a cena selecionada: resumo do conteúdo (o texto em si é escrito no
+// editor em tela cheia), final, efeitos e escolhas.
 export function SceneInspector({
   scene,
   work,
   isStart,
-  imageUrl,
+  media,
   outgoing,
   onChange,
-  onImage,
+  onOpenEditor,
   onMakeStart,
   onSelectChoice,
   onDelete,
@@ -25,15 +25,20 @@ export function SceneInspector({
   scene: ChapterGraphScene;
   work: ChapterGraphEditorView["work"];
   isStart: boolean;
-  imageUrl: string | null;
+  media: Record<string, string>;
   outgoing: ChapterGraphChoice[];
   onChange: (patch: Partial<ChapterGraphScene>) => void;
-  onImage: (media: PickableMedia | null) => void;
+  onOpenEditor: () => void;
   onMakeStart: () => void;
   onSelectChoice: (id: string) => void;
   onDelete: () => void;
 }) {
-  const [locale, setLocale] = useState(work.defaultLocale);
+  const locale = work.defaultLocale;
+  const excerpt = sceneExcerpt(scene.blocks, locale, locale, 220);
+  const imageId = firstImageId(scene.blocks);
+  const counts = new Map<SceneBlockType, number>();
+  for (const block of scene.blocks) counts.set(block.type, (counts.get(block.type) ?? 0) + 1);
+  const words = sceneWordStats(scene.blocks, locale).words;
 
   return (
     <div className="space-y-4 rounded-lg border border-border bg-card p-4">
@@ -53,27 +58,30 @@ export function SceneInspector({
       <label className="block space-y-1 text-sm">
         <span className="font-medium text-foreground">Nome no editor</span>
         <Input value={scene.label} maxLength={200} onChange={(event) => onChange({ label: event.target.value })} />
-        <span className="text-xs text-muted-foreground">Só você vê. O leitor vê a lâmina e o texto.</span>
+        <span className="text-xs text-muted-foreground">Só você vê. O leitor vê os blocos da cena.</span>
       </label>
 
-      <MediaPickerField
-        name="imageMediaId"
-        label="Lâmina (imagem)"
-        initialMedia={scene.imageMediaId && imageUrl ? { id: scene.imageMediaId, url: imageUrl, filename: "lâmina", contentType: "image/*" } : null}
-        onSelect={onImage}
-      />
-
-      <LocaleTabs locales={work.locales} active={locale} defaultLocale={work.defaultLocale} onChange={setLocale} />
-      <label className="block space-y-1 text-sm">
-        <span className="font-medium text-foreground">Texto</span>
-        <Textarea
-          rows={8}
-          value={scene.body[locale] ?? ""}
-          maxLength={20000}
-          placeholder="Parágrafos separados por uma linha em branco."
-          onChange={(event) => onChange({ body: { ...scene.body, [locale]: event.target.value } })}
-        />
-      </label>
+      <button
+        type="button"
+        onClick={onOpenEditor}
+        className="block w-full overflow-hidden rounded-lg border border-border text-left transition-colors hover:border-ring"
+      >
+        {imageId && media[imageId] && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={media[imageId]} alt="" className="h-24 w-full object-cover" />
+        )}
+        <span className="block space-y-1 p-3">
+          <span className="line-clamp-4 block font-serif text-sm text-foreground">{excerpt || "Cena vazia. Clique para escrever."}</span>
+          <span className="block text-xs text-muted-foreground">
+            {[...counts.entries()].map(([type, count]) => `${count} ${BLOCK_LABELS[type].toLowerCase()}`).join(" · ") || "sem blocos"}
+            {words > 0 && ` · ${words} palavras`}
+          </span>
+        </span>
+      </button>
+      <Button type="button" className="w-full" onClick={onOpenEditor}>
+        <PenLine className="size-4" />
+        Escrever a cena
+      </Button>
 
       <label className="flex items-center justify-between gap-2 text-sm">
         <span className="font-medium text-foreground">É um final</span>

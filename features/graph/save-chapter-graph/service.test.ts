@@ -24,6 +24,7 @@ const records = {
   chapters: story.chapters,
   scenes: story.scenes.map((scene) => ({ ...toChapterGraphScene({ ...scene, workId: "w1" }), workId: "w1", chapterId: scene.chapterId })),
   choices: story.choices,
+  cast: [],
 };
 const chapter1 = story.chapters.find((chapter) => chapter.id === "ch1")!;
 

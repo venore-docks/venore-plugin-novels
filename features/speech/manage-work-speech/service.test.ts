@@ -24,7 +24,7 @@ describe("áudio da obra por ação explícita", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     findWorkById.mockResolvedValue(work);
-    findStoryRecords.mockResolvedValue({ scenes: [{ id: "s1", body: { "pt-BR": "Olá" } }] });
+    findStoryRecords.mockResolvedValue({ scenes: [{ id: "s1", blocks: [{ id: "b", type: "text", text: { "pt-BR": "Olá" } }] }], cast: [] });
     getSpeechState.mockResolvedValue({ success: true, data: { active: true } });
     syncSpeechAudio.mockResolvedValue({ success: true, data: { queued: 1, unchanged: 0, removed: 0 } });
   });
@@ -36,7 +36,7 @@ describe("áudio da obra por ação explícita", () => {
       scope: "novels.work:w1",
       items,
       regenerate: false,
-      source: { label: "O Farol", href: "/admin/novels/works/w1" },
+      source: { label: "O Farol", href: "/admin/novels/works/w1?tab=audio" },
     });
     expect(setWorkSpeechEnabled).toHaveBeenCalledWith("w1", true);
   });

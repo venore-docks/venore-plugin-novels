@@ -52,6 +52,22 @@ describe("validateStory", () => {
     expect(codes(validateStory(story))).toContain("effect_type_mismatch");
   });
 
+  it("confere os blocos: legenda longa e fala de alguém fora do elenco são erro; bloco vazio é aviso", () => {
+    const story = buildStory();
+    story.cast = [];
+    story.scenes[0] = {
+      ...story.scenes[0],
+      blocks: [
+        { id: "c", type: "caption", mediaId: "m", alt: {}, caption: { "pt-BR": "x".repeat(181) }, position: "bottom" },
+        { id: "f", type: "speech", castId: "sumiu", text: { "pt-BR": "Oi" } },
+        { id: "i", type: "image", mediaId: null, alt: {}, aspect: "auto", bleed: false },
+      ],
+    };
+    const issues = validateStory({ ...story, cast: [] });
+    expect(codes(issues)).toEqual(expect.arrayContaining(["caption_too_long", "unknown_cast", "empty_image"]));
+    expect(issues.find((issue) => issue.code === "empty_image")?.severity).toBe("warning");
+  });
+
   it("recusa variável com chave inválida ou duplicada", () => {
     const story = buildStory();
     story.work.variables.push({ key: "Coragem!", label: "x", type: "number", initial: 0 });

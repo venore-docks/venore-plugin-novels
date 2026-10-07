@@ -11,6 +11,9 @@ export type SceneNodeData = {
   isStart: boolean;
   isEnding: boolean;
   hasError: boolean;
+  // Duplo clique abre o editor da cena (o onNodeDoubleClick do xyflow perde o evento quando o
+  // primeiro clique re-renderiza a seleção).
+  onOpen: () => void;
 };
 
 export type SceneFlowNode = Node<SceneNodeData, "scene">;
@@ -18,6 +21,7 @@ export type SceneFlowNode = Node<SceneNodeData, "scene">;
 export function SceneNode({ data, selected }: NodeProps<SceneFlowNode>) {
   return (
     <div
+      onDoubleClick={data.onOpen}
       className={cn(
         "w-48 overflow-hidden rounded-lg border bg-card text-left shadow-sm",
         selected ? "border-primary" : data.hasError ? "border-destructive" : "border-border",

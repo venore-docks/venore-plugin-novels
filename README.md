@@ -22,21 +22,38 @@ parágrafos estilo livro, e as escolhas do leitor ramificam a história.
 
 Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 
-## Tags da obra (0.8.0)
+## Base de autoria (0.9.0)
 
-No formulário da obra, **Tags** em duas categorias:
-
-- **Informativas**: gênero (lista fixa + até 5 tags livres, ex: "Tibia"), avisos de conteúdo
-  (violência, sangue, sexual, nudez, linguagem forte...) e classificação indicativa (Livre a 18+).
-  O formato — **Interativa** ou **Apenas texto** — é calculado: interativa quando alguma cena tem
-  mais de uma escolha.
-- **Produção**: para texto, imagens, revisão e tradução (só em obra com mais de um idioma), quem
-  fez — humanos, IA ou humanos com auxílio de IA ("Imagens feitas por IA", "Texto feito por
-  humanos"...). Uma escolha por parte, então nunca aparecem tags contraditórias. A leitura em voz
-  alta entra sozinha como "Áudio gerado por IA".
-
-Aparecem na capa da obra (início do leitor) e, resumidas, nos cards do catálogo. Guardadas em
-`works.tags` (jsonb, migration `0002`); obra antiga fica sem tags.
+- **Catálogo de tags no banco** (Graphic Novels → Tags, permissão `novels.tags.manage`): grupos
+  criados pelo admin (nome traduzível, categoria informativa ou de produção, uma ou várias opções,
+  obrigatório, aceita tag livre, aparece no card, ordem por arrastar) e tags (nome e descrição
+  traduzíveis, endereço único, arquivar sem apagar). Tags livres criadas pelos autores ficam só
+  na obra que as usa até o admin **promover**. Os textos dos selos calculados (Interativa / Apenas
+  texto / Áudio gerado por IA) também são configuração. As listas fixas da 0.8.0 viraram o
+  **pacote inicial** (instalado pela migration `0003`, que converte as tags das obras antigas;
+  botão "Instalar pacote inicial" repõe o que foi apagado). Grupo obrigatório sem escolha impede
+  publicar. Catálogo público filtra por tag: `/novels?tag=<endereço>`.
+- **Seleção de tags** por grupo: chips + "Adicionar…" com busca e teclado (e "Criar" em grupo que
+  aceita tag livre); grupo de uma opção com até 4 tags vira botões segmentados.
+- **Assistente de criação** (`/admin/novels/new`): Identidade (título grande, subtítulo, sinopse
+  com contador, capa arrastada ou da mídia com o ponto do recorte 2:3; endereço em "Avançado"),
+  Idiomas, Tags e Revisão, com prévia ao vivo do card (no celular, "Ver prévia") e rascunho salvo
+  no navegador. "Criar obra" abre o editor do primeiro capítulo, já com uma cena.
+- **Página da obra em abas**: História, Sistema (variáveis), Elenco, Configurações (identidade,
+  idiomas, tags), Áudio e Publicação (problemas).
+- **Cena em blocos**: Texto (**negrito**, *itálico*), Imagem larga (proporção, de borda a
+  borda), Imagem com legenda (texto curto sobre degradê da cor de fundo do site, até 180
+  caracteres), Fala (personagem do elenco, cor e retrato), Galeria (2–3 imagens), Separador e
+  Imagem de fundo esmaecida (imagem no topo esmaecendo na cor de fundo do tema, texto no
+  degradê). Todo texto continua texto: tradução, leitura em voz alta (a fala sai com o nome de
+  quem fala) e leitor de tela. A migration `0003` converteu texto + lâmina de cada cena antiga em
+  blocos e a `0004` apagou as colunas antigas.
+- **Editor de cena em tela cheia** (duplo clique na cena do grafo ou "Escrever a cena"): texto na
+  largura de leitura, blocos para adicionar entre quaisquer dois, arrastar pela alça, painel
+  lateral recolhível (final, efeitos, escolhas), **Foco** (Ctrl+.; Esc sai), "Ver como o leitor" e
+  palavras / tempo de leitura / tempo de áudio no rodapé.
+- **Elenco** (aba da obra): nome traduzível, cor de destaque (lista fechada de tokens do tema) e
+  retrato; personagem que ainda fala em alguma cena não pode ser removido.
 
 ## Painel do personagem (0.7.0)
 
@@ -92,7 +109,8 @@ nova ao avançar. Apagar a obra apaga o áudio; despublicar mantém. API: `@veno
 
 O core deriva a chave do plugin do **nome do pacote** (`@venore/plugin-novels` → `novels`) e
 procura `novelsManifest`, `novelsRouteTable` e `novelsContributions`
-(`scripts/gen-plugin-registry.ts`). A chave do manifesto, a permission (`novels.works.manage`),
+(`scripts/gen-plugin-registry.ts`). A chave do manifesto, as permissions (`novels.works.manage`,
+`novels.tags.manage`),
 o admin (`/admin/novels`) e o schema Postgres (`novels`, tracking em `novels_migrations`) seguem a
 mesma chave — renomear o pacote exige renomear tudo isso junto.
 

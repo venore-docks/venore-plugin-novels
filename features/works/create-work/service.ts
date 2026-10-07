@@ -1,6 +1,9 @@
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
-import { findWorkBySlug, insertWorkWithFirstChapter } from "./store";
+import { normalizeWorkTagInput } from "../../../shared/tag-catalog";
+import { findTagCatalog, findWorkBySlug, insertWorkWithFirstChapter } from "./store";
 import type { CreateWorkCommand, CreateWorkResult } from "./types";
+
+const localized = (locale: string, value: string | undefined) => (value?.trim() ? { [locale]: value.trim() } : {});
 
 export async function createWork(command: CreateWorkCommand): Promise<CreateWorkResult> {
   const handle = beginOperation({
@@ -15,12 +18,22 @@ export async function createWork(command: CreateWorkCommand): Promise<CreateWork
     return { success: false, error };
   }
 
+  const locale = command.defaultLocale;
+  const tags = command.tags ? normalizeWorkTagInput(await findTagCatalog(), command.tags, []) : { tagIds: [], newTags: [] };
   const work = await insertWorkWithFirstChapter({
     slug: command.slug,
-    title: { [command.defaultLocale]: command.title.trim() },
-    defaultLocale: command.defaultLocale,
+    title: { [locale]: command.title.trim() },
+    subtitle: localized(locale, command.subtitle),
+    synopsis: localized(locale, command.synopsis),
+    defaultLocale: locale,
+    locales: command.locales?.length ? command.locales : [locale],
+    coverMediaId: command.coverMediaId || null,
+    coverFocus: command.coverFocus ?? null,
     authorUserId: command.actorId,
-    firstChapterTitle: { [command.defaultLocale]: "Capítulo 1" },
+    firstChapterTitle: { [locale]: "Capítulo 1" },
+    firstSceneLabel: "Cena 1",
+    firstSceneBlocks: [{ id: crypto.randomUUID(), type: "text", text: {} }],
+    tags,
   });
 
   endOperation(handle, { success: true });

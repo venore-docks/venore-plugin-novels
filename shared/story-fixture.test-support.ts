@@ -6,9 +6,7 @@ import type { ChoiceRecord, Story, StoryScene } from "../contracts/types";
 export function scene(overrides: Partial<StoryScene> & { id: string; chapterId: string }): StoryScene {
   return {
     label: overrides.id,
-    imageMediaId: null,
-    imageUrl: null,
-    body: { "pt-BR": `Texto ${overrides.id}` },
+    blocks: [{ id: `${overrides.id}-t`, type: "text", text: { "pt-BR": `Texto ${overrides.id}` } }],
     isEnding: false,
     endingTitle: {},
     effects: [],
@@ -28,10 +26,13 @@ export function buildStory(): Story {
       id: "w1",
       slug: "obra",
       title: { "pt-BR": "Obra" },
+      subtitle: {},
       synopsis: {},
       defaultLocale: "pt-BR",
       locales: ["pt-BR"],
       coverUrl: null,
+      coverFocus: null,
+      tags: [],
       variables: [
         { key: "coragem", label: "Coragem", type: "number", initial: 0 },
         { key: "chave", label: "Pegou a chave", type: "boolean", initial: false },
@@ -47,6 +48,10 @@ export function buildStory(): Story {
       scene({ id: "c", chapterId: "ch1", isEnding: true, endingTitle: { "pt-BR": "Final corajoso" } }),
       scene({ id: "d", chapterId: "ch2", isEnding: true }),
     ],
+    badges: { interactive: { "pt-BR": "Interativa" }, textOnly: { "pt-BR": "Apenas texto" }, aiAudio: {} },
+    cast: [],
+    media: {},
+    audio: {},
     choices: [
       choice({ id: "a-b", sceneId: "a", targetSceneId: "b", position: 0, effects: [{ variable: "coragem", operation: "add", value: 1 }] }),
       choice({

@@ -1,6 +1,7 @@
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
-import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
-import { findStoryRecords, findWorkById, setWorkStatus } from "./store";
+import { hasBlockingIssues, validateStory, type StoryIssue } from "../../../shared/story-validation";
+import { validateWorkTags } from "../../../shared/tag-catalog";
+import { findStoryRecords, findTagCatalog, findWorkById, findWorkTagIds, setWorkStatus } from "./store";
 import type { PublishWorkCommand, PublishWorkResult } from "./types";
 
 // Fase 1: quem tem novels.works.manage publica direto. A aprovação por admin das obras
@@ -20,7 +21,14 @@ export async function publishWork(command: PublishWorkCommand): Promise<PublishW
   const work = await findWorkById(command.workId);
   if (!work) return fail("novels.work_not_found", "Obra não encontrada.");
 
-  const issues = validateStory(await findStoryRecords(work));
+  const [records, catalog, tagIds] = await Promise.all([findStoryRecords(work), findTagCatalog(), findWorkTagIds(work.id)]);
+  // Grupo de tags obrigatório sem escolha também impede publicar.
+  const tagIssues: StoryIssue[] = validateWorkTags(catalog.groups, catalog.tags, tagIds, work.defaultLocale).map((issue) => ({
+    severity: "error",
+    code: issue.code,
+    message: issue.message,
+  }));
+  const issues = [...tagIssues, ...validateStory(records)];
   if (hasBlockingIssues(issues)) {
     const errors = issues.filter((issue) => issue.severity === "error");
     return fail(

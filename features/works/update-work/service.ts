@@ -1,9 +1,8 @@
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
 import { normalizeLocalizedText } from "../../../shared/localized-text";
 import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
-import { normalizeTags } from "../../../shared/tags";
-import { sanitizeVariable } from "../../../shared/variables";
-import { findStoryRecords, findWorkById, findWorkBySlug, updateWorkRow } from "./store";
+import { normalizeWorkTagInput } from "../../../shared/tag-catalog";
+import { findStoryRecords, findTagCatalog, findWorkById, findWorkBySlug, findWorkTagIds, updateWorkRow } from "./store";
 import type { UpdateWorkCommand, UpdateWorkResult } from "./types";
 
 export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWorkResult> {
@@ -27,16 +26,16 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
   const next = {
     slug: command.slug,
     title: normalizeLocalizedText(command.title, command.locales),
+    subtitle: normalizeLocalizedText(command.subtitle ?? current.subtitle, command.locales),
     synopsis: normalizeLocalizedText(command.synopsis, command.locales),
     defaultLocale: command.defaultLocale,
     locales: command.locales,
     coverMediaId: command.coverMediaId || null,
-    variables: command.variables.map(sanitizeVariable),
-    tags: command.tags ? normalizeTags(command.tags) : current.tags,
+    coverFocus: command.coverFocus === undefined ? current.coverFocus : command.coverFocus,
   };
 
-  // Obra publicada não pode ficar quebrada por uma edição de variável/idioma: se a mudança
-  // gera erro no grafo (ex: apagou uma variável usada numa condição), recusa antes de gravar.
+  // Obra publicada não pode ficar quebrada por uma edição de idioma: se a mudança gera erro no
+  // grafo, recusa antes de gravar.
   if (current.status === "published") {
     const records = await findStoryRecords({ ...current, ...next });
     const issues = validateStory(records);
@@ -48,7 +47,10 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     }
   }
 
-  const work = await updateWorkRow(current.id, next);
+  const tags = command.tags
+    ? { input: normalizeWorkTagInput(await findTagCatalog(), command.tags, await findWorkTagIds(current.id)), actorId: command.actorId }
+    : null;
+  const work = await updateWorkRow(current.id, next, tags);
   endOperation(handle, { success: true });
   return { success: true, data: work };
 }
