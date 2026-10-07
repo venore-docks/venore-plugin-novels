@@ -17,6 +17,8 @@ export function LocalizedInput({
   multiline = false,
   placeholder,
   required = false,
+  locales,
+  hideLabel = false,
 }: {
   label: string;
   value: LocalizedText;
@@ -26,15 +28,19 @@ export function LocalizedInput({
   multiline?: boolean;
   placeholder?: string;
   required?: boolean;
+  // Idiomas da obra; sem isto, todos os que o plugin conhece.
+  locales?: string[];
+  hideLabel?: boolean;
 }) {
-  const others = SUPPORTED_LOCALES.filter((locale) => locale.code !== primaryLocale);
+  const others = SUPPORTED_LOCALES.filter((locale) => locale.code !== primaryLocale && (!locales || locales.includes(locale.code)));
   const translated = others.filter((locale) => value[locale.code]?.trim()).length;
   const [open, setOpen] = useState(false);
   const Field = multiline ? Textarea : Input;
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className={hideLabel ? "sr-only" : "text-sm font-medium text-foreground"}>{label}</span>
+        {others.length > 0 && (
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
@@ -44,6 +50,7 @@ export function LocalizedInput({
           <Languages className="size-3.5" aria-hidden />
           Traduções{translated > 0 ? ` (${translated})` : ""}
         </button>
+        )}
       </div>
       <Field
         value={value[primaryLocale] ?? ""}

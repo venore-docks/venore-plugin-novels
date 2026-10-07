@@ -1,5 +1,6 @@
 import type { OperationResult } from "@venore/plugin-sdk";
 import type { SpeechState, SpeechWorkerActivity } from "@venore/plugin-sdk/speech";
+import type { CreatureRecord, ItemRecord } from "../../../contracts/game";
 import type { CastMemberRecord, ChapterRecord, TagCatalog, WorkRecord } from "../../../contracts/types";
 import type { StoryIssue } from "../../../shared/story-validation";
 
@@ -13,7 +14,12 @@ export type WorkEditorView = {
   tagCatalog: TagCatalog;
   tagIds: string[];
   cast: CastMemberRecord[];
-  // URLs das imagens do elenco (retratos).
+  // Catálogo de itens e bestiário (0.11.0/0.12.0).
+  items: ItemRecord[];
+  creatures: CreatureRecord[];
+  // Cenas da obra (escolher a cena de um gatilho no sistema).
+  scenes: { id: string; label: string; chapterId: string }[];
+  // URLs das imagens (capa, retratos, itens, criaturas, vocações).
   media: Record<string, string>;
   // Leitura em voz alta: estado das faixas (cena x idioma) contra o texto atual e a fase do worker.
   speech: { state: SpeechState | null; worker: SpeechWorkerActivity };

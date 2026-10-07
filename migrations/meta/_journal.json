@@ -36,6 +36,13 @@
       "when": 1791401535027,
       "tag": "0004_drop_legacy_scene_body",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791404578704,
+      "tag": "0005_game_system",
+      "breakpoints": true
     }
   ]
 }

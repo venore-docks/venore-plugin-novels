@@ -1,4 +1,5 @@
 import type { ChoiceRecord, Story, StoryScene } from "../contracts/types";
+import { emptyChoiceMechanics, emptySceneMechanics, emptySystem } from "./engine/system";
 
 // Obra mínima usada pelos testes do motor e do validador:
 // Cap. 1: a -> (b | c[precisa coragem>=1]); b -> fim de capítulo; c = final
@@ -10,6 +11,7 @@ export function scene(overrides: Partial<StoryScene> & { id: string; chapterId: 
     isEnding: false,
     endingTitle: {},
     effects: [],
+    mechanics: emptySceneMechanics(),
     graphX: 0,
     graphY: 0,
     ...overrides,
@@ -17,7 +19,14 @@ export function scene(overrides: Partial<StoryScene> & { id: string; chapterId: 
 }
 
 export function choice(overrides: Partial<ChoiceRecord> & { id: string; sceneId: string; targetSceneId: string }): ChoiceRecord {
-  return { position: 0, label: { "pt-BR": `Escolha ${overrides.id}` }, conditions: [], effects: [], ...overrides };
+  return {
+    position: 0,
+    label: { "pt-BR": `Escolha ${overrides.id}` },
+    conditions: [],
+    effects: [],
+    mechanics: emptyChoiceMechanics(),
+    ...overrides,
+  };
 }
 
 export function buildStory(): Story {
@@ -48,6 +57,9 @@ export function buildStory(): Story {
       scene({ id: "c", chapterId: "ch1", isEnding: true, endingTitle: { "pt-BR": "Final corajoso" } }),
       scene({ id: "d", chapterId: "ch2", isEnding: true }),
     ],
+    system: emptySystem(),
+    items: [],
+    creatures: [],
     badges: { interactive: { "pt-BR": "Interativa" }, textOnly: { "pt-BR": "Apenas texto" }, aiAudio: {} },
     cast: [],
     media: {},

@@ -40,15 +40,44 @@ export {
   deleteCastMemberHandler as deleteCastMember,
   reorderCastHandler as reorderCast,
 } from "./features/cast/manage-cast/handler";
+export { updateGameSystemHandler as updateGameSystem } from "./features/game/update-game-system/handler";
+export {
+  saveItemHandler as saveItem,
+  deleteItemHandler as deleteItem,
+  reorderItemsHandler as reorderItems,
+} from "./features/game/manage-items/handler";
+export {
+  saveCreatureHandler as saveCreature,
+  deleteCreatureHandler as deleteCreature,
+  reorderCreaturesHandler as reorderCreatures,
+} from "./features/game/manage-creatures/handler";
+export {
+  listSystemTemplatesHandler as listSystemTemplates,
+  importSystemTemplateHandler as importSystemTemplate,
+  saveWorkAsTemplateHandler as saveWorkAsTemplate,
+  deleteSystemTemplateHandler as deleteSystemTemplate,
+  applySystemTemplateHandler as applySystemTemplate,
+} from "./features/game/system-templates/handler";
+export { getWorkStatsHandler as getWorkStats } from "./features/stats/get-work-stats/handler";
 export { listPublishedWorksHandler as listPublishedWorks } from "./features/reading/list-published-works/handler";
 export { getPublishedStoryHandler as getPublishedStory } from "./features/reading/get-published-story/handler";
 export { getReaderProgressHandler as getReaderProgress } from "./features/reading/get-reader-progress/handler";
 export { saveReaderProgressHandler as saveReaderProgress } from "./features/reading/save-reader-progress/handler";
+export { startReaderGameHandler as startReaderGame } from "./features/reading/start-reader-game/handler";
+export {
+  listReaderSavesHandler as listReaderSaves,
+  saveReaderSlotHandler as saveReaderSlot,
+  loadReaderSlotHandler as loadReaderSlot,
+  deleteReaderSlotHandler as deleteReaderSlot,
+} from "./features/reading/manage-reader-saves/handler";
 
 export { blockDefinitions, blockRenderers } from "./blocks";
 export { novelsSeeds } from "./seeds";
 
 export type * from "./contracts/types";
+export type * from "./contracts/game";
+export type { ReaderSaveSlot } from "./features/reading/manage-reader-saves/types";
+export type { WorkStatsView } from "./features/stats/get-work-stats/types";
 export type { StoryIssue } from "./shared/story-validation";
 export type { WorkAdminListItem } from "./features/works/list-works/types";
 export type { WorkEditorView, WorkEditorChapter } from "./features/works/get-work/types";

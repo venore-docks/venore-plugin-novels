@@ -44,6 +44,7 @@ export async function replaceChapterGraph(workId: string, chapterId: string, gra
         isEnding: scene.isEnding,
         endingTitle: scene.endingTitle,
         effects: scene.effects,
+        mechanics: scene.mechanics,
         graphX: scene.graphX,
         graphY: scene.graphY,
         updatedAt: now,

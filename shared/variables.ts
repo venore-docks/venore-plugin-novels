@@ -82,6 +82,11 @@ export function clampAll(vars: Record<string, VariableValue>, variables: Variabl
   return next;
 }
 
+// Valores iniciais das variáveis da obra, já dentro dos limites.
+export function initialVariables(variables: VariableDefinition[]): Record<string, VariableValue> {
+  return clampAll(Object.fromEntries(variables.map((variable) => [variable.key, variable.initial])), variables);
+}
+
 // ------------------------------------------------------------------ painel do leitor
 
 export type StatusEntry = { key: string; label: string; value: number | boolean; max: number | null };
