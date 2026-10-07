@@ -75,8 +75,8 @@ describe("variáveis do painel do personagem", () => {
     expect(sheet.status.map((entry) => [entry.label, entry.value, entry.max])).toEqual([
       ["HP", 138, 150],
       ["Level", 1, null],
-      ["Cap", 400, null],
     ]);
+    // A capacidade aparece só na mochila (peso máximo), nunca como status solto.
     expect(sheet.inventory.map((item) => [item.label, item.quantity, item.weight])).toEqual([
       ["Clava", null, 25],
       ["Poção de vida", 2, 3.6],

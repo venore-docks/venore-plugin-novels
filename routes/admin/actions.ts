@@ -18,7 +18,7 @@ import {
   updateWork,
   type StoryIssue,
 } from "../../index";
-import type { LocalizedText, VariableDefinition } from "../../contracts/types";
+import type { LocalizedText, VariableDefinition, WorkTags } from "../../contracts/types";
 import { ADMIN_BASE_PATH, adminChapterPath, adminWorkPath, PLUGIN_KEY, PUBLIC_BASE_PATH } from "../../shared/constants";
 
 export type AdminActionState = { error: string | null };
@@ -60,6 +60,7 @@ export type UpdateWorkPayload = {
   locales: string[];
   coverMediaId: string | null;
   variables: VariableDefinition[];
+  tags: WorkTags;
 };
 
 // Formulário de obra manda JSON (traduções e variáveis são listas dinâmicas no client).
@@ -83,6 +84,7 @@ export async function updateWorkAction(_prev: AdminActionState, formData: FormDa
     locales: Array.isArray(payload.locales) ? payload.locales.map(String) : [],
     coverMediaId: payload.coverMediaId ? String(payload.coverMediaId) : null,
     variables: Array.isArray(payload.variables) ? payload.variables : [],
+    tags: payload.tags,
   });
   if (!result.success) return { error: result.error.message };
   revalidateWork(payload.workId);

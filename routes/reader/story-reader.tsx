@@ -18,8 +18,10 @@ import {
   undoLastChoice,
   varsAlongPath,
 } from "../../shared/story-engine";
+import { describeTags } from "../../shared/tags";
 import { characterSheet, describeChanges, hasCharacterSheet } from "../../shared/variables";
-import { ChangeChips, CharacterDialog, FloatingSheetButton, StatusStrip } from "./character-panel";
+import { WorkTagGroups } from "../../components/work-tags";
+import { ChangeChips, CharacterDialog, ReaderHud } from "./character-panel";
 import { saveReaderProgressAction } from "./actions";
 
 type SavedProgress = { state: ReaderState; updatedAt: string };
@@ -194,6 +196,14 @@ export function StoryReader({
   const { work } = story;
   const t = (text: Record<string, string>) => pickText(text, locale, work.defaultLocale);
   const endingsTotal = story.scenes.filter((scene) => scene.isEnding).length;
+  // Interativa = alguma cena com mais de uma escolha (calculado, nunca escolhido pelo autor).
+  const choicesPerScene = new Map<string, number>();
+  for (const choice of story.choices) choicesPerScene.set(choice.sceneId, (choicesPerScene.get(choice.sceneId) ?? 0) + 1);
+  const tagGroups = describeTags(work.tags, {
+    interactive: [...choicesPerScene.values()].some((count) => count > 1),
+    hasAudio,
+    multilingual: work.locales.length > 1,
+  });
 
   if (!state) {
     return (
@@ -204,6 +214,7 @@ export function StoryReader({
           <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-foreground">{t(work.title)}</h1>
             {t(work.synopsis) && <p className="whitespace-pre-line text-muted-foreground">{t(work.synopsis)}</p>}
+            <WorkTagGroups groups={[...tagGroups.info, ...tagGroups.production]} />
             <LocalePicker locales={work.locales} value={locale} onChange={changeLocale} />
             {hasAudio && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -263,7 +274,7 @@ export function StoryReader({
       : [];
 
   return (
-    <div className="mx-auto w-full max-w-2xl pb-24">
+    <div className={sheet ? "mx-auto w-full max-w-2xl pb-40" : "mx-auto w-full max-w-2xl pb-24"}>
       {audioElement}
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
         <p className="min-w-0 truncate text-sm font-medium text-foreground">{t(work.title)}</p>
@@ -304,17 +315,8 @@ export function StoryReader({
           </Button>
         </div>
       </header>
-      {sheet && (sheet.status.length > 0 ? (
-        <StatusStrip sheet={sheet} onOpen={() => setSheetOpen(true)} />
-      ) : (
-        <div className="flex justify-end border-b border-border px-4 py-2">
-          <Button size="sm" variant="outline" onClick={() => setSheetOpen(true)}>
-            Personagem
-          </Button>
-        </div>
-      ))}
       {sheet && <CharacterDialog sheet={sheet} title={t(work.title)} open={sheetOpen} onOpenChange={setSheetOpen} />}
-      {sheet && <FloatingSheetButton sheet={sheet} onOpen={() => setSheetOpen(true)} />}
+      {sheet && <ReaderHud sheet={sheet} onOpen={() => setSheetOpen(true)} />}
 
       {pathScenes.map((scene, position) => {
         const previous = pathScenes[position - 1];

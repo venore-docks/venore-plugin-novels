@@ -1,3 +1,5 @@
+import type { ContentWarningKey, GenreKey, ProductionOrigin, ProductionPart, RatingKey } from "../shared/tags";
+
 // Texto traduzível: um valor por locale ("pt-BR", "en", "es"...). O core não tem i18n
 // (AGENTS.md, Known Gaps), então as traduções de cada obra moram no próprio plugin. A interface
 // continua em pt-BR; só o conteúdo da obra é multilíngue.
@@ -53,6 +55,16 @@ export type VariableEffect = {
   value: VariableValue;
 };
 
+// Tags da obra (shared/tags.ts): informativas (gênero, conteúdo, classificação) e de produção
+// (como texto, imagens, revisão e tradução foram feitos). Chaves fixas + até 5 gêneros livres.
+export type WorkTags = {
+  genres: GenreKey[];
+  customGenres: string[];
+  content: ContentWarningKey[];
+  rating: RatingKey | null;
+  production: Partial<Record<ProductionPart, ProductionOrigin>>;
+};
+
 export type WorkRecord = {
   id: string;
   slug: string;
@@ -65,6 +77,7 @@ export type WorkRecord = {
   status: WorkStatus;
   authorUserId: string | null;
   speechEnabled: boolean;
+  tags: WorkTags;
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -127,6 +140,7 @@ export type Story = {
     locales: string[];
     coverUrl: string | null;
     variables: VariableDefinition[];
+    tags: WorkTags;
   };
   chapters: StoryChapter[];
   scenes: StoryScene[];

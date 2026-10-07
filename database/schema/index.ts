@@ -18,6 +18,7 @@ import type {
   ReaderState,
   VariableDefinition,
   VariableEffect,
+  WorkTags,
 } from "../../contracts/types";
 
 export const novelsSchema = pgSchema("novels");
@@ -40,9 +41,11 @@ export const works = novelsSchema.table(
     variables: jsonb("variables").$type<VariableDefinition[]>().notNull().default([]),
     status: text("status").notNull().default("draft"),
     authorUserId: text("author_user_id"),
-    // Leitura em voz alta: o autor escolhe por obra (desligado por padrão). Ligado e publicada, cada
-    // cena ganha uma faixa por idioma (features/speech/sync-work-speech).
+    // Leitura em voz alta: marcado pelas ações do bloco "Áudio" da obra
+    // (features/speech/manage-work-speech) — o autor gerou ou apagou o áudio.
     speechEnabled: boolean("speech_enabled").notNull().default(false),
+    // Tags informativas e de produção (shared/tags.ts). Obra antiga fica com {} = sem tags.
+    tags: jsonb("tags").$type<Partial<WorkTags>>().notNull().default({}),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

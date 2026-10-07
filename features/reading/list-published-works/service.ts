@@ -1,4 +1,5 @@
 import { resolveMediaUrls } from "../../../shared/resolve-media-urls";
+import { normalizeTags } from "../../../shared/tags";
 import { findPublishedWorks } from "./store";
 import type { ListPublishedWorksInput, ListPublishedWorksResult } from "./types";
 
@@ -10,6 +11,11 @@ export async function listPublishedWorks(input: ListPublishedWorksInput = {}): P
   const urls = await resolveMediaUrls(rows.flatMap((row) => (row.coverMediaId ? [row.coverMediaId] : [])));
   return {
     success: true,
-    data: rows.map(({ coverMediaId, ...row }) => ({ ...row, coverUrl: coverMediaId ? (urls[coverMediaId] ?? null) : null })),
+    data: rows.map(({ coverMediaId, tags, interactive, ...row }) => ({
+      ...row,
+      tags: normalizeTags(tags),
+      interactive: Boolean(interactive),
+      coverUrl: coverMediaId ? (urls[coverMediaId] ?? null) : null,
+    })),
   };
 }

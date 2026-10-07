@@ -7,7 +7,7 @@ import {
   findWorkRowBySlug,
   toWorkRecord,
 } from "../../../database/queries/story-records";
-import type { LocalizedText, VariableDefinition, WorkRecord } from "../../../contracts/types";
+import type { LocalizedText, VariableDefinition, WorkRecord, WorkTags } from "../../../contracts/types";
 
 export { findStoryRecords, findWorkRowById as findWorkById, findWorkRowBySlug as findWorkBySlug };
 
@@ -21,6 +21,7 @@ export async function updateWorkRow(
     locales: string[];
     coverMediaId: string | null;
     variables: VariableDefinition[];
+    tags: WorkTags;
   },
 ): Promise<WorkRecord> {
   const [row] = await db
