@@ -15,6 +15,10 @@ export { getChapterGraphHandler as getChapterGraph } from "./features/graph/get-
 export { saveChapterGraphHandler as saveChapterGraph } from "./features/graph/save-chapter-graph/handler";
 export { publishWorkHandler as publishWork } from "./features/publishing/publish-work/handler";
 export { unpublishWorkHandler as unpublishWork } from "./features/publishing/unpublish-work/handler";
+export {
+  generateWorkSpeechHandler as generateWorkSpeech,
+  deleteWorkSpeechHandler as deleteWorkSpeech,
+} from "./features/speech/manage-work-speech/handler";
 export { listPublishedWorksHandler as listPublishedWorks } from "./features/reading/list-published-works/handler";
 export { getPublishedStoryHandler as getPublishedStory } from "./features/reading/get-published-story/handler";
 export { getReaderProgressHandler as getReaderProgress } from "./features/reading/get-reader-progress/handler";

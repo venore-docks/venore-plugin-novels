@@ -22,19 +22,23 @@ parágrafos estilo livro, e as escolhas do leitor ramificam a história.
 
 Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 
-## Leitura em voz alta (0.3.0+, exige core 2.1.0)
+## Leitura em voz alta (exige core 2.3.0 desde a 0.6.0)
 
-O autor escolhe por obra: **"Gerar áudio (leitura em voz alta)"** no formulário da obra
-(desligado por padrão; 0.4.0). Ligado, depois de publicada, cada cena ganha uma faixa em cada
-idioma com texto próprio. O bloco **Áudio** da tela da obra (0.5.0, exige core 2.2.0) mostra a
-produção: barra com as faixas prontas e o trecho da faixa em geração, o que está na fila, falhas e
-o que o worker do core está fazendo (preparando as vozes, gerando, parado), e se atualiza sozinho
-enquanto há fila; a obra aparece com título e link em Editorial → Áudios no core. No leitor, cada
-cena tem **Ouvir** e o modo **Ler em voz alta** (alto-falante no topo, ou a opção na capa) toca
-cada cena nova ao avançar. O áudio vem de `@venore/plugin-sdk/speech` (scope `novels.work:<id>`);
-o core só gera o que é novo ou mudou. Desligar a opção ou apagar a obra remove o áudio;
-despublicar mantém (republicar sem mudança não gera de novo). Configuração no core:
-`docs/speech/leitura-em-voz-alta.md`.
+O áudio é por ação do autor, no bloco **Áudio** da tela da obra — salvar, publicar ou editar
+cenas nunca gera nem refaz áudio:
+
+- **Gerar áudio / Gerar o que falta**: uma faixa por cena e idioma com texto próprio, só para o que
+  não tem áudio, falhou ou teve o texto mudado. Vale também para obra em rascunho.
+- **Gerar tudo de novo**: refaz todas as faixas (ex: depois de trocar a voz).
+- **Apagar áudio**: remove todas; o botão de ouvir some do leitor.
+
+O bloco mostra a produção (faixas em dia, desatualizadas, faltando, na fila, o percentual da faixa
+em geração) e o que o worker do core está fazendo, e se atualiza sozinho enquanto há fila. Texto
+mudado fica como **desatualizado**: o áudio antigo continua tocando até o autor gerar de novo. A
+obra aparece com título e link em Editorial → Áudios no core. No leitor, cada cena com áudio tem
+**Ouvir** e o modo **Ler em voz alta** (alto-falante no topo, ou a opção na capa) toca cada cena
+nova ao avançar. Apagar a obra apaga o áudio; despublicar mantém. API: `@venore/plugin-sdk/speech`
+(scope `novels.work:<id>`); configuração no core: `docs/speech/leitura-em-voz-alta.md`.
 
 ## Próximas fases
 

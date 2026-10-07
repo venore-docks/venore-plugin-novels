@@ -3,8 +3,6 @@ import { toChapterGraphScene } from "../../../shared/build-story";
 import { buildStory } from "../../../shared/story-fixture.test-support";
 
 vi.mock("@venore/plugin-sdk/observability", () => ({ beginOperation: vi.fn(() => ({})), endOperation: vi.fn() }));
-const syncWorkSpeech = vi.fn();
-vi.mock("../../speech/sync-work-speech/service", () => ({ syncWorkSpeech: (...args: unknown[]) => syncWorkSpeech(...args) }));
 
 const findChapterWithWork = vi.fn();
 const findForeignSceneIds = vi.fn();

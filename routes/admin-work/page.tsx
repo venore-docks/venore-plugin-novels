@@ -24,25 +24,31 @@ function timeAgo(iso: string | null): string | null {
   return hours < 48 ? `há ${hours} h` : `há ${Math.round(hours / 24)} dias`;
 }
 
-// Texto do bloco "Áudio": situação da obra e o que o worker de áudio do core está fazendo.
-function describeSpeech(workStatus: string, speech: SpeechView) {
-  const progress = speech.progress;
-  const queued = (progress?.pending ?? 0) + (progress?.processing ?? 0);
-  const status =
-    speech.expected === 0
+// Texto do bloco "Áudio": situação das faixas contra o texto atual e o que o worker de áudio do
+// core está fazendo. Salvar/publicar não mexe no áudio; as ações ficam no próprio bloco.
+function describeSpeech(speech: SpeechView) {
+  const state = speech.state;
+  const queued = (state?.pending ?? 0) + (state?.processing ?? 0);
+  const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+  const hasAudio = state ? state.ready + state.outdated + queued + state.failed + state.extra > 0 : false;
+  const status = !state
+    ? "Não foi possível ler a situação do áudio agora."
+    : state.total === 0
       ? "Nenhuma cena com texto ainda."
-      : workStatus !== "published" && !progress?.total
-        ? "O áudio será gerado quando a obra for publicada."
-        : !progress?.total
-          ? "Esperando a leitura em voz alta ser ligada em Editorial → Áudios."
-          : queued === 0 && progress.failed === 0
-            ? `Áudio pronto: ${progress.ready} ${progress.ready === 1 ? "faixa" : "faixas"} (cada cena em cada idioma).`
-            : "Cada cena em cada idioma vira uma faixa de áudio.";
+      : !state.active
+        ? "A leitura em voz alta está desligada: ligue em Editorial → Áudios."
+        : !hasAudio
+          ? "Sem áudio. Gere quando o texto estiver pronto — salvar a obra não gera nem muda o áudio."
+          : state.outdated > 0
+            ? `${plural(state.outdated, "faixa com texto mudado", "faixas com texto mudado")}: o áudio antigo continua tocando até você gerar de novo.`
+            : state.ready === state.total
+              ? `Áudio em dia: ${plural(state.ready, "faixa", "faixas")} (cada cena em cada idioma).`
+              : "Cada cena em cada idioma vira uma faixa de áudio.";
 
   const worker = speech.worker;
   let workerText: string | null = null;
   let workerBusy = false;
-  if (worker?.mode === "worker") {
+  if (worker.mode === "worker") {
     if (worker.stage === "generating") {
       workerBusy = true;
       workerText = `Worker gerando áudio agora (começou ${timeAgo(worker.since)}).`;
@@ -56,7 +62,7 @@ function describeSpeech(workStatus: string, speech: SpeechView) {
           : `Na fila, esperando o worker${worker.lastSignalAt ? ` (última execução ${timeAgo(worker.lastSignalAt)})` : ""}.`;
     }
   }
-  return { status, progress, workerText, workerBusy };
+  return { status, state, hasAudio, workerText, workerBusy };
 }
 
 export default async function WorkEditorPage({ params }: { params: Promise<{ workId: string }> }) {
@@ -67,7 +73,7 @@ export default async function WorkEditorPage({ params }: { params: Promise<{ wor
   const result = await getCachedWork(workId);
   if (!result.success) notFound();
   const { work, coverUrl, chapters, issues, speech } = result.data;
-  const speechView = work.speechEnabled ? describeSpeech(work.status, speech) : null;
+  const speechView = describeSpeech(speech);
   const title = pickText(work.title, work.defaultLocale, work.defaultLocale);
 
   return (
@@ -100,7 +106,7 @@ export default async function WorkEditorPage({ params }: { params: Promise<{ wor
         </section>
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-caps text-muted-foreground">Obra</h2>
-          {speechView && <SpeechProduction {...speechView} />}
+          <SpeechProduction workId={work.id} {...speechView} />
           <WorkSettingsForm work={work} coverUrl={coverUrl} />
         </section>
       </div>

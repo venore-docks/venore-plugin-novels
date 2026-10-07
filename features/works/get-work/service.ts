@@ -1,4 +1,4 @@
-import { getSpeechProgress, getSpeechWorkerActivity } from "@venore/plugin-sdk/speech";
+import { getSpeechState, getSpeechWorkerActivity } from "@venore/plugin-sdk/speech";
 import { resolveMediaUrls } from "../../../shared/resolve-media-urls";
 import { speechItemsForWork, workSpeechScope } from "../../../shared/speech";
 import { validateStory } from "../../../shared/story-validation";
@@ -11,16 +11,11 @@ export async function getWork(input: GetWorkInput): Promise<GetWorkResult> {
 
   const records = await findStoryRecords(work);
   const scope = workSpeechScope(work.id);
-  // Produção do áudio (faixas = cena x idioma): quantas prontas, na fila, sendo geradas, e o que o
-  // worker está fazendo agora.
-  const [progress, worker] = work.speechEnabled
-    ? await Promise.all([getSpeechProgress({ scopes: [scope] }), getSpeechWorkerActivity()])
-    : [null, null];
-  const speech = {
-    expected: work.speechEnabled ? speechItemsForWork(work, records.scenes).length : 0,
-    progress: progress?.success ? (progress.data[scope] ?? null) : null,
-    worker,
-  };
+  // Áudio da obra contra o texto atual (faixa = cena x idioma): pronto, desatualizado, faltando,
+  // na fila, gerando — e o que o worker do core está fazendo agora.
+  const items = speechItemsForWork(work, records.scenes);
+  const [state, worker] = await Promise.all([getSpeechState({ scope, items }), getSpeechWorkerActivity()]);
+  const speech = { state: state.success ? state.data : null, worker };
   const urls = work.coverMediaId ? await resolveMediaUrls([work.coverMediaId]) : {};
   const sceneCounts = new Map<string, number>();
   for (const scene of records.scenes) sceneCounts.set(scene.chapterId, (sceneCounts.get(scene.chapterId) ?? 0) + 1);

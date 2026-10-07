@@ -21,7 +21,6 @@ export async function updateWorkRow(
     locales: string[];
     coverMediaId: string | null;
     variables: VariableDefinition[];
-    speechEnabled: boolean;
   },
 ): Promise<WorkRecord> {
   const [row] = await db

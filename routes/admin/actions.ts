@@ -7,6 +7,8 @@ import {
   createChapter,
   createWork,
   deleteChapter,
+  deleteWorkSpeech,
+  generateWorkSpeech,
   deleteWork,
   moveChapter,
   publishWork,
@@ -58,7 +60,6 @@ export type UpdateWorkPayload = {
   locales: string[];
   coverMediaId: string | null;
   variables: VariableDefinition[];
-  speechEnabled: boolean;
 };
 
 // Formulário de obra manda JSON (traduções e variáveis são listas dinâmicas no client).
@@ -82,7 +83,6 @@ export async function updateWorkAction(_prev: AdminActionState, formData: FormDa
     locales: Array.isArray(payload.locales) ? payload.locales.map(String) : [],
     coverMediaId: payload.coverMediaId ? String(payload.coverMediaId) : null,
     variables: Array.isArray(payload.variables) ? payload.variables : [],
-    speechEnabled: payload.speechEnabled === true,
   });
   if (!result.success) return { error: result.error.message };
   revalidateWork(payload.workId);
@@ -157,4 +157,23 @@ export async function saveChapterGraphAction(workId: string, chapterId: string, 
   revalidateWork(String(workId));
   revalidatePath(adminChapterPath(String(workId), String(chapterId)));
   return { ok: true, savedAt: result.data.savedAt.toISOString(), issues: result.data.issues };
+}
+
+// Bloco "Áudio" da obra: gerar o que falta ou mudou ("missing"), refazer tudo ("all") ou apagar.
+export async function generateWorkSpeechAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
+  const workId = text(formData, "workId");
+  const result = await generateWorkSpeech({ workId, mode: formData.get("mode") === "all" ? "all" : "missing" });
+  if (!result.success) return { error: result.error.message };
+  revalidateWork(workId);
+  return { error: null };
+}
+
+export async function deleteWorkSpeechAction(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  if (await pluginDisabled()) return { error: PLUGIN_DISABLED_ERROR };
+  const workId = text(formData, "workId");
+  const result = await deleteWorkSpeech({ workId });
+  if (!result.success) return { error: result.error.message };
+  revalidateWork(workId);
+  return { error: null };
 }

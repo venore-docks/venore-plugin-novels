@@ -1,28 +1,70 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import type { SpeechProgress } from "@venore/plugin-sdk/speech";
+import { useActionState, useEffect } from "react";
+import type { SpeechState } from "@venore/plugin-sdk/speech";
+import { Button, useActionToast } from "@venore/plugin-sdk/ui";
+import { deleteWorkSpeechAction, generateWorkSpeechAction, type AdminActionState } from "../admin/actions";
 
 const REFRESH_MS = 15_000;
+const initialState: AdminActionState = { error: null };
 
-// Produção do áudio da obra: cada faixa é o texto de uma cena num idioma. A barra cheia são as
-// faixas prontas; o trecho pulsando é quanto da faixa em geração o worker já fez (ele informa a
-// cada poucos segundos). Enquanto há faixa na fila ou o worker está trabalhando, a página se
+function ActionButton({
+  workId,
+  action,
+  mode,
+  label,
+  confirm,
+  done,
+  variant = "outline",
+}: {
+  workId: string;
+  action: typeof generateWorkSpeechAction;
+  mode?: "missing" | "all";
+  label: string;
+  confirm?: string;
+  done: string;
+  variant?: "default" | "outline" | "destructive";
+}) {
+  const [state, formAction, pending] = useActionState(action, initialState);
+  useActionToast({ pending, error: state.error, successMessage: done });
+  return (
+    <form
+      action={formAction}
+      onSubmit={(event) => {
+        if (confirm && !window.confirm(confirm)) event.preventDefault();
+      }}
+    >
+      <input type="hidden" name="workId" value={workId} />
+      {mode && <input type="hidden" name="mode" value={mode} />}
+      <Button type="submit" size="sm" variant={variant} disabled={pending}>
+        {label}
+      </Button>
+    </form>
+  );
+}
+
+// Bloco "Áudio" da obra: produção das faixas (cena x idioma) contra o texto atual e as ações do
+// autor. Salvar a obra não gera nem muda o áudio: texto mudado fica "desatualizado" (o áudio antigo
+// continua tocando) até o autor gerar de novo. Enquanto há fila ou o worker trabalha, a página se
 // atualiza sozinha (router.refresh: só os dados, o formulário não perde o que foi digitado).
 export function SpeechProduction({
+  workId,
   status,
-  progress,
+  state,
+  hasAudio,
   workerText,
   workerBusy,
 }: {
+  workId: string;
   status: string;
-  progress: SpeechProgress | null;
+  state: SpeechState | null;
+  hasAudio: boolean;
   workerText: string | null;
   workerBusy: boolean;
 }) {
   const router = useRouter();
-  const queued = (progress?.pending ?? 0) + (progress?.processing ?? 0);
+  const queued = (state?.pending ?? 0) + (state?.processing ?? 0);
   const live = queued > 0 || workerBusy;
 
   useEffect(() => {
@@ -31,26 +73,30 @@ export function SpeechProduction({
     return () => window.clearInterval(timer);
   }, [live, router]);
 
-  const total = progress?.total ?? 0;
-  const ready = progress?.ready ?? 0;
-  const processing = progress?.processing ?? 0;
-  const current = progress?.currentPercent ?? 0;
+  const total = state?.total ?? 0;
+  const ready = state?.ready ?? 0;
+  const processing = state?.processing ?? 0;
+  const current = state?.currentPercent ?? 0;
   const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
   const producedPercent = total > 0 ? Math.min(100, Math.round(((ready + processing * (current / 100)) / total) * 100)) : 0;
-  const parts = progress
+  const parts = state
     ? [
-        `${ready} de ${total} ${total === 1 ? "faixa pronta" : "faixas prontas"}`,
+        `${ready} de ${total} ${total === 1 ? "faixa em dia" : "faixas em dia"}`,
+        state.outdated > 0 ? `${state.outdated} desatualizada${state.outdated === 1 ? "" : "s"}` : null,
+        state.missing > 0 ? `${state.missing} sem áudio` : null,
         processing > 0 ? `gerando agora${current ? ` (${current}% da faixa)` : ""}` : null,
-        progress.pending > 0 ? `${progress.pending} na fila` : null,
-        progress.failed > 0 ? `${progress.failed} com falha` : null,
+        state.pending > 0 ? `${state.pending} na fila` : null,
+        state.failed > 0 ? `${state.failed} com falha` : null,
       ].filter(Boolean)
     : [];
+  const canAct = Boolean(state?.active) && total > 0 && queued === 0;
+  const toGenerate = (state?.missing ?? 0) + (state?.outdated ?? 0) + (state?.failed ?? 0) + (state?.extra ? 1 : 0);
 
   return (
     <div className="space-y-2 rounded-lg border border-border bg-card p-3">
       <p className="text-sm font-medium text-foreground">Áudio</p>
       <p className="text-xs text-muted-foreground">{status}</p>
-      {total > 0 && (
+      {hasAudio && total > 0 && (
         <div className="space-y-1">
           <div
             role="progressbar"
@@ -69,7 +115,7 @@ export function SpeechProduction({
           <p className="text-xs text-muted-foreground">
             {producedPercent}% · {parts.join(" · ")}
           </p>
-          {progress?.failed && progress.lastError ? <p className="text-xs text-destructive">Último erro: {progress.lastError}</p> : null}
+          {state?.failed && state.lastError ? <p className="text-xs text-destructive">Último erro: {state.lastError}</p> : null}
         </div>
       )}
       {workerText && (
@@ -81,6 +127,38 @@ export function SpeechProduction({
           {workerText}
         </p>
       )}
+      <div className="flex flex-wrap gap-2 pt-1">
+        {canAct && toGenerate > 0 && (
+          <ActionButton
+            workId={workId}
+            action={generateWorkSpeechAction}
+            mode="missing"
+            variant="default"
+            label={hasAudio ? "Gerar o que falta" : "Gerar áudio"}
+            done="Na fila: o worker já foi chamado."
+          />
+        )}
+        {canAct && ready + (state?.outdated ?? 0) > 0 && (
+          <ActionButton
+            workId={workId}
+            action={generateWorkSpeechAction}
+            mode="all"
+            label="Gerar tudo de novo"
+            done="Todas as faixas voltaram para a fila."
+            confirm="Gerar de novo todas as faixas desta obra? O áudio atual de cada faixa sai até a nova ficar pronta."
+          />
+        )}
+        {hasAudio && (
+          <ActionButton
+            workId={workId}
+            action={deleteWorkSpeechAction}
+            label="Apagar áudio"
+            done="Áudio apagado."
+            variant="destructive"
+            confirm="Apagar todo o áudio desta obra? O botão de ouvir some do leitor."
+          />
+        )}
+      </div>
     </div>
   );
 }
