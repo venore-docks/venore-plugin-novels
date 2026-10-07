@@ -3,7 +3,6 @@ import { normalizeLocalizedText } from "../../../shared/localized-text";
 import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
 import { findStoryRecords, findWorkById, findWorkBySlug, updateWorkRow } from "./store";
 import type { UpdateWorkCommand, UpdateWorkResult } from "./types";
-import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
 
 export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWorkResult> {
   const handle = beginOperation({
@@ -31,7 +30,6 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     locales: command.locales,
     coverMediaId: command.coverMediaId || null,
     variables: command.variables.map((variable) => ({ ...variable, label: variable.label.trim() || variable.key })),
-    speechEnabled: command.speechEnabled,
   };
 
   // Obra publicada não pode ficar quebrada por uma edição de variável/idioma: se a mudança
@@ -48,8 +46,6 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
   }
 
   const work = await updateWorkRow(current.id, next);
-  // Ligar/desligar o áudio ou mudar idiomas muda quais faixas existem.
-  await syncWorkSpeech(work.id);
   endOperation(handle, { success: true });
   return { success: true, data: work };
 }

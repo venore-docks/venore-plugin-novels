@@ -10,7 +10,6 @@ export type UpdateWorkInput = {
   locales: string[];
   coverMediaId: string | null;
   variables: VariableDefinition[];
-  speechEnabled: boolean;
 };
 export type UpdateWorkCommand = UpdateWorkInput & { actorId: string };
 export type UpdateWorkResult = OperationResult<WorkRecord>;

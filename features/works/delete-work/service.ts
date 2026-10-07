@@ -1,7 +1,7 @@
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
 import { deleteWorkRow } from "./store";
 import type { DeleteWorkCommand, DeleteWorkResult } from "./types";
-import { syncWorkSpeech } from "../../speech/sync-work-speech/service";
+import { removeWorkSpeech } from "../../speech/manage-work-speech/service";
 
 export async function deleteWork(command: DeleteWorkCommand): Promise<DeleteWorkResult> {
   const handle = beginOperation({
@@ -16,7 +16,7 @@ export async function deleteWork(command: DeleteWorkCommand): Promise<DeleteWork
     return { success: false, error };
   }
   // Obra apagada: o áudio dela sai junto (scope vazio).
-  await syncWorkSpeech(command.workId);
+  await removeWorkSpeech(command.workId);
   endOperation(handle, { success: true });
   return { success: true, data: { id: command.workId } };
 }
