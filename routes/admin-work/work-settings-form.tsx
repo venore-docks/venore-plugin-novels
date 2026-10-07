@@ -7,6 +7,7 @@ import type { LocalizedText, VariableDefinition, WorkRecord } from "../../contra
 import { LocaleTabs } from "../../components/locale-tabs";
 import { localeLabel, SUPPORTED_LOCALES } from "../../shared/locales";
 import { updateWorkAction, type AdminActionState } from "../admin/actions";
+import { VariableDisplayFields } from "./variable-display-fields";
 
 const initialState: AdminActionState = { error: null };
 
@@ -51,7 +52,16 @@ export function WorkSettingsForm({
       current.map((variable, position) => {
         if (position !== index) return variable;
         const next = { ...variable, ...patch };
-        if (patch.type && patch.type !== variable.type) next.initial = patch.type === "number" ? 0 : false;
+        if (patch.type && patch.type !== variable.type) {
+          next.initial = patch.type === "number" ? 0 : false;
+          // Limites e capacidade só valem para número.
+          if (patch.type === "boolean") {
+            delete next.min;
+            delete next.max;
+            delete next.maxVariable;
+            delete next.capacity;
+          }
+        }
         return next;
       }),
     );
@@ -130,7 +140,9 @@ export function WorkSettingsForm({
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-foreground">Variáveis</legend>
         <p className="text-xs text-muted-foreground">
-          Guardam o estado da história (ex: coragem, pegou_a_chave). Escolhas podem exigir ou alterar esses valores.
+          Guardam o estado da história (ex: hp, club_fighting, tem_clava). Escolhas podem exigir ou alterar esses valores. Em
+          &quot;Mostrar ao leitor&quot;, a variável entra no painel do personagem: status (com barra quando tem máximo),
+          habilidade ou item do inventário.
         </p>
         {variables.map((variable, index) => (
           <div key={index} className="space-y-2 rounded-md border border-border p-2">
@@ -191,6 +203,11 @@ export function WorkSettingsForm({
                 <Trash2 className="size-4" />
               </Button>
             </div>
+            <VariableDisplayFields
+              variable={variable}
+              others={variables.filter((other, position) => position !== index && other.type === "number" && other.key)}
+              onChange={(patch) => updateVariable(index, patch)}
+            />
           </div>
         ))}
         <Button

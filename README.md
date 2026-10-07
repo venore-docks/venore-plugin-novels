@@ -22,6 +22,29 @@ parágrafos estilo livro, e as escolhas do leitor ramificam a história.
 
 Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 
+## Painel do personagem (0.7.0)
+
+Cada variável da obra pode aparecer para o leitor ("Mostrar ao leitor" no formulário da obra):
+
+- **Status** (HP, mana, level, cap): fica numa faixa sob o cabeçalho do leitor; número com máximo
+  vira barra ("HP 138/150"). O botão fixo no canto mostra o primeiro status com máximo e abre a
+  ficha.
+- **Habilidade** (club fighting, fist fighting): aparece na ficha.
+- **Item do inventário**: sim/não = carrega ou não (a clava); número = quantidade (poções). Cada
+  item tem **peso** por unidade; uma variável numérica marcada como **capacidade** (cap) define
+  quanto o personagem aguenta, e a ficha mostra "Carga 28,6/400".
+
+Número pode ter **mínimo** e **máximo**, aplicados depois de cada efeito (HP nunca abaixo de 0 nem
+acima do teto). O máximo pode ser **outra variável** (`hp_max`, que sobe de nível). Nas condições
+das escolhas há dois valores calculados: **Carga do inventário** (`_carga`) e **Espaço livre no
+inventário** (`_espaco_livre`) — ex: "Pegar a clava" só aparece com espaço livre ≥ 25. Ao chegar em
+cada cena, o leitor vê o que mudou ("HP −12", "Club fighting +1", "Pegou: Clava").
+
+Exemplo (fan fic de Tibia): `hp` (status, mín 0, máx = `hp_max`), `hp_max`, `level` (status), `cap`
+(status, capacidade), `club` e `fist` (habilidade), `clava` (item, peso 25). A escolha "Pegar a
+clava" tem efeito `clava = sim`; golpes com a clava somam em `club`, socos em `fist`; a cena de
+vitória contra o rat soma 1 em `level` e em `hp_max`.
+
 ## Leitura em voz alta (exige core 2.3.0 desde a 0.6.0)
 
 O áudio é por ação do autor, no bloco **Áudio** da tela da obra — salvar, publicar ou editar

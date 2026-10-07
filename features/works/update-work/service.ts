@@ -1,6 +1,7 @@
 import { beginOperation, endOperation } from "@venore/plugin-sdk/observability";
 import { normalizeLocalizedText } from "../../../shared/localized-text";
 import { hasBlockingIssues, validateStory } from "../../../shared/story-validation";
+import { sanitizeVariable } from "../../../shared/variables";
 import { findStoryRecords, findWorkById, findWorkBySlug, updateWorkRow } from "./store";
 import type { UpdateWorkCommand, UpdateWorkResult } from "./types";
 
@@ -29,7 +30,7 @@ export async function updateWork(command: UpdateWorkCommand): Promise<UpdateWork
     defaultLocale: command.defaultLocale,
     locales: command.locales,
     coverMediaId: command.coverMediaId || null,
-    variables: command.variables.map((variable) => ({ ...variable, label: variable.label.trim() || variable.key })),
+    variables: command.variables.map(sanitizeVariable),
   };
 
   // Obra publicada não pode ficar quebrada por uma edição de variável/idioma: se a mudança

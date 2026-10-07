@@ -11,11 +11,15 @@ import {
   choose,
   continueToNextChapter,
   indexStory,
+  initialVariables,
   nextStep,
   reconcileState,
   startStory,
   undoLastChoice,
+  varsAlongPath,
 } from "../../shared/story-engine";
+import { characterSheet, describeChanges, hasCharacterSheet } from "../../shared/variables";
+import { ChangeChips, CharacterDialog, FloatingSheetButton, StatusStrip } from "./character-panel";
 import { saveReaderProgressAction } from "./actions";
 
 type SavedProgress = { state: ReaderState; updatedAt: string };
@@ -76,6 +80,7 @@ export function StoryReader({
   const [chosenLocale, setChosenLocale] = useState<string | null>(null);
   const [chosenAutoRead, setChosenAutoRead] = useState<boolean | null>(null);
   const [state, setState] = useState<ReaderState | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   // Um <audio> só para a obra inteira: tocar outra cena troca a fonte. playingSceneId == null é
   // parado ou pausado.
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -247,6 +252,15 @@ export function StoryReader({
     return chapter ? `${number}. ${t(chapter.title)}` : "";
   };
   const canUndo = undoLastChoice(story, index, state) !== null;
+  // Painel do personagem e o que mudou em cada cena (só variáveis marcadas para o leitor).
+  const showSheet = hasCharacterSheet(work.variables);
+  const sheet = showSheet ? characterSheet(state.vars, work.variables) : null;
+  const varsByStep = showSheet ? varsAlongPath(story, index, state.path) : [];
+  const startVars = showSheet ? initialVariables(work.variables) : {};
+  const changesAt = (position: number) =>
+    showSheet && varsByStep[position]
+      ? describeChanges(position === 0 ? startVars : varsByStep[position - 1], varsByStep[position], work.variables)
+      : [];
 
   return (
     <div className="mx-auto w-full max-w-2xl pb-24">
@@ -290,6 +304,17 @@ export function StoryReader({
           </Button>
         </div>
       </header>
+      {sheet && (sheet.status.length > 0 ? (
+        <StatusStrip sheet={sheet} onOpen={() => setSheetOpen(true)} />
+      ) : (
+        <div className="flex justify-end border-b border-border px-4 py-2">
+          <Button size="sm" variant="outline" onClick={() => setSheetOpen(true)}>
+            Personagem
+          </Button>
+        </div>
+      ))}
+      {sheet && <CharacterDialog sheet={sheet} title={t(work.title)} open={sheetOpen} onOpenChange={setSheetOpen} />}
+      {sheet && <FloatingSheetButton sheet={sheet} onOpen={() => setSheetOpen(true)} />}
 
       {pathScenes.map((scene, position) => {
         const previous = pathScenes[position - 1];
@@ -326,6 +351,7 @@ export function StoryReader({
                   </p>
                 ))}
               </div>
+              <ChangeChips changes={changesAt(position)} />
             </article>
           </Fragment>
         );

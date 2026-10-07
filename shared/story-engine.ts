@@ -8,6 +8,7 @@ import type {
   VariableEffect,
   VariableValue,
 } from "../contracts/types";
+import { clampAll, clampNumber, withDerivedValues } from "./variables";
 
 // Motor de leitura: função pura sobre o grafo da obra, sem React nem banco. Roda no client (o
 // leitor) e é a mesma regra que o validador de publicação usa pra saber o que é alcançável.
@@ -34,7 +35,7 @@ export function indexStory(story: Pick<Story, "scenes" | "choices" | "work">): S
 }
 
 export function initialVariables(variables: VariableDefinition[]): Record<string, VariableValue> {
-  return Object.fromEntries(variables.map((variable) => [variable.key, variable.initial]));
+  return clampAll(Object.fromEntries(variables.map((variable) => [variable.key, variable.initial])), variables);
 }
 
 export function evaluateCondition(condition: ChoiceCondition, vars: Record<string, VariableValue>): boolean {
@@ -56,8 +57,14 @@ export function evaluateCondition(condition: ChoiceCondition, vars: Record<strin
   }
 }
 
-export function isChoiceAvailable(choice: ChoiceRecord, vars: Record<string, VariableValue>): boolean {
-  return choice.conditions.every((condition) => evaluateCondition(condition, vars));
+// `variables` liga os valores calculados (carga e espaço livre do inventário) nas condições.
+export function isChoiceAvailable(
+  choice: ChoiceRecord,
+  vars: Record<string, VariableValue>,
+  variables: VariableDefinition[] = [],
+): boolean {
+  const values = withDerivedValues(vars, variables);
+  return choice.conditions.every((condition) => evaluateCondition(condition, values));
 }
 
 // Efeito sobre variável não declarada (ou de tipo errado) é ignorado em silêncio na leitura: o
@@ -80,8 +87,11 @@ export function applyEffects(
     } else if (effect.operation === "toggle" && typeof current === "boolean") {
       next[effect.variable] = !current;
     }
+    const value = next[effect.variable];
+    if (typeof value === "number") next[effect.variable] = clampNumber(definition, value, next);
   }
-  return next;
+  // Um teto pode ter mudado (hp_max subiu ou desceu): reaplica os limites de todos os números.
+  return clampAll(next, [...variablesByKey.values()]);
 }
 
 function enterScene(index: StoryIndex, state: Omit<ReaderState, "sceneId">, sceneId: string): ReaderState {
@@ -121,7 +131,8 @@ export function nextStep(story: Story, index: StoryIndex, state: ReaderState): N
 
   const sceneChoices = index.choicesBySceneId.get(scene.id) ?? [];
   if (sceneChoices.length > 0) {
-    const available = sceneChoices.filter((choice) => isChoiceAvailable(choice, state.vars));
+    const variables = [...index.variablesByKey.values()];
+    const available = sceneChoices.filter((choice) => isChoiceAvailable(choice, state.vars, variables));
     return available.length > 0 ? { kind: "choices", choices: available } : { kind: "dead-end" };
   }
 
@@ -202,4 +213,20 @@ export function replayPath(story: Story, index: StoryIndex, path: string[], visi
     state = enterScene(index, { ...state, vars }, sceneId);
   }
   return state;
+}
+
+// Valor das variáveis depois de cada cena do caminho (mesmo replay de replayPath): o leitor
+// compara cena a cena para mostrar o que mudou ("Club fighting +1", "Pegou: Clava").
+export function varsAlongPath(story: Story, index: StoryIndex, path: string[]): Record<string, VariableValue>[] {
+  const result: Record<string, VariableValue>[] = [];
+  if (path.length === 0) return result;
+  let state: ReaderState = enterScene(index, { vars: initialVariables(story.work.variables), path: [], visitedEndings: [] }, path[0]);
+  result.push(state.vars);
+  for (const sceneId of path.slice(1)) {
+    const choice = (index.choicesBySceneId.get(state.sceneId) ?? []).find((candidate) => candidate.targetSceneId === sceneId);
+    const vars = choice ? applyEffects(state.vars, choice.effects, index.variablesByKey) : state.vars;
+    state = enterScene(index, { ...state, vars }, sceneId);
+    result.push(state.vars);
+  }
+  return result;
 }
