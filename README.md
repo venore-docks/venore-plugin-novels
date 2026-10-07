@@ -22,17 +22,34 @@ parágrafos estilo livro, e as escolhas do leitor ramificam a história.
 
 Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 
+## Tags da obra (0.8.0)
+
+No formulário da obra, **Tags** em duas categorias:
+
+- **Informativas**: gênero (lista fixa + até 5 tags livres, ex: "Tibia"), avisos de conteúdo
+  (violência, sangue, sexual, nudez, linguagem forte...) e classificação indicativa (Livre a 18+).
+  O formato — **Interativa** ou **Apenas texto** — é calculado: interativa quando alguma cena tem
+  mais de uma escolha.
+- **Produção**: para texto, imagens, revisão e tradução (só em obra com mais de um idioma), quem
+  fez — humanos, IA ou humanos com auxílio de IA ("Imagens feitas por IA", "Texto feito por
+  humanos"...). Uma escolha por parte, então nunca aparecem tags contraditórias. A leitura em voz
+  alta entra sozinha como "Áudio gerado por IA".
+
+Aparecem na capa da obra (início do leitor) e, resumidas, nos cards do catálogo. Guardadas em
+`works.tags` (jsonb, migration `0002`); obra antiga fica sem tags.
+
 ## Painel do personagem (0.7.0)
 
 Cada variável da obra pode aparecer para o leitor ("Mostrar ao leitor" no formulário da obra):
 
-- **Status** (HP, mana, level, cap): fica numa faixa sob o cabeçalho do leitor; número com máximo
-  vira barra ("HP 138/150"). O botão fixo no canto mostra o primeiro status com máximo e abre a
-  ficha.
-- **Habilidade** (club fighting, fist fighting): aparece na ficha.
+- **Status** (HP, mana, level): fica no **HUD fixo no rodapé** do leitor, que acompanha o texto;
+  número com máximo vira barra ("HP 138/150", fica vermelha abaixo de 25%).
+- **Habilidade** (club fighting, fist fighting): cartões na aba **Habilidades** da ficha (botão da
+  mochila no HUD).
 - **Item do inventário**: sim/não = carrega ou não (a clava); número = quantidade (poções). Cada
-  item tem **peso** por unidade; uma variável numérica marcada como **capacidade** (cap) define
-  quanto o personagem aguenta, e a ficha mostra "Carga 28,6/400".
+  item tem **peso** por unidade e aparece num espaço da aba **Mochila**. Uma variável numérica
+  marcada como **capacidade da mochila** (peso máximo) não aparece como status: vira "Peso na
+  mochila 28,6 de 400" com barra.
 
 Número pode ter **mínimo** e **máximo**, aplicados depois de cada efeito (HP nunca abaixo de 0 nem
 acima do teto). O máximo pode ser **outra variável** (`hp_max`, que sobe de nível). Nas condições

@@ -32,6 +32,7 @@ export function buildStory(
       locales: work.locales,
       coverUrl: work.coverMediaId ? (mediaUrls[work.coverMediaId] ?? null) : null,
       variables: work.variables,
+      tags: work.tags,
     },
     chapters: records.chapters.map((chapter) => ({
       id: chapter.id,

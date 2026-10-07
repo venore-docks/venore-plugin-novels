@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { PublishedWorkCard } from "../features/reading/list-published-works/types";
 import { publicWorkPath } from "../shared/constants";
 import { pickText } from "../shared/localized-text";
+import { CONTENT_WARNINGS, GENRES, RATINGS } from "../shared/tags";
+import { TagChips } from "./work-tags";
 import { WorkCover } from "./work-cover";
 
 export function WorkCardGrid({ works }: { works: PublishedWorkCard[] }) {
@@ -15,8 +17,16 @@ export function WorkCardGrid({ works }: { works: PublishedWorkCard[] }) {
               <WorkCover url={work.coverUrl} title={title} className="transition-opacity group-hover:opacity-90" />
               <p className="line-clamp-2 text-sm font-medium text-foreground">{title}</p>
               <p className="text-xs text-muted-foreground">
-                {work.chapterCount} {work.chapterCount === 1 ? "capítulo" : "capítulos"}
+                {work.chapterCount} {work.chapterCount === 1 ? "capítulo" : "capítulos"} · {work.interactive ? "Interativa" : "Apenas texto"}
+                {work.tags.rating && ` · ${RATINGS[work.tags.rating]}`}
               </p>
+              <TagChips
+                tags={[
+                  ...work.tags.genres.map((key) => GENRES[key]),
+                  ...work.tags.customGenres,
+                  ...work.tags.content.map((key) => CONTENT_WARNINGS[key]),
+                ].slice(0, 4)}
+              />
             </Link>
           </li>
         );

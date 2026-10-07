@@ -117,8 +117,9 @@ export function characterSheet(vars: Record<string, VariableValue>, variables: V
   const capacity = capacityVariable(variables);
   const capValue = capacity ? vars[capacity.key] : undefined;
   return {
-    status: variables.filter((variable) => variable.display === "status").map(entry),
-    skills: variables.filter((variable) => variable.display === "skill").map(entry),
+    // A capacidade aparece só na mochila (peso máximo), nunca como status solto ("Cap 400").
+    status: variables.filter((variable) => variable.display === "status" && !variable.capacity).map(entry),
+    skills: variables.filter((variable) => variable.display === "skill" && !variable.capacity).map(entry),
     inventory,
     hasInventory: variables.some(isInventory),
     load: inventoryLoad(vars, variables),
@@ -127,12 +128,14 @@ export function characterSheet(vars: Record<string, VariableValue>, variables: V
 }
 
 export function hasCharacterSheet(variables: VariableDefinition[]): boolean {
-  return variables.some((variable) => variable.display && variable.display !== "hidden");
+  return variables.some((variable) => (variable.display && variable.display !== "hidden") || variable.capacity);
 }
 
 export type VariableChange = { key: string; text: string; tone: "up" | "down" | "neutral" };
 
-const formatNumber = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, ""));
+// A interface do plugin é pt-BR: decimal com vírgula ("28,6"), até duas casas.
+const NUMBER_FORMAT = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
+const formatNumber = (value: number) => NUMBER_FORMAT.format(value);
 
 // O que mudou entre dois estados, só nas variáveis visíveis ao leitor: "Club fighting +1",
 // "HP −12", "Pegou: Clava", "Largou: Clava", "Poção de vida +2".

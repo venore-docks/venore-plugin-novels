@@ -3,11 +3,12 @@
 import { useActionState, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button, Input, MediaPickerField, Textarea, useActionToast } from "@venore/plugin-sdk/ui";
-import type { LocalizedText, VariableDefinition, WorkRecord } from "../../contracts/types";
+import type { LocalizedText, VariableDefinition, WorkRecord, WorkTags } from "../../contracts/types";
 import { LocaleTabs } from "../../components/locale-tabs";
 import { localeLabel, SUPPORTED_LOCALES } from "../../shared/locales";
 import { updateWorkAction, type AdminActionState } from "../admin/actions";
 import { VariableDisplayFields } from "./variable-display-fields";
+import { WorkTagsFields } from "./work-tags-fields";
 
 const initialState: AdminActionState = { error: null };
 
@@ -29,6 +30,7 @@ export function WorkSettingsForm({
   const [synopsis, setSynopsis] = useState<LocalizedText>(work.synopsis);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(work.coverMediaId);
   const [variables, setVariables] = useState<VariableDefinition[]>(work.variables);
+  const [tags, setTags] = useState<WorkTags>(work.tags);
 
   const payload = JSON.stringify({
     workId: work.id,
@@ -39,6 +41,7 @@ export function WorkSettingsForm({
     locales,
     coverMediaId,
     variables,
+    tags,
   });
   const editingLocale = locales.includes(activeLocale) ? activeLocale : defaultLocale;
 
@@ -136,6 +139,8 @@ export function WorkSettingsForm({
           />
         </label>
       </div>
+
+      <WorkTagsFields tags={tags} multilingual={locales.length > 1} onChange={setTags} />
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-foreground">Variáveis</legend>

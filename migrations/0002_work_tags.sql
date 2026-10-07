@@ -1,0 +1,1 @@
+ALTER TABLE "novels"."works" ADD COLUMN "tags" jsonb DEFAULT '{}'::jsonb NOT NULL;

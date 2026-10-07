@@ -15,6 +15,13 @@
       "when": 1791310389491,
       "tag": "0001_work_speech_enabled",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791335360056,
+      "tag": "0002_work_tags",
+      "breakpoints": true
     }
   ]
 }

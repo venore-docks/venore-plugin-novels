@@ -1,5 +1,5 @@
 import type { OperationResult } from "@venore/plugin-sdk";
-import type { LocalizedText, VariableDefinition, WorkRecord } from "../../../contracts/types";
+import type { LocalizedText, VariableDefinition, WorkRecord, WorkTags } from "../../../contracts/types";
 
 export type UpdateWorkInput = {
   workId: string;
@@ -10,6 +10,8 @@ export type UpdateWorkInput = {
   locales: string[];
   coverMediaId: string | null;
   variables: VariableDefinition[];
+  // Opcional: quem não manda tags (seed, chamadas antigas) mantém as que a obra já tem.
+  tags?: WorkTags;
 };
 export type UpdateWorkCommand = UpdateWorkInput & { actorId: string };
 export type UpdateWorkResult = OperationResult<WorkRecord>;

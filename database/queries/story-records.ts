@@ -2,6 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "@venore/plugin-sdk";
 import type { ChapterRecord, ChoiceRecord, SceneRecord, WorkRecord } from "../../contracts/types";
 import { chapters, choices, scenes, works } from "../schema";
+import { normalizeTags } from "../../shared/tags";
 
 // Leituras compartilhadas pelos store.ts que precisam da obra inteira (validação, publicação,
 // leitor). Cada store.ts continua sendo o único ponto de acesso do seu caso de uso; este módulo
@@ -15,7 +16,7 @@ export type WorkStoryRecords = {
 };
 
 export function toWorkRecord(row: typeof works.$inferSelect): WorkRecord {
-  return { ...row, status: row.status as WorkRecord["status"] };
+  return { ...row, status: row.status as WorkRecord["status"], tags: normalizeTags(row.tags) };
 }
 
 export async function findWorkRowById(workId: string): Promise<WorkRecord | null> {
