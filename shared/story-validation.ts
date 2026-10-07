@@ -5,7 +5,8 @@ import type {
   VariableDefinition,
   VariableEffect,
 } from "../contracts/types";
-import { CONDITION_OPERATORS, EFFECT_OPERATIONS } from "../contracts/types";
+import { CONDITION_OPERATORS, EFFECT_OPERATIONS, VARIABLE_DISPLAYS } from "../contracts/types";
+import { derivedVariables } from "./variables";
 
 // Validação do grafo da obra. "error" bloqueia a publicação; "warning" só avisa (tradução
 // faltando, cena solta). Mesma função serve ao editor (mostra a lista ao salvar) e ao
@@ -42,6 +43,7 @@ export type ValidatableStory = {
 };
 
 const VARIABLE_KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
+const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 
 export function validateVariableDefinitions(variables: VariableDefinition[]): StoryIssue[] {
   const issues: StoryIssue[] = [];
@@ -59,6 +61,41 @@ export function validateVariableDefinitions(variables: VariableDefinition[]): St
     } else if (typeof variable.initial !== variable.type) {
       issues.push(error("invalid_variable_initial", `Variável "${variable.key}": valor inicial não é do tipo ${variable.type}.`));
     }
+    issues.push(...checkVariableDisplay(variable, variables));
+  }
+  if (variables.filter((variable) => variable.capacity).length > 1) {
+    issues.push(error("multiple_capacity", "Só uma variável pode ser a capacidade do inventário."));
+  }
+  return issues;
+}
+
+// Campos de exibição e limites (0.7.0): opcionais, mas coerentes com o tipo.
+function checkVariableDisplay(variable: VariableDefinition, all: VariableDefinition[]): StoryIssue[] {
+  const issues: StoryIssue[] = [];
+  const name = `Variável "${variable.key}"`;
+  if (variable.display !== undefined && !VARIABLE_DISPLAYS.includes(variable.display)) {
+    issues.push(error("invalid_variable_display", `${name}: exibição inválida.`));
+  }
+  const numeric = variable.type === "number";
+  if (!numeric && (variable.min !== undefined || variable.max !== undefined || variable.maxVariable || variable.capacity)) {
+    issues.push(error("invalid_variable_limits", `${name}: mínimo, máximo e capacidade só valem para número.`));
+  }
+  if ((variable.min !== undefined && !finite(variable.min)) || (variable.max !== undefined && !finite(variable.max))) {
+    issues.push(error("invalid_variable_limits", `${name}: mínimo e máximo precisam ser números.`));
+  } else if (finite(variable.min) && finite(variable.max) && variable.min > variable.max) {
+    issues.push(error("invalid_variable_limits", `${name}: o mínimo é maior que o máximo.`));
+  }
+  if (variable.maxVariable) {
+    const target = all.find((candidate) => candidate.key === variable.maxVariable);
+    if (!target || target.type !== "number" || target.key === variable.key) {
+      issues.push(error("invalid_variable_limits", `${name}: o máximo precisa ser outra variável numérica.`));
+    }
+  }
+  if (variable.weight !== undefined && (!finite(variable.weight) || variable.weight < 0)) {
+    issues.push(error("invalid_variable_weight", `${name}: o peso precisa ser um número maior ou igual a zero.`));
+  }
+  if (variable.capacity && variable.display === "inventory") {
+    issues.push(error("invalid_variable_limits", `${name}: a capacidade não pode ser um item do inventário.`));
   }
   return issues;
 }
@@ -121,6 +158,10 @@ function missingLocales(text: LocalizedText, locales: string[]): string[] {
 export function validateStory(story: ValidatableStory): StoryIssue[] {
   const issues: StoryIssue[] = [...validateVariableDefinitions(story.work.variables)];
   const variables = new Map(story.work.variables.map((variable) => [variable.key, variable]));
+  // Condições também enxergam os valores calculados (carga, espaço livre); efeitos não.
+  const conditionVariables = new Map(
+    [...story.work.variables, ...derivedVariables(story.work.variables)].map((variable) => [variable.key, variable]),
+  );
   const { locales, defaultLocale } = story.work;
   const scenesById = new Map(story.scenes.map((scene) => [scene.id, scene]));
   const choicesByScene = new Map<string, ChoiceRecord[]>();
@@ -202,7 +243,7 @@ export function validateStory(story: ValidatableStory): StoryIssue[] {
             issues.push(warning("missing_translation", `${where}: escolha sem tradução (${locale}).`, choiceRef));
           }
         }
-        for (const condition of choice.conditions) issues.push(...checkCondition(condition, variables, choiceRef, where));
+        for (const condition of choice.conditions) issues.push(...checkCondition(condition, conditionVariables, choiceRef, where));
         for (const effect of choice.effects) issues.push(...checkEffect(effect, variables, choiceRef, where));
       }
       if (sceneChoices.length > 0 && sceneChoices.every((choice) => choice.conditions.length > 0)) {

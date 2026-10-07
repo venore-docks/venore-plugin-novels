@@ -9,13 +9,30 @@ export type WorkStatus = (typeof WORK_STATUSES)[number];
 export type VariableType = "number" | "boolean";
 export type VariableValue = number | boolean;
 
+// Onde a variável aparece para o leitor (painel do personagem): "hidden" (padrão, só o motor usa),
+// "status" (HP, mana, nível — com barra quando tem máximo), "skill" (club fighting, fist
+// fighting) ou "inventory" (item: sim/não = carrega ou não; número = quantidade).
+export const VARIABLE_DISPLAYS = ["hidden", "status", "skill", "inventory"] as const;
+export type VariableDisplay = (typeof VARIABLE_DISPLAYS)[number];
+
 // Variável de estado da obra ("coragem", "pegou_a_chave"). Escolhas e cenas leem/alteram esses
-// valores; a condição de uma escolha decide se ela aparece pro leitor.
+// valores; a condição de uma escolha decide se ela aparece pro leitor. Os campos opcionais (0.7.0)
+// cuidam de exibição e limites; obra antiga sem eles continua igual.
 export type VariableDefinition = {
   key: string;
   label: string;
   type: VariableType;
   initial: VariableValue;
+  display?: VariableDisplay;
+  // Número: limites aplicados depois de cada efeito (HP nunca abaixo de 0 nem acima do máximo).
+  // `maxVariable` usa outra variável como teto (hp_max que sobe de nível) e vale no lugar de `max`.
+  min?: number;
+  max?: number;
+  maxVariable?: string;
+  // Item de inventário: peso de uma unidade (padrão 1). A soma vira a carga.
+  weight?: number;
+  // Número que guarda a capacidade de carga (cap). No máximo uma por obra.
+  capacity?: boolean;
 };
 
 export const CONDITION_OPERATORS = ["eq", "neq", "gt", "gte", "lt", "lte"] as const;

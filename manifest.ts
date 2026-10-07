@@ -6,7 +6,7 @@ export const novelsManifest: PluginManifest = {
   manifestVersion: "1.0.0",
   key: "novels",
   name: "Graphic Novels",
-  version: "0.6.0",
+  version: "0.7.0",
   description: "Graphic novels interativas: leitura webtoon, escolhas ramificadas com variáveis e editor em grafo.",
   compatibility: { coreVersion: ">=2.3.0 <3.0.0" },
   // Schema próprio (novels), aplicado no install; default de migrationsSchema

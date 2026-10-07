@@ -12,8 +12,9 @@ import { findWorkRowBySlug } from "../database/queries/story-records";
 // Seed rodado via /admin/plugins, sem sessão: chama service.ts direto (mesmo racional do seed do
 // birthdays). actorId é só rótulo de auditoria.
 export const EXAMPLE_VARIABLES = [
-  { key: "coragem", label: "Coragem", type: "number" as const, initial: 0 },
-  { key: "lanterna", label: "Pegou a lanterna", type: "boolean" as const, initial: false },
+  // Aparecem no painel do personagem do leitor: coragem como status (0 a 3), lanterna no inventário.
+  { key: "coragem", label: "Coragem", type: "number" as const, initial: 0, display: "status" as const, min: 0, max: 3 },
+  { key: "lanterna", label: "Lanterna", type: "boolean" as const, initial: false, display: "inventory" as const },
 ];
 
 const SEED_ACTOR_ID = "system-seed";

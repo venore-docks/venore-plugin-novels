@@ -7,6 +7,7 @@ import type { ChapterGraphChoice, ChapterGraphScene } from "../../contracts/type
 import type { ChapterGraphEditorView } from "../../features/graph/get-chapter-graph/types";
 import { LocaleTabs } from "../../components/locale-tabs";
 import { ConditionsEditor, EffectsEditor } from "./rule-editors";
+import { derivedVariables } from "../../shared/variables";
 
 export function ChoiceInspector({
   choice,
@@ -91,7 +92,7 @@ export function ChoiceInspector({
 
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Só aparece se</p>
-        <ConditionsEditor variables={work.variables} conditions={choice.conditions} onChange={(conditions) => onChange({ conditions })} />
+        <ConditionsEditor variables={[...work.variables, ...derivedVariables(work.variables)]} conditions={choice.conditions} onChange={(conditions) => onChange({ conditions })} />
       </div>
 
       <div className="space-y-2">
