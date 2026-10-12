@@ -43,6 +43,8 @@ import {
   saveWorkAsTemplate,
   deleteSystemTemplate,
   applySystemTemplate,
+  importWork,
+  exportWork,
   type StoryIssue,
 } from "../../index";
 import { GAME_MODULES } from "../../contracts/game";
@@ -547,4 +549,21 @@ export async function convertLegacyVariablesAction(workId: string): Promise<Dire
   const result = await convertLegacyVariables({ workId: String(workId) });
   if (result.success) revalidateWork(String(workId));
   return toDirect(result);
+}
+
+// Importar obra (pacote venore-novels-work): arquivo do autor ou história de exemplo. Sucesso leva
+// ao editor da obra nova; o resumo do validador vai junto na URL para o aviso.
+export async function importWorkAction(source: { kind: "file"; content: string } | { kind: "example"; key: string }): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await importWork({ source });
+  if (!result.success) return { ok: false, error: result.error.message };
+  revalidatePath(ADMIN_BASE_PATH);
+  const { workId, errors, warnings } = result.data;
+  redirect(`${adminWorkPath(workId)}?importada=${errors}-${warnings}`);
+}
+
+export async function exportWorkAction(workId: string): Promise<{ ok: true; fileName: string; content: string } | { ok: false; error: string }> {
+  const result = await exportWork({ workId: String(workId) });
+  if (!result.success) return { ok: false, error: result.error.message };
+  return { ok: true, fileName: result.data.fileName, content: JSON.stringify(result.data.pkg, null, 2) };
 }

@@ -21,6 +21,7 @@ export const novelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
   }),
   staticBreadcrumbSegment({ key: "novels.admin", segments: ["admin", "novels"], label: "Graphic Novels" }),
   staticBreadcrumbSegment({ key: "novels.admin.new", segments: ["admin", "novels", "new"], label: "Nova obra" }),
+  staticBreadcrumbSegment({ key: "novels.admin.import", segments: ["admin", "novels", "import"], label: "Importar obra" }),
   staticBreadcrumbSegment({ key: "novels.admin.tags", segments: ["admin", "novels", "tags"], label: "Tags" }),
   staticBreadcrumbSegment({ key: "novels.admin.systems", segments: ["admin", "novels", "systems"], label: "Modelos de jogo" }),
   staticBreadcrumbSegment({

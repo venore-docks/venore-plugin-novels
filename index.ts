@@ -11,6 +11,9 @@ export { deleteWorkHandler as deleteWork } from "./features/works/delete-work/ha
 export { listWorksHandler as listWorks } from "./features/works/list-works/handler";
 export { getWorkHandler as getWork } from "./features/works/get-work/handler";
 export { getDraftStoryHandler as getDraftStory } from "./features/works/get-draft-story/handler";
+export { importWorkHandler as importWork } from "./features/works/import-work/handler";
+export { exportWorkHandler as exportWork } from "./features/works/export-work/handler";
+export { listWorkExamplesHandler as listWorkExamples } from "./features/works/list-work-examples/handler";
 export { createChapterHandler as createChapter } from "./features/chapters/create-chapter/handler";
 export { updateChapterHandler as updateChapter } from "./features/chapters/update-chapter/handler";
 export { deleteChapterHandler as deleteChapter } from "./features/chapters/delete-chapter/handler";
@@ -74,6 +77,7 @@ export { novelsSeeds } from "./seeds";
 
 export type * from "./contracts/types";
 export type * from "./contracts/game";
+export type * from "./contracts/work-package";
 export type { ReaderStats } from "./shared/reader-stats";
 export type { WorkStatsView } from "./features/stats/get-work-stats/types";
 export type { StoryIssue } from "./shared/story-validation";

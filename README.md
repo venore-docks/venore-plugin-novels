@@ -121,6 +121,23 @@ módulo esconde a configuração, nunca apaga.
   prévia das fórmulas troca de nível com um clique; "Ver como o leitor" mostra a barra do
   personagem.
 
+## Importar e exportar obras (0.15.0)
+
+- **Graphic Novels → Importar**: um arquivo `.json` no formato `venore-novels-work` vira um
+  rascunho novo (ids novos, endereço repetido ganha sufixo, tags casadas pelo slug do catálogo),
+  numa transação só. O arquivo é conferido inteiro antes: erro de formato ou referência quebrada
+  aparece com o caminho (`chapters[1].choices[3].to: cena "x" não é deste capítulo`) e nada é
+  gravado. Depois de importar, o editor mostra o resumo do validador de publicação.
+- **Exportar** (cabeçalho da obra): baixa a obra inteira no mesmo formato, com cenas, escolhas,
+  elenco, sistema, itens e criaturas referenciados por chave legível. Imagens não viajam (o id de
+  mídia é da instalação): o leitor mostra o cartão com o nome no lugar.
+- **Histórias de exemplo** (`examples/`), uma por tipo de obra, importáveis com um clique na mesma
+  tela: só narrativa, aventura simples, RPG de fantasia, Venore padrão, Tibia-like e terror com
+  sanidade.
+- Formato completo, com todos os efeitos, condições e mecânicas: [`examples/README.md`](examples/README.md).
+  `scripts/check-work-package.ts` confere um pacote (formato, validador e simulador com as quatro
+  estratégias); `scripts/template-skeleton.ts` gera o esqueleto a partir de um modelo de sistema.
+
 ## Painel do personagem (0.7.0)
 
 Cada variável da obra pode aparecer para o leitor ("Mostrar ao leitor" no formulário da obra):

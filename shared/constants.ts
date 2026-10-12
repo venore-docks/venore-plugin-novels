@@ -19,6 +19,7 @@ export function adminChapterPath(workId: string, chapterId: string): string {
 
 export const adminTagsPath = `${ADMIN_BASE_PATH}/tags`;
 export const adminNewWorkPath = `${ADMIN_BASE_PATH}/new`;
+export const adminImportWorkPath = `${ADMIN_BASE_PATH}/import`;
 export const adminSystemsPath = `${ADMIN_BASE_PATH}/systems`;
 
 export function adminWorkTabPath(workId: string, tab: string): string {

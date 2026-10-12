@@ -2,6 +2,7 @@ import { asPluginMetadata, asPluginPage, type PluginRouteTable } from "@venore/p
 import AdminPage from "./admin/page";
 import AdminChapterPage from "./admin-chapter/page";
 import AdminNewWorkPage from "./admin-new/page";
+import AdminImportPage from "./admin-import/page";
 import AdminTagsPage from "./admin-tags/page";
 import AdminSystemsPage from "./admin-systems/page";
 import AdminTestPage from "./admin-test/page";
@@ -13,6 +14,7 @@ export const novelsRouteTable: PluginRouteTable = {
   admin: [
     { pattern: "", Component: asPluginPage(AdminPage) },
     { pattern: "new", Component: asPluginPage(AdminNewWorkPage) },
+    { pattern: "import", Component: asPluginPage(AdminImportPage) },
     { pattern: "tags", Component: asPluginPage(AdminTagsPage) },
     { pattern: "systems", Component: asPluginPage(AdminSystemsPage) },
     { pattern: "works/:workId", Component: asPluginPage(AdminWorkPage) },

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { BookOpen, Plus, Tags } from "lucide-react";
+import { BookOpen, Plus, Tags, Upload } from "lucide-react";
 import { getPluginAdminPageData } from "@venore/plugin-sdk/admin";
 import { AdminAccessDenied, AdminPageHeader, Badge, Button, EmptyState } from "@venore/plugin-sdk/ui";
 import { listWorks } from "../../index";
 import { WorkCover } from "../../components/work-cover";
-import { adminNewWorkPath, adminTagsPath, adminWorkPath } from "../../shared/constants";
+import { adminImportWorkPath, adminNewWorkPath, adminTagsPath, adminWorkPath } from "../../shared/constants";
 import { pickText } from "../../shared/localized-text";
 import { localeLabel } from "../../shared/locales";
 import { StatusBadge } from "../../components/status-badge";
@@ -43,6 +43,12 @@ export default async function NovelsAdminPage() {
                 </Link>
               </Button>
             )}
+            <Button variant="outline" asChild>
+              <Link href={adminImportWorkPath}>
+                <Upload className="size-4" />
+                Importar
+              </Link>
+            </Button>
             {works.length > 0 ? newButton : null}
           </>
         }
@@ -52,7 +58,7 @@ export default async function NovelsAdminPage() {
         <EmptyState
           icon={<BookOpen className="size-8" strokeWidth={1.5} />}
           title="Nenhuma obra ainda"
-          description="Crie a primeira obra ou popule a obra de exemplo em Plugins."
+          description="Crie a primeira obra ou importe uma das histórias de exemplo (Importar)."
           action={newButton}
         />
       ) : (

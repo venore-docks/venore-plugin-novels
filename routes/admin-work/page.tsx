@@ -19,6 +19,7 @@ import { pickText } from "../../shared/localized-text";
 import { CastManager } from "./cast-manager";
 import { ChapterList } from "./chapter-list";
 import { IssueList } from "./issue-list";
+import { ExportButton } from "./export-button";
 import { PublishControls } from "./publish-controls";
 import { SpeechProduction } from "./speech-production";
 import { VariablesForm } from "./variables-form";
@@ -147,9 +148,20 @@ export default async function WorkEditorPage({
               Testar
             </Link>
           </Button>
+          <ExportButton workId={work.id} />
           <PublishControls workId={work.id} status={work.status} blocked={errors > 0} />
         </div>
       </header>
+
+      {typeof query.importada === "string" && (
+        <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-foreground">
+          Obra importada como rascunho.{" "}
+          {errors > 0
+            ? `O validador encontrou ${errors} ${errors === 1 ? "erro" : "erros"} para corrigir antes de publicar (aba História).`
+            : "Pronta para testar e publicar."}{" "}
+          Imagens não vêm no arquivo: escolha capa e ilustrações nas abas da obra.
+        </p>
+      )}
 
       <nav aria-label="Seções da obra" className="-mx-4 overflow-x-auto border-b border-border px-4 sm:mx-0 sm:px-0">
         <ul className="flex min-w-max gap-1">
