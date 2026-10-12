@@ -1,4 +1,5 @@
 import { toChapterGraphScene } from "../../../shared/build-story";
+import { withoutWork } from "../../../shared/game-records";
 import { resolveMediaUrls } from "../../../shared/resolve-media-urls";
 import { sceneMediaIds } from "../../../shared/scene-blocks";
 import { findChapterWithWork, findStoryRecords } from "./store";
@@ -29,7 +30,11 @@ export async function getChapterGraph(input: GetChapterGraphInput): Promise<GetC
         locales: work.locales,
         variables: work.variables,
         status: work.status,
+        gameSystem: work.gameSystem,
       },
+      items: records.items.map(withoutWork),
+      creatures: records.creatures.map(withoutWork),
+      allScenes: records.scenes.map((scene) => ({ id: scene.id, label: scene.label, chapterId: scene.chapterId })),
       chapter: found.chapter,
       cast: records.cast,
       chapterNumber: records.chapters.findIndex((chapter) => chapter.id === found.chapter.id) + 1,

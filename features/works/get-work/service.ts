@@ -1,4 +1,5 @@
 import { getSpeechState, getSpeechWorkerActivity } from "@venore/plugin-sdk/speech";
+import { collectMediaIds } from "../../../shared/build-story";
 import { resolveMediaUrls } from "../../../shared/resolve-media-urls";
 import { speechItemsForWork, workSpeechScope } from "../../../shared/speech";
 import { validateStory, type StoryIssue } from "../../../shared/story-validation";
@@ -17,8 +18,7 @@ export async function getWork(input: GetWorkInput): Promise<GetWorkResult> {
   const items = speechItemsForWork(work, records.scenes, records.cast);
   const [state, worker] = await Promise.all([getSpeechState({ scope, items }), getSpeechWorkerActivity()]);
   const speech = { state: state.success ? state.data : null, worker };
-  const mediaIds = [work.coverMediaId, ...records.cast.map((member) => member.portraitMediaId)].filter((id): id is string => Boolean(id));
-  const media = await resolveMediaUrls(mediaIds);
+  const media = await resolveMediaUrls(collectMediaIds({ ...records, scenes: [] }));
   const sceneCounts = new Map<string, number>();
   for (const scene of records.scenes) sceneCounts.set(scene.chapterId, (sceneCounts.get(scene.chapterId) ?? 0) + 1);
   const tagIssues: StoryIssue[] = validateWorkTags(tagCatalog.groups, tagCatalog.tags, tagIds, work.defaultLocale).map((issue) => ({
@@ -37,6 +37,9 @@ export async function getWork(input: GetWorkInput): Promise<GetWorkResult> {
       tagCatalog,
       tagIds,
       cast: records.cast,
+      items: records.items,
+      creatures: records.creatures,
+      scenes: records.scenes.map((scene) => ({ id: scene.id, label: scene.label, chapterId: scene.chapterId })),
       media,
       speech,
     },

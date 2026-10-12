@@ -1,3 +1,4 @@
+import type { Condition, Creature, Effect, GameSystem, Item, SceneMechanics } from "../contracts/game";
 import type {
   ChoiceCondition,
   ChoiceRecord,
@@ -7,6 +8,18 @@ import type {
   VariableEffect,
 } from "../contracts/types";
 import { CAPTION_MAX_CHARS, CONDITION_OPERATORS, EFFECT_OPERATIONS, VARIABLE_DISPLAYS } from "../contracts/types";
+import { normalizeSystem } from "./engine/system";
+import {
+  encounterTargets,
+  extraTargets,
+  validateChoiceMechanics,
+  validateCondition,
+  validateEffect,
+  validateGameSystem,
+  validateSceneMechanics,
+  type GameIssue,
+  type GameValidationInput,
+} from "./engine/validate";
 import { BLOCK_LABELS, blockTextFields } from "./scene-blocks";
 import { derivedVariables } from "./variables";
 
@@ -32,18 +45,22 @@ type ValidatableScene = {
   blocks: SceneBlock[];
   isEnding: boolean;
   endingTitle: LocalizedText;
-  effects: VariableEffect[];
+  effects: Effect[];
+  mechanics?: SceneMechanics;
 };
 
 type ValidatableChapter = { id: string; position: number; title: LocalizedText; startSceneId: string | null };
 
 export type ValidatableStory = {
-  work: { title: LocalizedText; defaultLocale: string; locales: string[]; variables: VariableDefinition[] };
+  work: { title: LocalizedText; defaultLocale: string; locales: string[]; variables: VariableDefinition[]; gameSystem?: GameSystem };
   chapters: ValidatableChapter[];
   scenes: ValidatableScene[];
   choices: ChoiceRecord[];
   // Elenco da obra: a fala precisa apontar para alguém que existe. Ausente = não confere.
   cast?: { id: string }[];
+  // Catálogo de itens e criaturas (0.11.0/0.12.0). Ausente = obra sem catálogo.
+  items?: Pick<Item, "id" | "key" | "useEffects">[];
+  creatures?: Pick<Creature, "id" | "key" | "loot">[];
 };
 
 const VARIABLE_KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
@@ -117,6 +134,17 @@ function sceneName(scene: ValidatableScene): string {
 }
 
 function checkCondition(
+  condition: Condition,
+  variables: Map<string, VariableDefinition>,
+  game: GameValidationInput,
+  ref: Partial<StoryIssue>,
+  where: string,
+): StoryIssue[] {
+  if ("kind" in condition && condition.kind !== undefined) return fromGame(validateCondition(condition, game, where), ref);
+  return checkLegacyCondition(condition as ChoiceCondition, variables, ref, where);
+}
+
+function checkLegacyCondition(
   condition: ChoiceCondition,
   variables: Map<string, VariableDefinition>,
   ref: Partial<StoryIssue>,
@@ -135,6 +163,38 @@ function checkCondition(
 }
 
 function checkEffect(
+  effect: Effect,
+  variables: Map<string, VariableDefinition>,
+  game: GameValidationInput,
+  ref: Partial<StoryIssue>,
+  where: string,
+): StoryIssue[] {
+  if ("kind" in effect && effect.kind !== undefined) return fromGame(validateEffect(effect, game, where), ref);
+  return checkLegacyEffect(effect as VariableEffect, variables, ref, where);
+}
+
+function fromGame(issues: GameIssue[], ref: Partial<StoryIssue>): StoryIssue[] {
+  return issues.map((issue) => ({ ...issue, ...ref, sceneId: issue.sceneId ?? ref.sceneId, choiceId: issue.choiceId ?? ref.choiceId }));
+}
+
+// Chaves numéricas do sistema de jogo (recursos, atributos, XP...) contam como variáveis no
+// formato antigo de condição e efeito. Derivados e nível só valem em condição (são calculados).
+function systemNumbers(system: GameSystem, forConditions: boolean): VariableDefinition[] {
+  const keys: string[] = [];
+  if (system.modules.resources) keys.push(...system.resources.map((resource) => resource.key));
+  if (system.modules.attributes) {
+    keys.push(...system.attributes.map((attribute) => attribute.key));
+    if (forConditions) keys.push(...system.derived.map((derived) => derived.key));
+  }
+  if (system.modules.progression) {
+    keys.push(system.progression.xpKey, system.progression.pointsKey);
+    if (forConditions) keys.push(system.progression.levelKey);
+  }
+  if (system.modules.shops && system.currency.mode === "counter") keys.push(system.currency.key);
+  return keys.map((key) => ({ key, label: key, type: "number", initial: 0 }));
+}
+
+function checkLegacyEffect(
   effect: VariableEffect,
   variables: Map<string, VariableDefinition>,
   ref: Partial<StoryIssue>,
@@ -204,11 +264,34 @@ function checkBlocks(
 
 export function validateStory(story: ValidatableStory): StoryIssue[] {
   const issues: StoryIssue[] = [...validateVariableDefinitions(story.work.variables)];
-  const variables = new Map(story.work.variables.map((variable) => [variable.key, variable]));
+  const system = normalizeSystem(story.work.gameSystem);
+  const game: GameValidationInput = {
+    system,
+    variables: story.work.variables,
+    items: story.items ?? [],
+    creatures: story.creatures ?? [],
+    sceneIds: new Set(story.scenes.map((scene) => scene.id)),
+  };
+  issues.push(...validateGameSystem(game));
+  const variables = new Map(
+    [...systemNumbers(system, false), ...story.work.variables].map((variable) => [variable.key, variable]),
+  );
   // Condições também enxergam os valores calculados (carga, espaço livre); efeitos não.
   const conditionVariables = new Map(
-    [...story.work.variables, ...derivedVariables(story.work.variables)].map((variable) => [variable.key, variable]),
+    [...systemNumbers(system, true), ...story.work.variables, ...derivedVariables(story.work.variables)].map((variable) => [variable.key, variable]),
   );
+  // Gatilhos de recurso (ao zerar/lotar) levam a cenas de qualquer capítulo: essas cenas contam
+  // como alcançáveis.
+  const triggerTargets = new Set<string>();
+  if (system.modules.resources) {
+    for (const resource of system.resources) {
+      if (resource.onZero?.sceneId) triggerTargets.add(resource.onZero.sceneId);
+      if (resource.onFull?.sceneId) triggerTargets.add(resource.onFull.sceneId);
+    }
+  }
+  for (const scene of story.scenes) {
+    for (const target of Object.values(scene.mechanics?.onZero ?? {})) if (target) triggerTargets.add(target);
+  }
   const { locales, defaultLocale } = story.work;
   const scenesById = new Map(story.scenes.map((scene) => [scene.id, scene]));
   const choicesByScene = new Map<string, ChoiceRecord[]>();
@@ -251,7 +334,8 @@ export function validateStory(story: ValidatableStory): StoryIssue[] {
         const current = queue.shift()!;
         if (reachable.has(current)) continue;
         reachable.add(current);
-        for (const choice of choicesByScene.get(current) ?? []) queue.push(choice.targetSceneId);
+        for (const choice of choicesByScene.get(current) ?? []) queue.push(choice.targetSceneId, ...extraTargets(choice.mechanics));
+        queue.push(...encounterTargets(scenesById.get(current)?.mechanics));
       }
     }
 
@@ -261,17 +345,24 @@ export function validateStory(story: ValidatableStory): StoryIssue[] {
       const where = `${chapterName}, cena "${sceneName(scene)}"`;
       const sceneChoices = choicesByScene.get(scene.id) ?? [];
 
-      if (start && !reachable.has(scene.id)) {
+      if (start && !reachable.has(scene.id) && !triggerTargets.has(scene.id)) {
         issues.push(warning("unreachable_scene", `${where}: nenhuma escolha leva até ela.`, ref));
       }
       issues.push(...checkBlocks(scene.blocks, locales, story.cast, ref, where));
       if (scene.isEnding && sceneChoices.length > 0) {
         issues.push(error("ending_with_choices", `${where}: é um final, mas tem escolhas saindo dela.`, ref));
       }
-      if (!scene.isEnding && sceneChoices.length === 0 && isLastChapter) {
+      const exits = encounterTargets(scene.mechanics);
+      if (!scene.isEnding && sceneChoices.length === 0 && exits.length === 0 && isLastChapter) {
         issues.push(error("dead_end", `${where}: não tem escolhas nem é marcada como final (último capítulo).`, ref));
       }
-      for (const effect of scene.effects) issues.push(...checkEffect(effect, variables, ref, where));
+      for (const target of exits) {
+        if (scenesById.get(target) && scenesById.get(target)!.chapterId !== scene.chapterId) {
+          issues.push(error("cross_chapter_choice", `${where}: a saída do encontro leva para outro capítulo.`, ref));
+        }
+      }
+      for (const effect of scene.effects) issues.push(...checkEffect(effect, variables, game, ref, where));
+      if (scene.mechanics) issues.push(...fromGame(validateSceneMechanics(scene.mechanics, game, where), ref));
 
       for (const choice of sceneChoices) {
         const choiceRef = { ...ref, choiceId: choice.id };
@@ -288,8 +379,17 @@ export function validateStory(story: ValidatableStory): StoryIssue[] {
             issues.push(warning("missing_translation", `${where}: escolha sem tradução (${locale}).`, choiceRef));
           }
         }
-        for (const condition of choice.conditions) issues.push(...checkCondition(condition, conditionVariables, choiceRef, where));
-        for (const effect of choice.effects) issues.push(...checkEffect(effect, variables, choiceRef, where));
+        for (const condition of choice.conditions) issues.push(...checkCondition(condition, conditionVariables, game, choiceRef, where));
+        for (const effect of choice.effects) issues.push(...checkEffect(effect, variables, game, choiceRef, where));
+        if (choice.mechanics) {
+          issues.push(...fromGame(validateChoiceMechanics(choice.mechanics, game, where), choiceRef));
+          for (const extra of extraTargets(choice.mechanics)) {
+            const outcome = scenesById.get(extra);
+            if (outcome && outcome.chapterId !== scene.chapterId) {
+              issues.push(error("cross_chapter_choice", `${where}: um resultado do teste leva para outro capítulo.`, choiceRef));
+            }
+          }
+        }
       }
       if (sceneChoices.length > 0 && sceneChoices.every((choice) => choice.conditions.length > 0)) {
         issues.push(

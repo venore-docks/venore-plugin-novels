@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hasBlockingIssues, validateStory } from "./story-validation";
 import { buildStory, choice, scene } from "./story-fixture.test-support";
+import { emptyChoiceMechanics, emptySceneMechanics } from "./engine/system";
 
 function codes(issues: { code: string }[]) {
   return issues.map((issue) => issue.code);
@@ -73,5 +74,49 @@ describe("validateStory", () => {
     story.work.variables.push({ key: "Coragem!", label: "x", type: "number", initial: 0 });
     story.work.variables.push({ key: "coragem", label: "x", type: "number", initial: 0 });
     expect(codes(validateStory(story))).toEqual(expect.arrayContaining(["invalid_variable_key", "duplicate_variable"]));
+  });
+
+  it("sistema de jogo: fórmula, item e recurso inexistentes bloqueiam", () => {
+    const story = buildStory();
+    story.system.modules.resources = true;
+    story.system.resources.push({
+      key: "vida",
+      name: { "pt-BR": "Vida" },
+      abbr: {},
+      color: "chart-2",
+      max: "10 + forsa",
+      initial: "max",
+      regen: "",
+      regenInCombat: false,
+      onZero: null,
+      onFull: null,
+      showInHud: true,
+      lowPercent: 25,
+    });
+    story.choices[0].effects.push({ kind: "item", operation: "give", itemId: "sumiu", quantity: "1" });
+    story.choices[0].mechanics = { ...emptyChoiceMechanics(), cost: [{ resource: "mana", amount: "2" }] };
+    const issues = validateStory({ ...story, work: { ...story.work, gameSystem: story.system } });
+    expect(codes(issues)).toEqual(expect.arrayContaining(["invalid_formula", "missing_item", "unknown_resource"]));
+    expect(issues.find((issue) => issue.code === "invalid_formula")?.message).toContain('"forsa" não existe');
+  });
+
+  it("resultado do teste e saída do encontro contam como caminho e não podem sair do capítulo", () => {
+    const story = buildStory();
+    story.system.modules.dice = true;
+    story.system.modules.combat = true;
+    story.scenes.push(scene({ id: "queda", chapterId: "ch1", isEnding: true }));
+    story.choices[0].mechanics = {
+      ...emptyChoiceMechanics(),
+      test: { roll: "1d20", dc: "10", label: {}, successEffects: [], failure: { targetSceneId: "queda", effects: [] }, critical: null, fumble: null, bands: [] },
+    };
+    let issues = validateStory({ ...story, work: { ...story.work, gameSystem: story.system } });
+    expect(issues.some((issue) => issue.code === "unreachable_scene" && issue.sceneId === "queda")).toBe(false);
+    story.choices[0].mechanics.test!.failure.targetSceneId = "d";
+    issues = validateStory({ ...story, work: { ...story.work, gameSystem: story.system } });
+    expect(codes(issues)).toContain("cross_chapter_choice");
+    // Encontro sem criaturas e com combate ligado.
+    story.scenes = story.scenes.map((current) => (current.id === "b" ? { ...current, mechanics: { ...emptySceneMechanics(), kind: "encounter" } } : current));
+    issues = validateStory({ ...story, work: { ...story.work, gameSystem: story.system } });
+    expect(codes(issues)).toContain("empty_encounter");
   });
 });

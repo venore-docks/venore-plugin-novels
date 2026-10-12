@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { isPluginActive } from "@venore/plugin-sdk";
 import { getCurrentUser } from "@venore/plugin-sdk/auth";
-import { getCachedPublishedStory, getReaderProgress } from "../../index";
+import { getCachedPublishedStory, getReaderProgress, getSeriesCarry } from "../../index";
 import { PLUGIN_KEY, publicWorkPath } from "../../shared/constants";
 import { pickText } from "../../shared/localized-text";
 import { absoluteUrl, resolveRequestOrigin } from "../../shared/request-origin";
@@ -17,12 +17,16 @@ export default async function StoryReaderPage({ params }: Params) {
   if (!result.success) notFound();
 
   const story = result.data;
-  const [user, progress] = await Promise.all([getCurrentUser(), getReaderProgress({ workId: story.work.id })]);
+  const [user, progress, carry] = await Promise.all([
+    getCurrentUser(),
+    getReaderProgress({ workId: story.work.id }),
+    story.system.series.previousWorkId ? getSeriesCarry({ workId: story.work.id }) : null,
+  ]);
   const signedIn = user.success && user.data !== null;
   const serverProgress =
     progress.success && progress.data ? { state: progress.data.state, updatedAt: progress.data.updatedAt.toISOString() } : null;
 
-  return <StoryReader story={story} signedIn={signedIn} serverProgress={serverProgress} />;
+  return <StoryReader story={story} signedIn={signedIn} serverProgress={serverProgress} carry={carry?.success ? carry.data : undefined} />;
 }
 
 export async function generateStoryMetadata({ params }: Params): Promise<Metadata> {

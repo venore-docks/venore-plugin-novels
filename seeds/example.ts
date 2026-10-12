@@ -1,5 +1,6 @@
 import type { OperationResult } from "@venore/plugin-sdk";
 import type { ChapterGraph, LocalizedText } from "../contracts/types";
+import { emptyChoiceMechanics, emptySceneMechanics } from "../shared/engine/system";
 import { createChapter } from "../features/chapters/create-chapter/service";
 import { updateChapter } from "../features/chapters/update-chapter/service";
 import { saveChapterGraph } from "../features/graph/save-chapter-graph/service";
@@ -39,6 +40,7 @@ function sceneNode(
     isEnding: false,
     endingTitle: {},
     effects: [],
+    mechanics: emptySceneMechanics(),
     graphX: x,
     graphY: y,
     ...extra,
@@ -101,6 +103,7 @@ export function chapterOne(prefix: string): ChapterGraph {
         label: t("Subir até o farol", "Climb to the lighthouse"),
         conditions: [],
         effects: [{ variable: "coragem", operation: "add", value: 1 }],
+        mechanics: emptyChoiceMechanics(),
       },
       {
         id: id("c2"),
@@ -110,6 +113,7 @@ export function chapterOne(prefix: string): ChapterGraph {
         label: t("Procurar abrigo na vila", "Look for shelter in the village"),
         conditions: [],
         effects: [],
+        mechanics: emptyChoiceMechanics(),
       },
       {
         id: id("c3"),
@@ -119,6 +123,7 @@ export function chapterOne(prefix: string): ChapterGraph {
         label: t("Pegar a lanterna", "Take the lantern"),
         conditions: [],
         effects: [{ variable: "lanterna", operation: "set", value: true }],
+        mechanics: emptyChoiceMechanics(),
       },
       {
         id: id("c4"),
@@ -128,6 +133,7 @@ export function chapterOne(prefix: string): ChapterGraph {
         label: t("Seguir no escuro", "Keep going in the dark"),
         conditions: [],
         effects: [],
+        mechanics: emptyChoiceMechanics(),
       },
     ],
   };
@@ -179,6 +185,7 @@ export function chapterTwo(prefix: string): ChapterGraph {
         label: t("Acender o farol com a lanterna", "Light the beacon with the lantern"),
         conditions: [{ variable: "lanterna", operator: "eq", value: true }],
         effects: [],
+        mechanics: emptyChoiceMechanics(),
       },
       {
         id: id("d2"),
@@ -188,6 +195,7 @@ export function chapterTwo(prefix: string): ChapterGraph {
         label: t("Gritar para o barco", "Shout at the boat"),
         conditions: [{ variable: "coragem", operator: "gte", value: 1 }],
         effects: [],
+        mechanics: emptyChoiceMechanics(),
       },
       {
         id: id("d3"),
@@ -197,6 +205,7 @@ export function chapterTwo(prefix: string): ChapterGraph {
         label: t("Esperar", "Wait"),
         conditions: [],
         effects: [],
+        mechanics: emptyChoiceMechanics(),
       },
     ],
   };

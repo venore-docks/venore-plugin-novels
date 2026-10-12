@@ -1,7 +1,10 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@venore/plugin-sdk";
+import type { CreatureRecord, ItemRecord } from "../../contracts/game";
 import type { CastMemberRecord, ChapterRecord, ChoiceRecord, SceneRecord, WorkRecord } from "../../contracts/types";
-import { castMembers, chapters, choices, scenes, works } from "../schema";
+import { normalizeChoiceMechanics, normalizeSceneMechanics, normalizeSystem } from "../../shared/engine/system";
+import { toCreatureRecord, toItemRecord } from "../../shared/game-records";
+import { castMembers, chapters, choices, creatures, items, scenes, works } from "../schema";
 
 // Leituras compartilhadas pelos store.ts que precisam da obra inteira (validação, publicação,
 // leitor). Cada store.ts continua sendo o único ponto de acesso do seu caso de uso; este módulo
@@ -13,10 +16,12 @@ export type WorkStoryRecords = {
   scenes: SceneRecord[];
   choices: ChoiceRecord[];
   cast: CastMemberRecord[];
+  items: ItemRecord[];
+  creatures: CreatureRecord[];
 };
 
 export function toWorkRecord(row: typeof works.$inferSelect): WorkRecord {
-  return { ...row, status: row.status as WorkRecord["status"], coverFocus: row.coverFocus ?? null };
+  return { ...row, status: row.status as WorkRecord["status"], coverFocus: row.coverFocus ?? null, gameSystem: normalizeSystem(row.gameSystem) };
 }
 
 export async function findWorkRowById(workId: string): Promise<WorkRecord | null> {
@@ -43,8 +48,18 @@ export async function findCastRows(workId: string): Promise<CastMemberRecord[]> 
     .orderBy(asc(castMembers.position), asc(castMembers.createdAt));
 }
 
+export async function findItemRows(workId: string): Promise<ItemRecord[]> {
+  const rows = await db.select().from(items).where(eq(items.workId, workId)).orderBy(asc(items.position), asc(items.createdAt));
+  return rows.map(toItemRecord);
+}
+
+export async function findCreatureRows(workId: string): Promise<CreatureRecord[]> {
+  const rows = await db.select().from(creatures).where(eq(creatures.workId, workId)).orderBy(asc(creatures.position), asc(creatures.createdAt));
+  return rows.map(toCreatureRecord);
+}
+
 export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecords> {
-  const [chapterRows, sceneRows, choiceRows, cast] = await Promise.all([
+  const [chapterRows, sceneRows, choiceRows, cast, itemRows, creatureRows] = await Promise.all([
     db.select().from(chapters).where(eq(chapters.workId, work.id)).orderBy(asc(chapters.position)),
     db.select().from(scenes).where(eq(scenes.workId, work.id)),
     db
@@ -56,12 +71,15 @@ export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecor
         label: choices.label,
         conditions: choices.conditions,
         effects: choices.effects,
+        mechanics: choices.mechanics,
       })
       .from(choices)
       .innerJoin(scenes, eq(scenes.id, choices.sceneId))
       .where(eq(scenes.workId, work.id))
       .orderBy(asc(choices.position)),
     findCastRows(work.id),
+    findItemRows(work.id),
+    findCreatureRows(work.id),
   ]);
   return {
     work,
@@ -75,11 +93,14 @@ export async function findStoryRecords(work: WorkRecord): Promise<WorkStoryRecor
       isEnding: row.isEnding,
       endingTitle: row.endingTitle,
       effects: row.effects,
+      mechanics: normalizeSceneMechanics(row.mechanics),
       graphX: row.graphX,
       graphY: row.graphY,
     })),
-    choices: choiceRows,
+    choices: choiceRows.map((row) => ({ ...row, mechanics: normalizeChoiceMechanics(row.mechanics) })),
     cast,
+    items: itemRows,
+    creatures: creatureRows,
   };
 }
 

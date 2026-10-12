@@ -31,8 +31,21 @@ import {
   updateTagBadges,
   updateWork,
   updateWorkVariables,
+  updateGameSystem,
+  convertLegacyVariables,
+  saveItem,
+  deleteItem,
+  reorderItems,
+  saveCreature,
+  deleteCreature,
+  reorderCreatures,
+  importSystemTemplate,
+  saveWorkAsTemplate,
+  deleteSystemTemplate,
+  applySystemTemplate,
   type StoryIssue,
 } from "../../index";
+import { GAME_MODULES } from "../../contracts/game";
 import type {
   AccentColor,
   CatalogBadges,
@@ -46,6 +59,7 @@ import type {
 import {
   ADMIN_BASE_PATH,
   adminChapterPath,
+  adminSystemsPath,
   adminTagsPath,
   adminWorkPath,
   PLUGIN_KEY,
@@ -107,6 +121,8 @@ export type CreateWorkPayload = {
   coverMediaId: string | null;
   coverFocus: CoverFocus | null;
   tags: WorkTagInput;
+  // Passo "Sistema de jogo": só narrativa, um modelo ou montar do zero (liga o básico).
+  system?: { mode: "narrative" | "template" | "scratch"; templateKey?: string | null };
 };
 
 // Assistente de criação: cria e leva direto ao editor do primeiro capítulo.
@@ -125,8 +141,15 @@ export async function createWorkAction(payload: CreateWorkPayload): Promise<Dire
     tags: tagInput(payload.tags),
   });
   if (!result.success) return { ok: false, error: result.error.message };
+  const system = payload.system;
+  if (system?.mode === "template" && system.templateKey) {
+    await applySystemTemplate({ workId: result.data.id, templateKey: String(system.templateKey) });
+  } else if (system?.mode === "scratch") {
+    const modules = Object.fromEntries(GAME_MODULES.map((module) => [module, ["resources", "attributes", "dice"].includes(module)]));
+    await updateGameSystem({ workId: result.data.id, system: { modules } });
+  }
   revalidatePath(ADMIN_BASE_PATH);
-  redirect(adminChapterPath(result.data.id, result.data.firstChapterId));
+  redirect(system?.mode === "scratch" || system?.mode === "template" ? `${adminWorkPath(result.data.id)}?tab=sistema` : adminChapterPath(result.data.id, result.data.firstChapterId));
 }
 
 export type UpdateWorkPayload = {
@@ -433,5 +456,95 @@ export async function installTagStarterPackAction(): Promise<DirectActionResult>
   if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
   const result = await installTagStarterPack();
   if (result.success) revalidateTags();
+  return toDirect(result);
+}
+
+// ------------------------------------------------------------------ sistema de jogo (0.10.0+)
+
+export async function updateGameSystemAction(workId: string, system: unknown): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await updateGameSystem({ workId: String(workId), system });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function applySystemTemplateAction(workId: string, input: { templateKey?: string; package?: unknown }): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await applySystemTemplate({
+    workId: String(workId),
+    templateKey: input?.templateKey ? String(input.templateKey) : null,
+    package: input?.package,
+  });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function saveWorkAsTemplateAction(input: { workId: string; key: string; name: LocalizedText; description: LocalizedText }): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await saveWorkAsTemplate({ workId: String(input?.workId ?? ""), key: String(input?.key ?? ""), name: localized(input?.name), description: localized(input?.description) });
+  if (result.success) revalidatePath(adminSystemsPath);
+  return toDirect(result);
+}
+
+export async function importSystemTemplateAction(content: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await importSystemTemplate({ package: String(content ?? "") });
+  if (result.success) revalidatePath(adminSystemsPath);
+  return toDirect(result);
+}
+
+export async function deleteSystemTemplateAction(id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await deleteSystemTemplate({ id: String(id) });
+  if (result.success) revalidatePath(adminSystemsPath);
+  return toDirect(result);
+}
+
+export async function saveItemAction(workId: string, id: string | null, item: unknown): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await saveItem({ workId: String(workId), id: id ? String(id) : null, item });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function deleteItemAction(workId: string, id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await deleteItem({ workId: String(workId), id: String(id) });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function reorderItemsAction(workId: string, orderedIds: string[]): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await reorderItems({ workId: String(workId), orderedIds: Array.isArray(orderedIds) ? orderedIds.map(String) : [] });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function saveCreatureAction(workId: string, id: string | null, creature: unknown): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await saveCreature({ workId: String(workId), id: id ? String(id) : null, creature });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function deleteCreatureAction(workId: string, id: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await deleteCreature({ workId: String(workId), id: String(id) });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function reorderCreaturesAction(workId: string, orderedIds: string[]): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await reorderCreatures({ workId: String(workId), orderedIds: Array.isArray(orderedIds) ? orderedIds.map(String) : [] });
+  if (result.success) revalidateWork(String(workId));
+  return toDirect(result);
+}
+
+export async function convertLegacyVariablesAction(workId: string): Promise<DirectActionResult> {
+  if (await pluginDisabled()) return { ok: false, error: PLUGIN_DISABLED_ERROR };
+  const result = await convertLegacyVariables({ workId: String(workId) });
+  if (result.success) revalidateWork(String(workId));
   return toDirect(result);
 }

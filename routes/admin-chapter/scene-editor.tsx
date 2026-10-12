@@ -32,7 +32,9 @@ import { useDragReorder } from "../../components/use-drag-reorder";
 import { pickText } from "../../shared/localized-text";
 import { BLOCK_HINTS, BLOCK_LABELS, newBlock, sceneWordStats } from "../../shared/scene-blocks";
 import { BlockEditor } from "./block-editors";
-import { EffectsEditor } from "./rule-editors";
+import type { GameCatalog } from "../game-editor/catalog";
+import { EffectsEditor } from "../game-editor/rules";
+import { SceneMechanicsEditor } from "../game-editor/scene-mechanics";
 
 const BLOCK_ICONS: Record<SceneBlockType, LucideIcon> = {
   text: AlignLeft,
@@ -53,6 +55,7 @@ const minutes = (value: number) => (value < 1 ? "menos de 1 min" : `${Math.round
 export function SceneEditor({
   scene,
   work,
+  catalog,
   cast,
   media,
   isStart,
@@ -67,6 +70,7 @@ export function SceneEditor({
 }: {
   scene: ChapterGraphScene;
   work: ChapterGraphEditorView["work"];
+  catalog: GameCatalog;
   cast: ChapterGraphEditorView["cast"];
   media: Record<string, string>;
   isStart: boolean;
@@ -289,8 +293,10 @@ export function SceneEditor({
 
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">Ao entrar nesta cena</p>
-              <EffectsEditor variables={work.variables} effects={scene.effects} onChange={(effects) => onChange({ effects })} />
+              <EffectsEditor catalog={catalog} effects={scene.effects} onChange={(effects) => onChange({ effects })} />
             </div>
+
+            <SceneMechanicsEditor catalog={catalog} mechanics={scene.mechanics} onChange={(mechanics) => onChange({ mechanics })} />
 
             {!scene.isEnding && (
               <div className="space-y-2">

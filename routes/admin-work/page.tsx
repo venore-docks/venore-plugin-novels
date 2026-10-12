@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Play } from "lucide-react";
+import { authorizeActor } from "@venore/plugin-sdk/rbac";
 import { getPluginAdminPageData } from "@venore/plugin-sdk/admin";
 import { AdminAccessDenied, Button, cn } from "@venore/plugin-sdk/ui";
-import { getCachedWork, type WorkEditorView } from "../../index";
+import { getCachedWork, getWorkStats, listSystemTemplates, listWorks, type WorkEditorView } from "../../index";
 import { StatusBadge } from "../../components/status-badge";
 import { WorkCover } from "../../components/work-cover";
-import { adminWorkTabPath, publicWorkPath } from "../../shared/constants";
+import { withoutWork } from "../../shared/game-records";
+import { adminWorkTabPath, adminWorkTestPath, publicWorkPath, SYSTEMS_PERMISSION } from "../../shared/constants";
+import type { GameCatalog } from "../game-editor/catalog";
+import { SystemEditor } from "../game-editor/system-editor";
+import { CreatureCatalog, ItemCatalog } from "./item-catalog";
+import { WorkStats } from "./work-stats";
+import { LegacyConvert } from "./legacy-convert";
+import { canConvert } from "../../shared/legacy-conversion";
 import { pickText } from "../../shared/localized-text";
 import { CastManager } from "./cast-manager";
 import { ChapterList } from "./chapter-list";
@@ -22,9 +30,12 @@ type SpeechView = WorkEditorView["speech"];
 const TABS = [
   { key: "historia", label: "História" },
   { key: "sistema", label: "Sistema" },
+  { key: "itens", label: "Itens" },
+  { key: "bestiario", label: "Bestiário" },
   { key: "elenco", label: "Elenco" },
   { key: "configuracoes", label: "Configurações" },
   { key: "audio", label: "Áudio" },
+  { key: "estatisticas", label: "Estatísticas" },
   { key: "publicacao", label: "Publicação" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
@@ -98,6 +109,16 @@ export default async function WorkEditorPage({
   const title = pickText(work.title, work.defaultLocale, work.defaultLocale);
   const subtitle = pickText(work.subtitle, work.defaultLocale, work.defaultLocale);
   const errors = issues.filter((issue) => issue.severity === "error").length;
+  const catalog: GameCatalog = {
+    locale: work.defaultLocale,
+    locales: work.locales,
+    variables: work.variables,
+    system: work.gameSystem,
+    items: view.items.map(withoutWork),
+    creatures: view.creatures.map(withoutWork),
+    scenes: view.scenes,
+    allScenes: view.scenes,
+  };
 
   return (
     <div className="space-y-6">
@@ -120,6 +141,12 @@ export default async function WorkEditorPage({
               </Link>
             </Button>
           )}
+          <Button variant="outline" asChild>
+            <Link href={adminWorkTestPath(work.id)} target="_blank">
+              <Play className="size-4" />
+              Testar
+            </Link>
+          </Button>
           <PublishControls workId={work.id} status={work.status} blocked={errors > 0} />
         </div>
       </header>
@@ -160,7 +187,10 @@ export default async function WorkEditorPage({
           <ChapterList work={work} chapters={chapters} />
         </section>
       )}
-      {tab === "sistema" && <VariablesForm work={work} />}
+      {tab === "sistema" && <SystemTab view={view} />}
+      {tab === "itens" && <ItemCatalog workId={work.id} catalog={catalog} records={view.items} media={view.media} />}
+      {tab === "bestiario" && <CreatureCatalog workId={work.id} catalog={catalog} records={view.creatures} media={view.media} />}
+      {tab === "estatisticas" && <StatsTab workId={work.id} locale={work.defaultLocale} />}
       {tab === "elenco" && <CastManager work={work} cast={view.cast} media={view.media} />}
       {tab === "configuracoes" && <WorkSettingsForm work={work} coverUrl={coverUrl} tagCatalog={view.tagCatalog} tagIds={view.tagIds} />}
       {tab === "audio" && <SpeechProduction workId={work.id} {...describeSpeech(view.speech)} />}
@@ -175,4 +205,48 @@ export default async function WorkEditorPage({
       )}
     </div>
   );
+}
+
+async function SystemTab({ view }: { view: WorkEditorView }) {
+  const { work } = view;
+  const [templates, systems, works] = await Promise.all([listSystemTemplates(), authorizeActor(SYSTEMS_PERMISSION), listWorks()]);
+  return (
+    <div className="space-y-6">
+      {/* key: aplicar um modelo (refresh) remonta o editor com o sistema que veio do banco. */}
+      <SystemEditor
+        key={work.updatedAt.toISOString()}
+        workId={work.id}
+        workTitle={work.title}
+        locale={work.defaultLocale}
+        locales={work.locales}
+        system={work.gameSystem}
+        variables={work.variables}
+        items={view.items.map(withoutWork)}
+        creatures={view.creatures.map(withoutWork)}
+        scenes={view.scenes}
+        templates={templates.success ? templates.data : []}
+        canManageTemplates={systems.authorized}
+        works={(works.success ? works.data : []).filter((other) => other.id !== work.id).map((other) => ({ id: other.id, title: pickText(other.title, other.defaultLocale, other.defaultLocale) }))}
+      />
+      {canConvert(work.variables) && (
+        <LegacyConvert
+          workId={work.id}
+          summary={[
+            work.variables.some((variable) => variable.display === "status" && (variable.maxVariable || typeof variable.max === "number")) ? "Barras com máximo viram recursos." : "",
+            work.variables.some((variable) => variable.display === "inventory") ? "Itens do inventário viram itens do catálogo." : "",
+            work.variables.some((variable) => variable.capacity) ? "A capacidade vira o peso máximo." : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
+      )}
+      <VariablesForm work={work} />
+    </div>
+  );
+}
+
+async function StatsTab({ workId, locale }: { workId: string; locale: string }) {
+  const stats = await getWorkStats({ workId });
+  if (!stats.success) return <p className="text-sm text-destructive">{stats.error.message}</p>;
+  return <WorkStats stats={stats.data} locale={locale} />;
 }

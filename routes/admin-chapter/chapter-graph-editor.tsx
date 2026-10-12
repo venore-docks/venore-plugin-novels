@@ -20,6 +20,9 @@ import { Button } from "@venore/plugin-sdk/ui";
 import type { ChapterGraph, ChapterGraphChoice, ChapterGraphScene } from "../../contracts/types";
 import type { ChapterGraphEditorView } from "../../features/graph/get-chapter-graph/types";
 import { adminWorkPath } from "../../shared/constants";
+import { emptyChoiceMechanics, emptySceneMechanics } from "../../shared/engine/system";
+import { encounterTargets, extraTargets } from "../../shared/engine/validate";
+import type { GameCatalog } from "../game-editor/catalog";
 import { pickText } from "../../shared/localized-text";
 import { firstImageId, sceneExcerpt } from "../../shared/scene-blocks";
 import { validateStory, type StoryIssue } from "../../shared/story-validation";
@@ -78,6 +81,23 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
   const [dirty, setDirty] = useState(false);
   const [saving, startSaving] = useTransition();
 
+  const catalog = useMemo<GameCatalog>(
+    () => ({
+      locale,
+      locales: work.locales,
+      variables: work.variables,
+      system: work.gameSystem,
+      items: view.items,
+      creatures: view.creatures,
+      scenes: scenes.map((scene) => ({ id: scene.id, label: scene.label })),
+      allScenes: [
+        ...scenes.map((scene) => ({ id: scene.id, label: scene.label })),
+        ...view.allScenes.filter((scene) => scene.chapterId !== chapter.id).map((scene) => ({ id: scene.id, label: `${scene.label} (outro capítulo)` })),
+      ],
+    }),
+    [locale, work, view.items, view.creatures, view.allScenes, scenes, chapter.id],
+  );
+
   // Validação ao vivo só deste capítulo. Um capítulo "fantasma" depois dele faz o validador
   // tratar este como não-último quando ele não é (cena sem escolha = fim de capítulo, não beco).
   const issues = useMemo<StoryIssue[]>(() => {
@@ -85,13 +105,15 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
     const chapters = [{ id: chapter.id, position: 1, title: chapter.title, startSceneId }];
     if (!isLast) chapters.push({ id: "__next__", position: 2, title: {}, startSceneId: null });
     return validateStory({
-      work: { title: work.title, defaultLocale: work.defaultLocale, locales: work.locales, variables: work.variables },
+      work: { title: work.title, defaultLocale: work.defaultLocale, locales: work.locales, variables: work.variables, gameSystem: work.gameSystem },
       chapters,
       scenes: scenes.map((scene) => ({ ...scene, chapterId: chapter.id })),
       choices,
       cast: view.cast,
+      items: view.items,
+      creatures: view.creatures,
     }).filter((issue) => issue.chapterId === chapter.id);
-  }, [scenes, choices, startSceneId, chapter, work, view.chapterNumber, view.chapterCount, view.cast]);
+  }, [scenes, choices, startSceneId, chapter, work, view.chapterNumber, view.chapterCount, view.cast, view.items, view.creatures]);
 
   const errorSceneIds = useMemo(
     () => new Set(issues.filter((issue) => issue.severity === "error" && issue.sceneId).map((issue) => issue.sceneId!)),
@@ -130,19 +152,36 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
       const key = `${choice.sceneId}->${choice.targetSceneId}`;
       groups.set(key, [...(groups.get(key) ?? []), choice]);
     }
-    return choices.map((choice) => {
+    const main: Edge[] = choices.map((choice) => {
       const group = groups.get(`${choice.sceneId}->${choice.targetSceneId}`) ?? [choice];
+      const badges = [choice.mechanics?.test ? "🎲" : "", (choice.mechanics?.cost.length ?? 0) > 0 ? "◆" : "", choice.conditions.length > 0 ? "🔒" : ""].join("");
       return {
         id: choice.id,
         source: choice.sceneId,
         target: choice.targetSceneId,
-        label: group[0].id === choice.id ? group.map(labelOf).join(" / ") : undefined,
+        label: group[0].id === choice.id ? `${badges ? `${badges} ` : ""}${group.map(labelOf).join(" / ")}` : undefined,
         selected: selection?.kind === "choice" && selection.id === choice.id,
         markerEnd: { type: MarkerType.ArrowClosed },
         animated: choice.conditions.length > 0,
       };
     });
-  }, [choices, selection, locale]);
+    // Saídas extras (resultado do teste, saídas do encontro): tracejadas, sem rótulo editável.
+    const sceneIds = new Set(scenes.map((scene) => scene.id));
+    const extra: Edge[] = [];
+    for (const choice of choices) {
+      for (const target of new Set(extraTargets(choice.mechanics))) {
+        if (target === choice.targetSceneId || !sceneIds.has(target)) continue;
+        extra.push({ id: `test:${choice.id}:${target}`, source: choice.sceneId, target, selectable: false, deletable: false, style: { strokeDasharray: "6 4" }, markerEnd: { type: MarkerType.ArrowClosed }, label: "🎲" });
+      }
+    }
+    for (const scene of scenes) {
+      for (const target of new Set(encounterTargets(scene.mechanics))) {
+        if (!sceneIds.has(target)) continue;
+        extra.push({ id: `fight:${scene.id}:${target}`, source: scene.id, target, selectable: false, deletable: false, style: { strokeDasharray: "2 4" }, markerEnd: { type: MarkerType.ArrowClosed }, label: "⚔" });
+      }
+    }
+    return [...main, ...extra];
+  }, [choices, scenes, selection, locale]);
 
   const markDirty = useCallback(() => setDirty(true), []);
 
@@ -217,6 +256,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
           label: { [locale]: "Nova escolha" },
           conditions: [],
           effects: [],
+          mechanics: emptyChoiceMechanics(),
         },
       ]);
       setSelection({ kind: "choice", id });
@@ -235,6 +275,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
       isEnding: false,
       endingTitle: {},
       effects: [],
+      mechanics: emptySceneMechanics(),
       graphX: anchor ? anchor.graphX + 40 : 0,
       graphY: anchor ? anchor.graphY + 220 : 0,
     };
@@ -348,6 +389,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
               key={selectedScene.id}
               scene={selectedScene}
               work={work}
+              catalog={catalog}
               isStart={selectedScene.id === startSceneId}
               media={imageUrls}
               outgoing={choices.filter((choice) => choice.sceneId === selectedScene.id).sort((a, b) => a.position - b.position)}
@@ -365,6 +407,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
               key={selectedChoice.id}
               choice={selectedChoice}
               work={work}
+              catalog={catalog}
               scenes={scenes}
               siblingCount={choices.filter((choice) => choice.sceneId === selectedChoice.sceneId).length}
               onChange={(patch) => updateChoice(selectedChoice.id, patch)}
@@ -391,6 +434,7 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
           key={editingScene.id}
           scene={editingScene}
           work={work}
+          catalog={catalog}
           cast={view.cast}
           media={imageUrls}
           isStart={editingScene.id === startSceneId}

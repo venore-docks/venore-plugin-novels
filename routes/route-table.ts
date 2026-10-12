@@ -3,6 +3,8 @@ import AdminPage from "./admin/page";
 import AdminChapterPage from "./admin-chapter/page";
 import AdminNewWorkPage from "./admin-new/page";
 import AdminTagsPage from "./admin-tags/page";
+import AdminSystemsPage from "./admin-systems/page";
+import AdminTestPage from "./admin-test/page";
 import AdminWorkPage from "./admin-work/page";
 import CatalogPage from "./catalog/page";
 import ReaderPage, { generateStoryMetadata } from "./reader/page";
@@ -12,7 +14,9 @@ export const novelsRouteTable: PluginRouteTable = {
     { pattern: "", Component: asPluginPage(AdminPage) },
     { pattern: "new", Component: asPluginPage(AdminNewWorkPage) },
     { pattern: "tags", Component: asPluginPage(AdminTagsPage) },
+    { pattern: "systems", Component: asPluginPage(AdminSystemsPage) },
     { pattern: "works/:workId", Component: asPluginPage(AdminWorkPage) },
+    { pattern: "works/:workId/test", Component: asPluginPage(AdminTestPage) },
     { pattern: "works/:workId/chapters/:chapterId", Component: asPluginPage(AdminChapterPage) },
   ],
   public: [

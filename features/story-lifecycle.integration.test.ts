@@ -18,12 +18,21 @@ import { findNovelsMediaUsage } from "./media-usage/find-novels-media-usage/serv
 import { getTagCatalog } from "./tags/get-tag-catalog/service";
 import { installTagStarterPack, saveTagGroup } from "./tags/manage-tag-catalog/service";
 import { updateWork } from "./works/update-work/service";
+import { applySystemTemplate, saveWorkAsTemplate, listSystemTemplates } from "./game/system-templates/service";
+import { saveItem, deleteItem } from "./game/manage-items/service";
+import { startReaderGame } from "./reading/start-reader-game/service";
+import { listReaderSaves, loadReaderSlot, saveReaderSlot } from "./reading/manage-reader-saves/service";
+import { getWorkStats } from "./stats/get-work-stats/service";
+import { convertLegacyVariables } from "./works/convert-legacy-variables/service";
+import { createContext } from "../shared/engine/context";
+import { applyAction, replay, toSaved } from "../shared/engine/play";
 
 // Fluxo cruzando o schema novels com auth (progresso por usuário) contra Postgres real:
 // seed completo, leitura publicada, progresso, edição que quebraria a obra publicada, exclusão.
 describe("novels — ciclo da obra (integração)", () => {
   beforeEach(async () => {
     await db.execute(sql.raw("TRUNCATE TABLE novels.works CASCADE"));
+    await db.execute(sql.raw("TRUNCATE TABLE novels.system_templates"));
     // Volta o catálogo ao pacote inicial (um teste pode ter tornado um grupo obrigatório).
     await db.execute(sql.raw("TRUNCATE TABLE novels.tag_groups CASCADE"));
     await installTagStarterPack({ actorId: "u" });
@@ -52,13 +61,13 @@ describe("novels — ciclo da obra (integração)", () => {
     const reader = await seedUser({ name: "Leitora" });
     const state = { sceneId: story.data.chapters[0].startSceneId!, vars: { coragem: 0, lanterna: false }, path: [], visitedEndings: [] };
 
-    expect((await saveReaderProgress({ workId: story.data.work.id, state, userId: reader.id })).success).toBe(true);
+    expect((await saveReaderProgress({ workId: story.data.work.id, progress: { kind: "legacy", state }, userId: reader.id })).success).toBe(true);
     const progress = await getReaderProgress({ workId: story.data.work.id, userId: reader.id });
-    expect(progress.success && progress.data?.state.sceneId).toBe(state.sceneId);
+    expect(progress.success && (progress.data?.state as { sceneId?: string } | undefined)?.sceneId).toBe(state.sceneId);
 
     await unpublishWork({ workId: story.data.work.id, actorId: "u" });
     expect((await getPublishedStory({ slug: "o-farol" })).success).toBe(false);
-    expect((await saveReaderProgress({ workId: story.data.work.id, state, userId: reader.id })).success).toBe(false);
+    expect((await saveReaderProgress({ workId: story.data.work.id, progress: { kind: "legacy", state }, userId: reader.id })).success).toBe(false);
   });
 
   it("recusa grafo que quebraria obra publicada e aceita depois de despublicar", async () => {
@@ -155,5 +164,63 @@ describe("novels — ciclo da obra (integração)", () => {
 
     expect((await deleteWork({ workId: created.data.id, actorId: "u" })).success).toBe(true);
     expect(await findNovelsMediaUsage("media-1")).toEqual([]);
+  });
+
+  it("sistema de jogo: modelo aplicado, item no catálogo, partida conferida no servidor, salvamentos e estatísticas", async () => {
+    await seedNovelsExample();
+    const published = await getPublishedStory({ slug: "o-farol" });
+    if (!published.success) throw new Error("seed");
+    const workId = published.data.work.id;
+
+    // Converter as variáveis antigas: coragem (barra 0..3) vira recurso, lanterna vira item.
+    const converted = await convertLegacyVariables({ workId, actorId: "u" });
+    expect(converted).toEqual({ success: true, data: { resources: ["coragem"], items: ["lanterna"], capacity: null } });
+    const afterConversion = await getPublishedStory({ slug: "o-farol" });
+    if (!afterConversion.success) throw new Error("leitura");
+    expect(afterConversion.data.system.resources.map((resource) => resource.key)).toEqual(["coragem"]);
+    expect(afterConversion.data.items.map((item) => item.key)).toEqual(["lanterna"]);
+
+    // Pegar a lanterna ainda libera o final "A luz que guia".
+    const ctx = createContext(afterConversion.data);
+    const reader = await seedUser({ name: "Jogadora" });
+    const started = await startReaderGame({ workId, userId: reader.id, start: { t: "start" } });
+    if (!started.success) throw new Error(started.error.message);
+    let state = replay(ctx, started.data).state;
+    for (const action of [{ t: "choose", choiceId: `${afterConversion.data.chapters[0].id}-c1` }, { t: "choose", choiceId: `${afterConversion.data.chapters[0].id}-c3` }, { t: "continue" }] as const) {
+      const result = applyAction(ctx, state, action);
+      if (!result.ok) throw new Error(result.reason);
+      state = result.state;
+    }
+    expect(state.bag.map((stack) => ctx.items.get(stack.itemId)?.key)).toEqual(["lanterna"]);
+    const saved = await saveReaderProgress({ workId, userId: reader.id, progress: { kind: "saved", saved: toSaved(state) } });
+    expect(saved).toEqual({ success: true, data: { updatedAt: expect.any(Date), truncated: false } });
+    // Semente trocada no meio da partida é recusada.
+    expect((await saveReaderProgress({ workId, userId: reader.id, progress: { kind: "saved", saved: { ...toSaved(state), seed: "forjada" } } })).success).toBe(false);
+
+    const slot = await saveReaderSlot({ workId, slot: 1, name: "Antes do farol", saved: toSaved(state), userId: reader.id });
+    expect(slot.success).toBe(true);
+    expect((await listReaderSaves({ workId, userId: reader.id })).success).toBe(true);
+    expect((await loadReaderSlot({ workId, slot: 1, userId: reader.id })).success).toBe(true);
+
+    const stats = await getWorkStats({ workId });
+    expect(stats.success && stats.data.readers).toBe(1);
+    expect(stats.success && stats.data.choices.length).toBe(2);
+
+    // Modelo aplicado num rascunho novo, item novo no catálogo e o sistema salvo como modelo.
+    const draft = await createWork({ title: "Arena", slug: "arena", defaultLocale: "pt-BR", actorId: "u" });
+    if (!draft.success) throw new Error("rascunho");
+    const applied = await applySystemTemplate({ workId: draft.data.id, templateKey: "rpg_fantasia", actorId: "u" });
+    expect(applied).toEqual({ success: true, data: { items: 6, creatures: 2 } });
+    const item = await saveItem({ workId: draft.data.id, item: { key: "tocha", name: { "pt-BR": "Tocha" }, type: "material", weight: 1 }, actorId: "u" });
+    expect(item.success).toBe(true);
+    expect((await saveItem({ workId: draft.data.id, item: { key: "tocha", name: { "pt-BR": "Outra" } }, actorId: "u" })).success).toBe(false);
+    if (item.success) expect((await deleteItem({ workId: draft.data.id, id: item.data.id, actorId: "u" })).success).toBe(true);
+    const asTemplate = await saveWorkAsTemplate({ workId: draft.data.id, key: "arena", name: { "pt-BR": "Arena" }, description: {}, actorId: "u" });
+    expect(asTemplate.success).toBe(true);
+    const templates = await listSystemTemplates();
+    expect(templates.success && templates.data.find((template) => template.key === "arena")?.package.items).toHaveLength(6);
+    const view = await getWork({ workId: draft.data.id });
+    expect(view.success && view.data.items.length).toBe(6);
+    expect(view.success && view.data.creatures.length).toBe(2);
   });
 });

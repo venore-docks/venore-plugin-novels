@@ -1,4 +1,5 @@
 import type { CastMember, SceneRecord, WorkRecord } from "../contracts/types";
+import { interpolateBlocks } from "./engine/interpolate";
 import { sceneTextIn } from "./scene-blocks";
 
 // Leitura em voz alta (@venore/plugin-sdk/speech): um scope por obra, um item por cena e idioma.
@@ -16,14 +17,16 @@ export type SpeechItem = { itemKey: string; locale: string; text: string };
 // Só o texto escrito naquele idioma: cena sem tradução não ganha áudio no idioma (o leitor mostra
 // o texto do idioma principal, e tocar esse áudio no lugar confundiria). O texto junta os blocos
 // da cena (narração, legendas, falas com o nome de quem fala).
+// Texto com ficha do leitor ({nome}, {sexo|...}) é lido com o valor padrão de cada campo.
 export function speechItemsForWork(
-  work: Pick<WorkRecord, "locales">,
+  work: Pick<WorkRecord, "locales"> & { gameSystem?: WorkRecord["gameSystem"] },
   scenes: Pick<SceneRecord, "id" | "blocks">[],
   cast: CastMember[] = [],
 ): SpeechItem[] {
+  const fields = work.gameSystem?.modules.character ? work.gameSystem.character.fields : [];
   return scenes.flatMap((scene) =>
     work.locales
-      .map((locale) => ({ itemKey: sceneSpeechItemKey(scene.id), locale, text: sceneTextIn(scene.blocks, locale, cast).trim() }))
+      .map((locale) => ({ itemKey: sceneSpeechItemKey(scene.id), locale, text: sceneTextIn(interpolateBlocks(scene.blocks, fields, {}), locale, cast).trim() }))
       .filter((item) => item.text.length > 0),
   );
 }

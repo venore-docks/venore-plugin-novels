@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Story } from "../contracts/types";
-import { choose, continueToNextChapter, indexStory, nextStep, startStory } from "../shared/story-engine";
+import { createContext } from "../shared/engine/context";
+import { applyAction, choiceViews, newGame } from "../shared/engine/play";
+import { emptySystem } from "../shared/engine/system";
 import { hasBlockingIssues, validateStory } from "../shared/story-validation";
 
 vi.mock("@venore/plugin-sdk", () => ({ db: {} }));
@@ -26,6 +28,9 @@ async function exampleStory(): Promise<Story> {
       tags: [],
       variables: EXAMPLE_VARIABLES,
     },
+    system: emptySystem(),
+    items: [],
+    creatures: [],
     badges: { interactive: {}, textOnly: {}, aiAudio: {} },
     cast: [],
     media: {},
@@ -50,17 +55,15 @@ describe("seed O Farol", () => {
   });
 
   it("pegar a lanterna libera o final 'A luz que guia'", async () => {
-    const story = await exampleStory();
-    const index = indexStory(story);
-    let state = startStory(story, index)!;
-    for (const choiceId of ["ch1-c1", "ch1-c3"]) {
-      const result = choose(story, index, state, choiceId);
-      if (!result.ok) throw new Error(choiceId);
+    const ctx = createContext(await exampleStory());
+    const first = newGame(ctx, { seed: "s" });
+    if (!first.ok) throw new Error(first.reason);
+    let state = first.state;
+    for (const action of [{ t: "choose", choiceId: "ch1-c1" }, { t: "choose", choiceId: "ch1-c3" }, { t: "continue" }] as const) {
+      const result = applyAction(ctx, state, action);
+      if (!result.ok) throw new Error(result.reason);
       state = result.state;
     }
-    const next = continueToNextChapter(story, index, state);
-    if (!next.ok) throw new Error("capítulo 2");
-    const step = nextStep(story, index, next.state);
-    expect(step.kind === "choices" && step.choices.map((choice) => choice.id)).toEqual(["ch2-d1", "ch2-d2", "ch2-d3"]);
+    expect(choiceViews(ctx, state).map((view) => view.choice.id)).toEqual(["ch2-d1", "ch2-d2", "ch2-d3"]);
   });
 });

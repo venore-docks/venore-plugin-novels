@@ -55,6 +55,44 @@ Cena sem escolhas e que não é final leva ao início do próximo capítulo.
 - **Elenco** (aba da obra): nome traduzível, cor de destaque (lista fechada de tokens do tema) e
   retrato; personagem que ainda fala em alguma cena não pode ser removido.
 
+## Sistema de jogo (0.10.0 a 0.13.0)
+
+Uma obra pode continuar só texto ou ligar, peça por peça, um sistema de RPG na aba **Sistema**.
+Os nomes (Vida, Mana, Mochila, Capacete) são do autor; o código só conhece papéis. Desligar um
+módulo esconde a configuração, nunca apaga.
+
+| Módulo | O que faz |
+| --- | --- |
+| Recursos | Barras (Vida, Mana, Sanidade…): máximo por fórmula, regeneração por cena, gatilho ao zerar/lotar (cena + efeitos; cada cena pode sobrescrever), custo em escolhas |
+| Atributos | Stats e habilidades, valores derivados por fórmula, treino por uso (habilidade sobe com tentativas) |
+| Dados | Teste na escolha (rolagem, DT, sucesso/falha, crítico, falha crítica ou faixas), dado animado na tela com o detalhamento, rolagem travada por partida e "rolar de novo" só pagando o custo |
+| Nível e XP | Curva por fórmula (ex: a do Tibia) ou tabela, pontos com custo crescente e teto por nível, efeitos ao subir |
+| Inventário / Equipamento | Catálogo de itens (aba **Itens**): peso, espaço com recipientes, mãos, áreas de equipar, modificadores, requisitos, uso, "sobrando" quando não cabe, itens no chão |
+| Combate | Cena de **Encontro** com criaturas do **Bestiário**: rodadas (ações com custo, defender, fugir, usar item) ou um único teste; fórmulas com `atacante.`/`defensor.`/`dado` |
+| Extras | Criação de personagem (ficha com sexo e outros campos, vocação, pontos; `{nome}` e `{sexo|feminino:cansada|masculino:cansado|cansade}` no texto), efeitos com duração, lojas (moeda contador ou item), missões, conquistas, bestiário do leitor, modo hardcore, série (valores passam da obra anterior) |
+
+- **Fórmulas** (`shared/engine/formula.ts`): parser próprio, sem `eval`; `+ - * / % ^`, comparações,
+  `e`/`ou`/`não`, `min max arred piso teto abs limitar se`, dados `1d20`, `2d20k1`, `4d6k3`, e
+  funções da partida `tem("item")`, `equipado`, `cabe`, `perfil`, `missao`, `etapa`, `conquista`,
+  `efeito`. O editor mostra erro na hora, autocompleta e calcula o valor no início da partida.
+- **Motor puro** (`shared/engine/`): a partida é um registro de ações a partir de uma semente. O
+  mesmo código roda no leitor, no servidor (refaz a partida ao salvar; quem tem conta recebe a
+  semente do servidor, e trocar de semente no meio é recusado), no validador e no simulador.
+  Progresso salvo no formato antigo é convertido na primeira leitura.
+- **Modelos** (Graphic Novels → Modelos de jogo, permissão `novels.systems.manage`): Aventura
+  simples, RPG de fantasia, Venore padrão (fórmulas da planilha com redução R/(R+k) sobre o HP
+  máximo atual), Tibia-like e Terror com sanidade. Modelos são pacotes JSON
+  (`format: "venore-novels-system"`) que se importam como os plugins; a aba Sistema exporta o
+  sistema da obra e importa o de outra. Aplicar copia (itens/criaturas casados pela chave).
+- **Para o autor**: passo "Sistema de jogo" no assistente, **Testar** / "Testar daqui" (rascunho a
+  partir de qualquer cena com nível, recursos e itens escolhidos), **simulador** (partidas
+  automáticas: % por final, cenas nunca alcançadas, onde os recursos zeram; build pura × equilibrada),
+  aba **Estatísticas** (leitores com conta: onde param, finais, escolhas, onde morrem) e
+  "Converter variáveis antigas" (barra → recurso, inventário → item, capacidade → peso).
+- **Para o leitor**: HUD com recursos e nível, ficha em abas (atributos com distribuição de pontos,
+  mochila com equipar/usar/largar, equipamento, diário, conquistas, bestiário), histórico da
+  partida e até 3 salvamentos nomeados por obra (com conta).
+
 ## Painel do personagem (0.7.0)
 
 Cada variável da obra pode aparecer para o leitor ("Mostrar ao leitor" no formulário da obra):

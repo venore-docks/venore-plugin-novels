@@ -1,6 +1,7 @@
 export const PLUGIN_KEY = "novels";
 export const MANAGE_PERMISSION = "novels.works.manage";
 export const TAGS_PERMISSION = "novels.tags.manage";
+export const SYSTEMS_PERMISSION = "novels.systems.manage";
 export const PUBLIC_BASE_PATH = "/novels";
 export const ADMIN_BASE_PATH = "/admin/novels";
 
@@ -18,6 +19,7 @@ export function adminChapterPath(workId: string, chapterId: string): string {
 
 export const adminTagsPath = `${ADMIN_BASE_PATH}/tags`;
 export const adminNewWorkPath = `${ADMIN_BASE_PATH}/new`;
+export const adminSystemsPath = `${ADMIN_BASE_PATH}/systems`;
 
 export function adminWorkTabPath(workId: string, tab: string): string {
   return `${adminWorkPath(workId)}?tab=${tab}`;
@@ -25,4 +27,8 @@ export function adminWorkTabPath(workId: string, tab: string): string {
 
 export function catalogTagPath(slug: string): string {
   return `${PUBLIC_BASE_PATH}?tag=${encodeURIComponent(slug)}`;
+}
+
+export function adminWorkTestPath(workId: string, sceneId?: string): string {
+  return `${adminWorkPath(workId)}/test${sceneId ? `?scene=${encodeURIComponent(sceneId)}` : ""}`;
 }

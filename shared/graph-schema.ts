@@ -1,11 +1,7 @@
 import { z } from "zod";
-import {
-  CONDITION_OPERATORS,
-  DIVIDER_STYLES,
-  EFFECT_OPERATIONS,
-  IMAGE_ASPECTS,
-  type ChapterGraph,
-} from "../contracts/types";
+import { DIVIDER_STYLES, IMAGE_ASPECTS, type ChapterGraph } from "../contracts/types";
+import { normalizeChoiceMechanics, normalizeSceneMechanics } from "./engine/system";
+import { sanitizeConditions, sanitizeEffects } from "./engine/sanitize";
 import { blocksFromLegacy } from "./scene-blocks";
 
 // O grafo chega do editor (client) como JSON: nada nele é confiável. Limites generosos pra uma
@@ -22,9 +18,11 @@ export const GRAPH_LIMITS = {
 
 const id = z.string().min(1).max(64);
 const localized = (max: number) => z.record(z.string().min(2).max(10), z.string().max(max));
-const variableValue = z.union([z.number().finite(), z.boolean()]);
-const condition = z.object({ variable: z.string().min(1).max(40), operator: z.enum(CONDITION_OPERATORS), value: variableValue });
-const effect = z.object({ variable: z.string().min(1).max(40), operation: z.enum(EFFECT_OPERATIONS), value: variableValue });
+// Efeitos e condições têm vários formatos (0.10.0): aqui só o tamanho; os campos de cada tipo
+// passam por shared/engine/sanitize.ts depois do parse.
+const rule = z.record(z.string(), z.unknown());
+const mechanics = z.record(z.string(), z.unknown()).optional();
+
 const text = localized(GRAPH_LIMITS.bodyChars);
 const short = localized(GRAPH_LIMITS.labelChars);
 
@@ -65,7 +63,8 @@ const scene = z.preprocess(
     blocks: z.array(block).max(GRAPH_LIMITS.blocksPerScene),
     isEnding: z.boolean(),
     endingTitle: short,
-    effects: z.array(effect).max(GRAPH_LIMITS.rulesPerItem),
+    effects: z.array(rule).max(GRAPH_LIMITS.rulesPerItem),
+    mechanics,
     graphX: z.number().finite(),
     graphY: z.number().finite(),
   }),
@@ -77,8 +76,9 @@ const choice = z.object({
   targetSceneId: id,
   position: z.number().int().min(0).max(1000),
   label: short,
-  conditions: z.array(condition).max(GRAPH_LIMITS.rulesPerItem),
-  effects: z.array(effect).max(GRAPH_LIMITS.rulesPerItem),
+  conditions: z.array(rule).max(GRAPH_LIMITS.rulesPerItem),
+  effects: z.array(rule).max(GRAPH_LIMITS.rulesPerItem),
+  mechanics,
 });
 
 const chapterGraph = z.object({
@@ -95,7 +95,20 @@ export type GraphParseResult = { ok: true; graph: ChapterGraph } | { ok: false; 
 export function parseChapterGraph(raw: unknown): GraphParseResult {
   const parsed = chapterGraph.safeParse(raw);
   if (!parsed.success) return { ok: false, message: "Grafo inválido: formato não reconhecido." };
-  const graph = parsed.data as ChapterGraph;
+  const graph: ChapterGraph = {
+    startSceneId: parsed.data.startSceneId,
+    scenes: parsed.data.scenes.map((item) => ({
+      ...(item as Omit<ChapterGraph["scenes"][number], "effects" | "mechanics">),
+      effects: sanitizeEffects(item.effects, GRAPH_LIMITS.rulesPerItem),
+      mechanics: normalizeSceneMechanics(item.mechanics),
+    })),
+    choices: parsed.data.choices.map((item) => ({
+      ...item,
+      conditions: sanitizeConditions(item.conditions, GRAPH_LIMITS.rulesPerItem),
+      effects: sanitizeEffects(item.effects, GRAPH_LIMITS.rulesPerItem),
+      mechanics: normalizeChoiceMechanics(item.mechanics),
+    })),
+  };
 
   const sceneIds = new Set(graph.scenes.map((item) => item.id));
   if (sceneIds.size !== graph.scenes.length) return { ok: false, message: "Grafo inválido: cena repetida." };

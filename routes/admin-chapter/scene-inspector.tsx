@@ -1,18 +1,23 @@
 "use client";
 
-import { Flag, PenLine, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Flag, PenLine, Play, Trash2 } from "lucide-react";
 import { Button, Input, Switch } from "@venore/plugin-sdk/ui";
 import type { ChapterGraphChoice, ChapterGraphScene, SceneBlockType } from "../../contracts/types";
 import type { ChapterGraphEditorView } from "../../features/graph/get-chapter-graph/types";
 import { pickText } from "../../shared/localized-text";
 import { BLOCK_LABELS, firstImageId, sceneExcerpt, sceneWordStats } from "../../shared/scene-blocks";
-import { EffectsEditor } from "./rule-editors";
+import { adminWorkTestPath } from "../../shared/constants";
+import type { GameCatalog } from "../game-editor/catalog";
+import { EffectsEditor } from "../game-editor/rules";
+import { SceneMechanicsEditor } from "../game-editor/scene-mechanics";
 
 // Painel lateral do grafo para a cena selecionada: resumo do conteúdo (o texto em si é escrito no
 // editor em tela cheia), final, efeitos e escolhas.
 export function SceneInspector({
   scene,
   work,
+  catalog,
   isStart,
   media,
   outgoing,
@@ -24,6 +29,7 @@ export function SceneInspector({
 }: {
   scene: ChapterGraphScene;
   work: ChapterGraphEditorView["work"];
+  catalog: GameCatalog;
   isStart: boolean;
   media: Record<string, string>;
   outgoing: ChapterGraphChoice[];
@@ -78,10 +84,18 @@ export function SceneInspector({
           </span>
         </span>
       </button>
-      <Button type="button" className="w-full" onClick={onOpenEditor}>
-        <PenLine className="size-4" />
-        Escrever a cena
-      </Button>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button type="button" onClick={onOpenEditor}>
+          <PenLine className="size-4" />
+          Escrever a cena
+        </Button>
+        <Button type="button" variant="outline" asChild>
+          <Link href={adminWorkTestPath(work.id, scene.id)} target="_blank">
+            <Play className="size-4" />
+            Testar daqui
+          </Link>
+        </Button>
+      </div>
 
       <label className="flex items-center justify-between gap-2 text-sm">
         <span className="font-medium text-foreground">É um final</span>
@@ -101,8 +115,10 @@ export function SceneInspector({
 
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Ao entrar nesta cena</p>
-        <EffectsEditor variables={work.variables} effects={scene.effects} onChange={(effects) => onChange({ effects })} />
+        <EffectsEditor catalog={catalog} effects={scene.effects} onChange={(effects) => onChange({ effects })} />
       </div>
+
+      <SceneMechanicsEditor catalog={catalog} mechanics={scene.mechanics} onChange={(mechanics) => onChange({ mechanics })} />
 
       {!scene.isEnding && (
         <div className="space-y-1">

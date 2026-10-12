@@ -9,6 +9,8 @@ import type {
   WorkRecord,
   WorkTagGroupView,
 } from "../contracts/types";
+import type { CreatureRecord, ItemRecord } from "../contracts/game";
+import { withoutWork } from "./game-records";
 import { sceneMediaIds } from "./scene-blocks";
 
 export function toChapterGraphScene(scene: SceneRecord): ChapterGraphScene {
@@ -19,6 +21,7 @@ export function toChapterGraphScene(scene: SceneRecord): ChapterGraphScene {
     isEnding: scene.isEnding,
     endingTitle: scene.endingTitle,
     effects: scene.effects,
+    mechanics: scene.mechanics,
     graphX: scene.graphX,
     graphY: scene.graphY,
   };
@@ -30,6 +33,8 @@ export type StoryRecords = {
   scenes: SceneRecord[];
   choices: ChoiceRecord[];
   cast: CastMemberRecord[];
+  items: ItemRecord[];
+  creatures: CreatureRecord[];
 };
 
 // Monta o Story (formato do leitor/validador) a partir das linhas do banco + URLs de mídia já
@@ -53,6 +58,9 @@ export function buildStory(
       variables: work.variables,
       tags: extras.tags,
     },
+    system: work.gameSystem,
+    items: records.items.map(withoutWork),
+    creatures: records.creatures.map(withoutWork),
     badges: extras.badges,
     chapters: records.chapters.map((chapter) => ({
       id: chapter.id,
@@ -74,8 +82,11 @@ export function buildStory(
   };
 }
 
-export function collectMediaIds(records: Pick<StoryRecords, "work" | "scenes" | "cast">): string[] {
+export function collectMediaIds(records: Pick<StoryRecords, "work" | "scenes" | "cast"> & Partial<Pick<StoryRecords, "items" | "creatures">>): string[] {
   const ids = new Set<string>();
+  for (const item of records.items ?? []) if (item.imageMediaId) ids.add(item.imageMediaId);
+  for (const creature of records.creatures ?? []) if (creature.imageMediaId) ids.add(creature.imageMediaId);
+  for (const vocation of records.work.gameSystem?.character.vocations ?? []) if (vocation.imageMediaId) ids.add(vocation.imageMediaId);
   if (records.work.coverMediaId) ids.add(records.work.coverMediaId);
   for (const scene of records.scenes) for (const id of sceneMediaIds(scene.blocks)) ids.add(id);
   for (const member of records.cast) if (member.portraitMediaId) ids.add(member.portraitMediaId);
@@ -91,4 +102,10 @@ export function isInteractive(choices: Pick<ChoiceRecord, "sceneId">[]): boolean
     perScene.set(choice.sceneId, count);
   }
   return false;
+}
+
+// Story só para o motor (conferência do progresso no servidor, estatísticas, simulador): sem URLs
+// de mídia nem tags, que o motor não lê.
+export function storyForEngine(records: StoryRecords): Story {
+  return buildStory(records, { media: {}, tags: [], badges: { interactive: {}, textOnly: {}, aiAudio: {} } });
 }

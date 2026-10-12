@@ -1,3 +1,13 @@
+import type {
+  ChoiceMechanics,
+  Condition,
+  Creature,
+  Effect,
+  GameSystem,
+  Item,
+  SceneMechanics,
+} from "./game";
+
 // Texto traduzível: um valor por locale ("pt-BR", "en", "es"...). O core não tem i18n
 // (AGENTS.md, Known Gaps), então as traduções de cada obra moram no próprio plugin. A interface
 // continua em pt-BR; só o conteúdo da obra (e do catálogo de tags) é multilíngue.
@@ -162,6 +172,8 @@ export type WorkRecord = {
   coverMediaId: string | null;
   coverFocus: CoverFocus | null;
   variables: VariableDefinition[];
+  // Sistema de jogo (0.10.0): módulos, recursos, atributos, fórmulas... (contracts/game.ts).
+  gameSystem: GameSystem;
   status: WorkStatus;
   authorUserId: string | null;
   speechEnabled: boolean;
@@ -188,7 +200,9 @@ export type SceneRecord = {
   blocks: SceneBlock[];
   isEnding: boolean;
   endingTitle: LocalizedText;
-  effects: VariableEffect[];
+  effects: Effect[];
+  // Tipo da cena (texto, encontro, loja) e regras de jogo dela.
+  mechanics: SceneMechanics;
   graphX: number;
   graphY: number;
 };
@@ -196,11 +210,14 @@ export type SceneRecord = {
 export type ChoiceRecord = {
   id: string;
   sceneId: string;
+  // Destino da escolha (no teste de dados, o destino do sucesso).
   targetSceneId: string;
   position: number;
   label: LocalizedText;
-  conditions: ChoiceCondition[];
-  effects: VariableEffect[];
+  conditions: Condition[];
+  effects: Effect[];
+  // Custo em recurso e teste de dados.
+  mechanics: ChoiceMechanics;
 };
 
 // Grafo de um capítulo como o editor manipula: cenas + escolhas, salvo inteiro de uma vez
@@ -231,6 +248,9 @@ export type Story = {
     variables: VariableDefinition[];
     tags: WorkTagGroupView[];
   };
+  system: GameSystem;
+  items: Item[];
+  creatures: Creature[];
   badges: CatalogBadges;
   chapters: StoryChapter[];
   scenes: StoryScene[];

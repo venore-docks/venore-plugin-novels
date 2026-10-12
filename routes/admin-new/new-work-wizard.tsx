@@ -29,7 +29,11 @@ type Draft = {
   cover: PickableMedia | null;
   coverFocus: CoverFocus | null;
   tags: WorkTagInput;
+  systemMode: "narrative" | "template" | "scratch";
+  templateKey: string | null;
 };
+
+export type TemplateSummary = { key: string; name: Record<string, string>; description: Record<string, string>; modules: string[] };
 
 const DRAFT_KEY = "novels:new-work-draft";
 const MAX_SYNOPSIS = 4000;
@@ -45,12 +49,15 @@ const EMPTY: Draft = {
   cover: null,
   coverFocus: null,
   tags: { tagIds: [], newTags: [] },
+  systemMode: "narrative",
+  templateKey: null,
 };
 
 const STEPS = [
   { key: "identity", label: "Identidade" },
   { key: "languages", label: "Idiomas" },
   { key: "tags", label: "Tags" },
+  { key: "system", label: "Sistema de jogo" },
   { key: "review", label: "Revisão" },
 ] as const;
 
@@ -75,7 +82,7 @@ function writeDraft(draft: Draft | null) {
 
 const noopSubscribe = () => () => {};
 
-export function NewWorkWizard({ tagCatalog }: { tagCatalog: TagCatalog }) {
+export function NewWorkWizard({ tagCatalog, templates }: { tagCatalog: TagCatalog; templates: TemplateSummary[] }) {
   // O rascunho mora no navegador: o assistente só monta depois da hidratação.
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   if (!hydrated) {
@@ -85,10 +92,10 @@ export function NewWorkWizard({ tagCatalog }: { tagCatalog: TagCatalog }) {
       </div>
     );
   }
-  return <Wizard tagCatalog={tagCatalog} />;
+  return <Wizard tagCatalog={tagCatalog} templates={templates} />;
 }
 
-function Wizard({ tagCatalog }: { tagCatalog: TagCatalog }) {
+function Wizard({ tagCatalog, templates }: { tagCatalog: TagCatalog; templates: TemplateSummary[] }) {
   const [draft, setDraftState] = useState<Draft>(readDraft);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -140,6 +147,7 @@ function Wizard({ tagCatalog }: { tagCatalog: TagCatalog }) {
         coverMediaId: draft.cover?.id ?? null,
         coverFocus: draft.cover ? draft.coverFocus : null,
         tags: draft.tags,
+        system: { mode: draft.systemMode, templateKey: draft.systemMode === "template" ? draft.templateKey : null },
       });
       // Sucesso redireciona para o editor do capítulo; só volta aqui com erro.
       if (result && !result.ok) toast.error(result.error);
@@ -328,7 +336,51 @@ function Wizard({ tagCatalog }: { tagCatalog: TagCatalog }) {
 
           {step === 3 && (
             <section className="space-y-6">
-              <StepTitle title="Tudo certo?" hint="Depois de criar, a obra abre direto no editor do primeiro capítulo, com uma cena pronta para escrever." />
+              <StepTitle title="A obra é para ler ou para jogar?" hint="Dá para mudar depois na aba Sistema. Nada de RPG aparece para o leitor enquanto estiver desligado." />
+              <div className="grid gap-3 md:grid-cols-3">
+                {(
+                  [
+                    ["narrative", "Só narrativa", "Escolhas e variáveis, sem regras de jogo."],
+                    ["template", "Usar um modelo", "Parte de um sistema pronto: recursos, atributos, itens, combate…"],
+                    ["scratch", "Montar do zero", "Liga recursos, atributos e dados; você define nomes e fórmulas."],
+                  ] as const
+                ).map(([mode, label, hint]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={draft.systemMode === mode}
+                    onClick={() => update({ systemMode: mode, templateKey: mode === "template" ? (draft.templateKey ?? templates[0]?.key ?? null) : draft.templateKey })}
+                    className={cn("space-y-1 rounded-xl border p-4 text-start", draft.systemMode === mode ? "border-primary bg-primary/5" : "border-border hover:bg-muted")}
+                  >
+                    <span className="block font-semibold text-foreground">{label}</span>
+                    <span className="block text-sm text-muted-foreground">{hint}</span>
+                  </button>
+                ))}
+              </div>
+              {draft.systemMode === "template" && (
+                <ul className="grid gap-2 md:grid-cols-2">
+                  {templates.map((template) => (
+                    <li key={template.key}>
+                      <button
+                        type="button"
+                        aria-pressed={draft.templateKey === template.key}
+                        onClick={() => update({ templateKey: template.key })}
+                        className={cn("w-full space-y-1 rounded-lg border p-3 text-start", draft.templateKey === template.key ? "border-primary bg-primary/5" : "border-border hover:bg-muted")}
+                      >
+                        <span className="block font-medium text-foreground">{template.name[draft.defaultLocale] ?? template.name["pt-BR"] ?? template.key}</span>
+                        <span className="block text-xs text-muted-foreground">{template.description[draft.defaultLocale] ?? template.description["pt-BR"] ?? ""}</span>
+                        <span className="block text-xs text-foreground">Liga: {template.modules.join(", ") || "nada"}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {step === 4 && (
+            <section className="space-y-6">
+              <StepTitle title="Tudo certo?" hint="Depois de criar, a obra abre no editor do primeiro capítulo (ou na aba Sistema, se escolheu um sistema de jogo), com uma cena pronta para escrever." />
               <ReviewBlock title="Identidade" onEdit={() => goTo(0)}>
                 <p className="font-display text-2xl font-bold text-foreground">{draft.title || "Sem título"}</p>
                 {draft.subtitle && <p className="text-muted-foreground">{draft.subtitle}</p>}
@@ -348,6 +400,15 @@ function Wizard({ tagCatalog }: { tagCatalog: TagCatalog }) {
                     publica.
                   </p>
                 )}
+              </ReviewBlock>
+              <ReviewBlock title="Sistema de jogo" onEdit={() => goTo(3)}>
+                <p className="text-sm text-foreground">
+                  {draft.systemMode === "narrative"
+                    ? "Só narrativa"
+                    : draft.systemMode === "scratch"
+                      ? "Montar do zero (recursos, atributos e dados)"
+                      : `Modelo: ${templates.find((template) => template.key === draft.templateKey)?.name["pt-BR"] ?? draft.templateKey ?? "—"}`}
+                </p>
               </ReviewBlock>
             </section>
           )}

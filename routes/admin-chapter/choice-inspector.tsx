@@ -6,12 +6,15 @@ import { Button, Input } from "@venore/plugin-sdk/ui";
 import type { ChapterGraphChoice, ChapterGraphScene } from "../../contracts/types";
 import type { ChapterGraphEditorView } from "../../features/graph/get-chapter-graph/types";
 import { LocaleTabs } from "../../components/locale-tabs";
-import { ConditionsEditor, EffectsEditor } from "./rule-editors";
-import { derivedVariables } from "../../shared/variables";
+import type { GameCatalog } from "../game-editor/catalog";
+import { ChoiceMechanicsEditor } from "../game-editor/choice-mechanics";
+import { ConditionsEditor, EffectsEditor } from "../game-editor/rules";
+import { emptyChoiceMechanics } from "../../shared/engine/system";
 
 export function ChoiceInspector({
   choice,
   work,
+  catalog,
   scenes,
   siblingCount,
   onChange,
@@ -21,6 +24,7 @@ export function ChoiceInspector({
 }: {
   choice: ChapterGraphChoice;
   work: ChapterGraphEditorView["work"];
+  catalog: GameCatalog;
   scenes: ChapterGraphScene[];
   siblingCount: number;
   onChange: (patch: Partial<ChapterGraphChoice>) => void;
@@ -76,7 +80,7 @@ export function ChoiceInspector({
       </label>
 
       <label className="block space-y-1 text-sm">
-        <span className="font-medium text-foreground">Leva para</span>
+        <span className="font-medium text-foreground">{choice.mechanics?.test ? "Sucesso leva para" : "Leva para"}</span>
         <select
           value={choice.targetSceneId}
           onChange={(event) => onChange({ targetSceneId: event.target.value })}
@@ -92,13 +96,20 @@ export function ChoiceInspector({
 
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Só aparece se</p>
-        <ConditionsEditor variables={[...work.variables, ...derivedVariables(work.variables)]} conditions={choice.conditions} onChange={(conditions) => onChange({ conditions })} />
+        <ConditionsEditor catalog={catalog} conditions={choice.conditions} onChange={(conditions) => onChange({ conditions })} />
       </div>
 
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Ao escolher</p>
-        <EffectsEditor variables={work.variables} effects={choice.effects} onChange={(effects) => onChange({ effects })} />
+        <EffectsEditor catalog={catalog} effects={choice.effects} onChange={(effects) => onChange({ effects })} />
       </div>
+
+      <ChoiceMechanicsEditor
+        catalog={catalog}
+        mechanics={choice.mechanics ?? emptyChoiceMechanics()}
+        targetSceneId={choice.targetSceneId}
+        onChange={(mechanics) => onChange({ mechanics })}
+      />
     </div>
   );
 }

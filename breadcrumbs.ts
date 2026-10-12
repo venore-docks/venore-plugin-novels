@@ -22,6 +22,7 @@ export const novelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
   staticBreadcrumbSegment({ key: "novels.admin", segments: ["admin", "novels"], label: "Graphic Novels" }),
   staticBreadcrumbSegment({ key: "novels.admin.new", segments: ["admin", "novels", "new"], label: "Nova obra" }),
   staticBreadcrumbSegment({ key: "novels.admin.tags", segments: ["admin", "novels", "tags"], label: "Tags" }),
+  staticBreadcrumbSegment({ key: "novels.admin.systems", segments: ["admin", "novels", "systems"], label: "Modelos de jogo" }),
   staticBreadcrumbSegment({
     key: "novels.admin.works",
     segments: ["admin", "novels", "works"],
@@ -36,6 +37,12 @@ export const novelsBreadcrumbSegments: BreadcrumbSegmentDefinition[] = [
       const result = await (await queries()).getCachedWork(workId);
       return result.success ? pickText(result.data.work.title, result.data.work.defaultLocale, result.data.work.defaultLocale) : null;
     },
+  }),
+  staticBreadcrumbSegment({
+    key: "novels.admin.test",
+    segments: ["admin", "novels", "works", ":workId", "test"],
+    label: "Modo teste",
+    href: null,
   }),
   staticBreadcrumbSegment({
     key: "novels.admin.chapters",

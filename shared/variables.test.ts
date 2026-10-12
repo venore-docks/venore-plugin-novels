@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { ChoiceRecord, VariableDefinition } from "../contracts/types";
-import { applyEffects, initialVariables, isChoiceAvailable } from "./story-engine";
+import type { Effect } from "../contracts/game";
+import type { ChoiceRecord, VariableDefinition, VariableValue } from "../contracts/types";
+import { contextFromParts } from "./engine/context";
+import { applyEffects as engineApplyEffects } from "./engine/effects";
+import { sampleState } from "./engine/play";
+import { conditionsMet } from "./engine/rules";
+import { emptySystem } from "./engine/system";
 import { validateVariableDefinitions } from "./story-validation";
 import {
   characterSheet,
@@ -9,6 +14,7 @@ import {
   FREE_CAPACITY_KEY,
   inventoryLoad,
   LOAD_KEY,
+  initialVariables,
   sanitizeVariable,
 } from "./variables";
 
@@ -23,7 +29,19 @@ const variables: VariableDefinition[] = [
   { key: "clava", label: "Clava", type: "boolean", initial: false, display: "inventory", weight: 25 },
   { key: "pocao", label: "Poção de vida", type: "number", initial: 2, display: "inventory", weight: 1.8 },
 ];
-const byKey = new Map(variables.map((variable) => [variable.key, variable]));
+// O motor novo (shared/engine) aplica as variáveis do formato antigo com as mesmas regras.
+const ctx = contextFromParts({ system: emptySystem(), variables });
+function applyEffects(vars: Record<string, VariableValue>, effects: Effect[], _byKey?: unknown): Record<string, VariableValue> {
+  void _byKey;
+  const state = { ...sampleState(ctx), vars: { ...vars } };
+  engineApplyEffects(ctx, state, effects);
+  return state.vars;
+}
+function isChoiceAvailable(choice: ChoiceRecord, vars: Record<string, VariableValue>, _variables?: unknown): boolean {
+  void _variables;
+  return conditionsMet(ctx, { ...sampleState(ctx), vars }, choice.conditions);
+}
+const byKey = null;
 
 describe("variáveis do painel do personagem", () => {
   it("HP fica entre o mínimo e o teto de outra variável, e o teto que sobe vale na hora", () => {

@@ -6,8 +6,8 @@ export const novelsManifest: PluginManifest = {
   manifestVersion: "1.0.0",
   key: "novels",
   name: "Graphic Novels",
-  version: "0.9.0",
-  description: "Graphic novels interativas: leitura webtoon, escolhas ramificadas com variáveis e editor em grafo.",
+  version: "0.13.0",
+  description: "Graphic novels interativas e jogáveis: leitura webtoon, escolhas ramificadas, sistema de RPG por módulos (recursos, atributos, dados, itens, combate) e editor em grafo.",
   compatibility: { coreVersion: ">=2.3.0 <3.0.0" },
   // Schema próprio (novels), aplicado no install; default de migrationsSchema
   // ("novels_migrations") bate com drizzle.config.ts.
@@ -15,6 +15,7 @@ export const novelsManifest: PluginManifest = {
   permissions: [
     { key: "novels.works.manage", label: "Criar, editar e publicar graphic novels" },
     { key: "novels.tags.manage", label: "Gerenciar o catálogo de tags das graphic novels" },
+    { key: "novels.systems.manage", label: "Gerenciar os modelos de sistema de jogo das graphic novels" },
   ],
   navigation: [
     {
@@ -38,6 +39,17 @@ export const novelsManifest: PluginManifest = {
       groupOrder: 30,
       order: 41,
       requiredPermission: "novels.tags.manage",
+    },
+    {
+      key: "novels.systems",
+      label: "Modelos de jogo",
+      href: "/admin/novels/systems",
+      icon: "puzzle",
+      groupKey: "plugins",
+      groupLabel: "Plugins",
+      groupOrder: 30,
+      order: 42,
+      requiredPermission: "novels.systems.manage",
     },
   ],
   seeds: [
