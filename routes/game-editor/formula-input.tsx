@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { Input, cn } from "@venore/plugin-sdk/ui";
 import { contextFromParts } from "../../shared/engine/context";
 import { evaluateFormula } from "../../shared/engine/formula";
 import { sampleState } from "../../shared/engine/play";
-import { playerScope } from "../../shared/engine/rules";
+import { playerScope, resourceMax } from "../../shared/engine/rules";
 import { formulaChecker } from "../../shared/engine/validate";
 import { COMBAT_EXTRA, combatNames, formulaNames, FUNCTION_HINTS, type GameCatalog } from "./catalog";
 
@@ -15,6 +15,18 @@ function formatPreview(value: number | boolean | string): string {
   if (typeof value === "boolean") return value ? "verdadeiro" : "falso";
   if (typeof value === "number") return String(Math.round(value * 100) / 100);
   return `"${value}"`;
+}
+
+// Nível usado na prévia, compartilhado por todos os campos da página (clique na prévia troca).
+const PREVIEW_LEVELS = [1, 5, 10, 20];
+const previewStore = { level: 1, listeners: new Set<() => void>() };
+const subscribePreview = (listener: () => void) => {
+  previewStore.listeners.add(listener);
+  return () => previewStore.listeners.delete(listener);
+};
+function cyclePreviewLevel() {
+  previewStore.level = PREVIEW_LEVELS[(PREVIEW_LEVELS.indexOf(previewStore.level) + 1) % PREVIEW_LEVELS.length];
+  for (const listener of previewStore.listeners) listener();
 }
 
 // Campo de fórmula (seção 8.2 do documento): erro na hora ("forsa não existe"), autocompletar das
@@ -48,10 +60,17 @@ export function FormulaInput({
   const [active, setActive] = useState(0);
 
   const check = useMemo(() => formulaChecker({ system: catalog.system, variables: catalog.variables }), [catalog.system, catalog.variables]);
+  const level = useSyncExternalStore(subscribePreview, () => previewStore.level, () => 1);
+  const leveled = catalog.system.modules.progression;
   const preview = useMemo(() => {
     const ctx = contextFromParts({ system: catalog.system, variables: catalog.variables, items: catalog.items, locale: catalog.locale });
-    return { ctx, state: sampleState(ctx) };
-  }, [catalog.system, catalog.variables, catalog.items, catalog.locale]);
+    const state = sampleState(ctx);
+    if (leveled && level > 1) {
+      state.vars[catalog.system.progression.levelKey] = level;
+      for (const resource of ctx.resources.values()) state.vars[resource.key] = resourceMax(ctx, state, resource.key);
+    }
+    return { ctx, state };
+  }, [catalog.system, catalog.variables, catalog.items, catalog.locale, leveled, level]);
   const extra = useMemo(() => [...extraNames, ...(combat ? COMBAT_EXTRA : [])], [extraNames, combat]);
   const vocabulary = useMemo(
     () => [...formulaNames(catalog), ...(combat ? combatNames(catalog) : []), ...extraNames.filter((name) => !name.endsWith(".")).map((name) => ({ name, hint: "" })), ...FUNCTION_HINTS],
@@ -150,7 +169,16 @@ export function FormulaInput({
       {problem ? (
         <p className="mt-1 text-xs text-destructive">{problem}</p>
       ) : result !== null ? (
-        <p className="mt-1 text-xs text-muted-foreground">= {result} no início da partida</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          = {result}{" "}
+          {leveled ? (
+            <button type="button" className="underline decoration-dotted underline-offset-2 hover:text-foreground" onClick={cyclePreviewLevel} title="Trocar o nível da prévia">
+              {level === 1 ? "no início da partida" : `no nível ${level}`}
+            </button>
+          ) : (
+            "no início da partida"
+          )}
+        </p>
       ) : null}
     </div>
   );

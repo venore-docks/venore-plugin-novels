@@ -8,14 +8,30 @@ import { num } from "../../shared/engine/formula";
 import { newGame } from "../../shared/engine/play";
 import { pointCost } from "../../shared/engine/rules";
 import type { PlayAction } from "../../shared/engine/types";
+import { GameImage } from "../../components/game-image";
 import type { Text } from "./game-hud";
+import type { ReaderStrings } from "./strings";
 
 type StartAction = Extract<PlayAction, { t: "start" }>;
 
 // Criação de personagem (seção 13; decisão 3 do documento): ficha (nome, sexo e o que o autor
 // definir), vocação com valores e itens iniciais, pontos com o mesmo custo crescente do nível e,
 // se a obra oferecer, o modo hardcore.
-export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameContext; text: Text; onStart: (start: StartAction) => void; busy: boolean }) {
+export function CharacterCreation({
+  ctx,
+  text,
+  strings,
+  media,
+  onStart,
+  busy,
+}: {
+  ctx: GameContext;
+  text: Text;
+  strings: ReaderStrings;
+  media: Record<string, string>;
+  onStart: (start: StartAction) => void;
+  busy: boolean;
+}) {
   const character = ctx.system.character;
   const usesCharacter = ctx.on("character");
   const [profile, setProfile] = useState<Record<string, string>>({});
@@ -48,7 +64,7 @@ export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameConte
         onStart({ t: "start", profile, vocationId, allocations, hardcore });
       }}
     >
-      {usesCharacter && <h2 className="text-lg font-semibold text-foreground">Seu personagem</h2>}
+      {usesCharacter && <h2 className="text-lg font-semibold text-foreground">{strings.yourCharacter}</h2>}
       {fields.map((field) =>
         field.kind === "choice" ? (
           <fieldset key={field.key} className="space-y-1.5">
@@ -81,7 +97,7 @@ export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameConte
 
       {usesCharacter && character.vocations.length > 0 && (
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-foreground">Vocação</legend>
+          <legend className="text-sm font-medium text-foreground">{strings.vocation}</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {character.vocations.map((vocation) => (
               <button
@@ -92,15 +108,18 @@ export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameConte
                   setVocationId(vocation.id);
                   setAllocations({});
                 }}
-                className={cn("space-y-1 rounded-lg border p-3 text-start", vocationId === vocation.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted")}
+                className={cn("flex gap-3 rounded-lg border p-3 text-start", vocationId === vocation.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted")}
               >
+                <GameImage url={vocation.imageMediaId ? media[vocation.imageMediaId] : null} name={text(vocation.name)} className="size-16 shrink-0" compact />
+                <span className="min-w-0 space-y-1">
                 <span className="block font-medium text-foreground">{text(vocation.name)}</span>
                 {text(vocation.description) && <span className="block text-xs text-muted-foreground">{text(vocation.description)}</span>}
                 {vocation.items.length > 0 && (
                   <span className="block text-xs text-muted-foreground">
-                    Começa com: {vocation.items.map((entry) => `${text(ctx.items.get(entry.itemId)?.name)}${entry.quantity > 1 ? ` ×${entry.quantity}` : ""}`).join(", ")}
+                    {vocation.items.map((entry) => `${text(ctx.items.get(entry.itemId)?.name)}${entry.quantity > 1 ? ` ×${entry.quantity}` : ""}`).join(", ")}
                   </span>
                 )}
+                </span>
               </button>
             ))}
           </div>
@@ -110,8 +129,10 @@ export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameConte
       {usesCharacter && character.startingPoints > 0 && stats.length > 0 && preview && (
         <fieldset className="space-y-2">
           <legend className="flex w-full items-baseline justify-between text-sm font-medium text-foreground">
-            Distribua seus pontos
-            <span className={cn("tabular-nums", left > 0 ? "text-primary" : "text-muted-foreground")}>{left} sobrando</span>
+            {strings.points}
+            <span className={cn("tabular-nums", left > 0 ? "text-primary" : "text-muted-foreground")}>
+              {left} {strings.left}
+            </span>
           </legend>
           <ul className="grid gap-2 sm:grid-cols-2">
             {stats.map((attribute) => {
@@ -122,14 +143,16 @@ export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameConte
                 <li key={attribute.key} className="flex items-center justify-between gap-2 rounded-lg border border-border p-2">
                   <span className="min-w-0">
                     <span className="block truncate text-sm text-foreground">{text(attribute.name)}</span>
-                    <span className="block text-xs text-muted-foreground">próximo ponto custa {cost}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {strings.nextCosts} {cost}
+                    </span>
                   </span>
                   <span className="flex items-center gap-1">
-                    <Button type="button" size="icon" variant="outline" className="size-7" aria-label={`Tirar ponto de ${text(attribute.name)}`} disabled={added <= 0} onClick={() => setAllocations({ ...allocations, [attribute.key]: Math.max(0, added - 1) })}>
+                    <Button type="button" size="icon" variant="outline" className="size-7" aria-label={`− ${text(attribute.name)}`} disabled={added <= 0} onClick={() => setAllocations({ ...allocations, [attribute.key]: Math.max(0, added - 1) })}>
                       <Minus className="size-3.5" />
                     </Button>
                     <span className="w-8 text-center font-semibold tabular-nums text-foreground">{value}</span>
-                    <Button type="button" size="icon" variant="outline" className="size-7" aria-label={`Pôr ponto em ${text(attribute.name)}`} disabled={cost > left} onClick={() => setAllocations({ ...allocations, [attribute.key]: added + 1 })}>
+                    <Button type="button" size="icon" variant="outline" className="size-7" aria-label={`+ ${text(attribute.name)}`} disabled={cost > left} onClick={() => setAllocations({ ...allocations, [attribute.key]: added + 1 })}>
                       <Plus className="size-3.5" />
                     </Button>
                   </span>
@@ -142,16 +165,16 @@ export function CharacterCreation({ ctx, text, onStart, busy }: { ctx: GameConte
 
       {ctx.system.hardcore && (
         <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
-          <Switch checked={hardcore} onCheckedChange={setHardcore} aria-label="Modo hardcore" />
+          <Switch checked={hardcore} onCheckedChange={setHardcore} aria-label={strings.hardcore} />
           <span>
-            <span className="block font-medium text-foreground">Modo hardcore</span>
-            <span className="block text-xs text-muted-foreground">Sem voltar cena, sem rolar de novo e com um único salvamento.</span>
+            <span className="block font-medium text-foreground">{strings.hardcore}</span>
+            <span className="block text-xs text-muted-foreground">{strings.hardcoreHint}</span>
           </span>
         </label>
       )}
 
       <Button type="submit" className="w-full" disabled={busy || missingName}>
-        Começar
+        {strings.begin}
       </Button>
     </form>
   );

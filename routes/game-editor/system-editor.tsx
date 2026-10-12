@@ -19,6 +19,7 @@ import {
   CharacterSection,
   CombatSection,
   DiceSection,
+  EncyclopediaSection,
   EquipmentSection,
   InventorySection,
   ProgressionSection,
@@ -50,6 +51,7 @@ export const MODULE_INFO: Record<GameModule, { label: string; description: strin
 
 type Props = {
   workId: string;
+  media?: Record<string, string>;
   locale: string;
   locales: string[];
   system: GameSystem;
@@ -91,8 +93,8 @@ export function SystemEditor(props: Props) {
   }, [dirty]);
 
   const catalog = useMemo<GameCatalog>(
-    () => ({ locale: props.locale, locales: props.locales, variables: props.variables, system, items: props.items, creatures: props.creatures, scenes: props.scenes, allScenes: props.scenes }),
-    [props.locale, props.locales, props.variables, system, props.items, props.creatures, props.scenes],
+    () => ({ locale: props.locale, locales: props.locales, variables: props.variables, system, items: props.items, creatures: props.creatures, scenes: props.scenes, allScenes: props.scenes, media: props.media }),
+    [props.locale, props.locales, props.variables, system, props.items, props.creatures, props.scenes, props.media],
   );
   const issues = useMemo(
     () => validateGameSystem({ system, variables: props.variables, items: props.items, creatures: props.creatures, sceneIds: new Set(props.scenes.map((scene) => scene.id)) }),
@@ -187,6 +189,7 @@ export function SystemEditor(props: Props) {
     { key: "effects", title: "Efeitos com duração", on: system.modules.effects, body: <StatusEffectsSection catalog={catalog} system={system} set={set} /> },
     { key: "quests", title: "Missões", on: system.modules.quests, body: <QuestsSection catalog={catalog} system={system} set={set} /> },
     { key: "achievements", title: "Conquistas", on: system.modules.achievements, body: <AchievementsSection catalog={catalog} system={system} set={set} /> },
+    { key: "encyclopedia", title: "Enciclopédia (lugares, personagens, história)", on: true, body: <EncyclopediaSection catalog={catalog} system={system} set={set} /> },
     { key: "series", title: "Série (continuação de outra obra)", on: true, body: <SeriesSection catalog={catalog} system={system} set={set} works={props.works} /> },
   ];
 

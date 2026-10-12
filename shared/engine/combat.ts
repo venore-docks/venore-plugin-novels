@@ -1,9 +1,10 @@
 import type { CombatActionDef, Creature } from "../../contracts/game";
 import type { LocalizedText, StoryScene } from "../../contracts/types";
 import type { GameContext } from "./context";
-import { applyEffect, applyEffects, clampState, removeItem, scopeFor } from "./effects";
+import { applyEffect, applyEffects, clampState, equipItem, removeItem, scopeFor, unequipItem } from "./effects";
+import { dieAt } from "./rng";
 import { evaluateBoolean, evaluateNumber, num, type DiceRoll, type FormulaScope } from "./formula";
-import { conditionsMet, playerScope, resourceMax } from "./rules";
+import { conditionsMet, currentLoad, maxLoad, playerScope, resourceMax } from "./rules";
 import type { CombatLogLine, CombatState, GameState, RollView } from "./types";
 
 // Combate por rodadas (0.12.0): o leitor escolhe uma ação, depois cada criatura age. As fórmulas
@@ -89,16 +90,19 @@ function resolveAttack(
   attacker: FormulaScope,
   defender: FormulaScope,
   extraReduction: number,
-): { hit: boolean; amount: number; die: number; rolls: DiceRoll[] } {
+): { hit: boolean; amount: number; die: number; rolls: DiceRoll[]; critical: boolean } {
   const rolls: DiceRoll[] = [];
   const base = scopeFor(ctx, draft, (roll) => rolls.push(roll));
   const die = evaluateNumber(ctx.system.combat.die, base, 1);
   const scope = combatScope(attacker, defender, die, base);
-  if (formulas.hit.trim() && !evaluateBoolean(formulas.hit, scope, true)) return { hit: false, amount: 0, die, rolls };
-  const raw = evaluateNumber(formulas.damage, scope, 0);
+  if (formulas.hit.trim() && !evaluateBoolean(formulas.hit, scope, true)) return { hit: false, amount: 0, die, rolls, critical: false };
+  // Crítico: chance em % (fórmula do sistema), rolada em 1d100.
+  const critical = ctx.system.combat.critical;
+  const isCritical = critical.chance.trim() !== "" && dieAt(draft.seed, draft.counter++, 100) <= evaluateNumber(critical.chance, scope, 0);
+  const raw = evaluateNumber(formulas.damage, scope, 0) * (isCritical ? critical.multiplier : 1);
   const reduction = Math.max(0, Math.min(ctx.system.combat.maxReduction, evaluateNumber(formulas.reduction, scope, 0) + extraReduction));
   const amount = Math.max(ctx.system.combat.minDamage, Math.round(raw * (1 - reduction)));
-  return { hit: true, amount, die, rolls };
+  return { hit: true, amount, die, rolls, critical: isCritical };
 }
 
 function aliveTargets(state: CombatState) {
@@ -134,8 +138,17 @@ export function combatRound(ctx: GameContext, draft: GameState, input: CombatInp
     if (!ctx.system.combat.defend.enabled) return "Defender não está disponível.";
     combat.defending = true;
     log(draft, { kind: "defend", actor: YOU, target: null, amount: null, action: null, roll: null });
+  } else if (input.action === "equip" || input.action === "unequip") {
+    if (!ctx.system.combat.equipInCombat) return "Durante a luta, só ações de combate.";
+    const item = input.itemId ? ctx.items.get(input.itemId) : undefined;
+    if (!item) return "Item desconhecido.";
+    const error = input.action === "equip" ? equipItem(ctx, draft, item.id, true) : unequipItem(ctx, draft, item.id);
+    if (error) return error;
+    log(draft, { kind: "equip", actor: YOU, target: null, amount: null, action: item.name, roll: null });
   } else if (input.action === "flee") {
     if (!ctx.system.combat.flee.enabled) return "Fugir não está disponível.";
+    const weight = ctx.system.inventory.weight;
+    if (ctx.on("inventory") && weight.enabled && weight.blockFlee && currentLoad(ctx, draft) > maxLoad(ctx, draft)) return "Carga pesada demais para fugir.";
     const rolls: DiceRoll[] = [];
     const scope = scopeFor(ctx, draft, (roll) => rolls.push(roll));
     const total = evaluateNumber(ctx.system.combat.flee.roll, scope, 0);
@@ -170,7 +183,7 @@ export function combatRound(ctx: GameContext, draft: GameState, input: CombatInp
     const result = resolveAttack(ctx, draft, action, player, creatureScope(creature, target.creature.hp), 0);
     const roll = toRollView(result.rolls, action.name, result.amount, null, result.hit ? "success" : "failure");
     if (result.hit) target.creature.hp = Math.max(0, target.creature.hp - result.amount);
-    log(draft, { kind: result.hit ? "attack" : "miss", actor: YOU, target: creature.name, amount: result.hit ? result.amount : null, action: action.name, roll });
+    log(draft, { kind: result.hit ? "attack" : "miss", actor: YOU, target: creature.name, amount: result.hit ? result.amount : null, action: action.name, roll, critical: result.critical });
     trainSkill(ctx, draft, action.trains);
   }
 
@@ -206,6 +219,7 @@ export function combatRound(ctx: GameContext, draft: GameState, input: CombatInp
     );
     if (result.hit) draft.vars[hp] = Math.max(0, num(draft.vars[hp]) - result.amount);
     log(draft, {
+      critical: result.critical,
       kind: result.hit ? "attack" : "miss",
       actor: creature.name,
       target: YOU,

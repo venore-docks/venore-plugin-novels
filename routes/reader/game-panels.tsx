@@ -1,25 +1,26 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { Coins, Flag, Shield, Swords } from "lucide-react";
-import { toast } from "sonner";
-import { Button, cn, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input } from "@venore/plugin-sdk/ui";
+import { useState } from "react";
+import { Coins, Flag, Shield, Swords, Trophy } from "lucide-react";
+import { Button, cn, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@venore/plugin-sdk/ui";
 import type { ShopDef } from "../../contracts/game";
-import type { ReaderSaveSlot } from "../../features/reading/manage-reader-saves/types";
+import type { LocalizedText } from "../../contracts/types";
 import { ACCENT_CLASSES } from "../../shared/accent";
 import type { GameContext } from "../../shared/engine/context";
 import { evaluateNumber, num } from "../../shared/engine/formula";
-import { currency, toSaved } from "../../shared/engine/play";
+import { currency } from "../../shared/engine/play";
 import { conditionsMet, playerScope } from "../../shared/engine/rules";
 import { sceneExcerpt } from "../../shared/scene-blocks";
-import type { GameState, PlayAction, SavedGame, Stack } from "../../shared/engine/types";
-import { deleteReaderSlotAction, listReaderSavesAction, loadReaderSlotAction, saveReaderSlotAction } from "./actions";
+import type { GameState, PlayAction, Stack } from "../../shared/engine/types";
+import { GameImage } from "../../components/game-image";
+import { exploredPercent, readerAchievements, totalsOf, type ReaderStats } from "../../shared/reader-stats";
+import type { ReaderStrings } from "./strings";
 import { describeChange, formatNumber, type Text } from "./game-hud";
 
 // Painéis do passo atual da partida: luta, loja, itens sobrando; e os diálogos de histórico e
 // salvamentos.
 
-export function CombatPanel({ ctx, state, mode, text, act, busy }: { ctx: GameContext; state: GameState; mode: "rounds" | "single"; text: Text; act: (action: PlayAction) => void; busy: boolean }) {
+export function CombatPanel({ ctx, state, mode, text, act, busy, strings }: { ctx: GameContext; state: GameState; mode: "rounds" | "single"; text: Text; act: (action: PlayAction) => void; busy: boolean; strings: ReaderStrings }) {
   const combat = state.combat!;
   const scene = ctx.scenes.get(state.sceneId);
   const encounter = scene?.mechanics.encounter;
@@ -33,7 +34,7 @@ export function CombatPanel({ ctx, state, mode, text, act, busy }: { ctx: GameCo
     <div className="space-y-3 rounded-xl border border-border bg-card p-3">
       <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
         <Swords className="size-4" aria-hidden />
-        {mode === "single" ? "Luta" : `Rodada ${combat.round}`}
+        {mode === "single" ? strings.fight : `${strings.round} ${combat.round}`}
       </p>
       <ul className="grid gap-2 sm:grid-cols-2">
         {combat.creatures.map((creatureState, index) => {
@@ -49,10 +50,7 @@ export function CombatPanel({ ctx, state, mode, text, act, busy }: { ctx: GameCo
                 onClick={() => setTarget(index)}
                 className={cn("flex w-full items-center gap-2 rounded-lg border p-2 text-start", selected === index && alive.length > 1 ? "border-primary" : "border-border", down && "opacity-50")}
               >
-                {image && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={image} alt="" className="size-10 rounded-md object-cover" />
-                )}
+                <GameImage url={image} name={text(creature?.name)} className="size-12 shrink-0" compact />
                 <span className="min-w-0 flex-1 space-y-1">
                   <span className="flex items-baseline justify-between gap-1 text-sm">
                     <span className="truncate font-medium text-foreground">{text(creature?.name)}</span>
@@ -72,7 +70,7 @@ export function CombatPanel({ ctx, state, mode, text, act, busy }: { ctx: GameCo
       {mode === "single" ? (
         <Button className="w-full" disabled={busy} onClick={() => act({ t: "combat", action: "single" })}>
           <Swords className="size-4" />
-          Lutar
+          {strings.fight}
         </Button>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
@@ -97,27 +95,36 @@ export function CombatPanel({ ctx, state, mode, text, act, busy }: { ctx: GameCo
           {ctx.system.combat.defend.enabled && (
             <Button variant="outline" disabled={busy} onClick={() => act({ t: "combat", action: "defend" })}>
               <Shield className="size-4" />
-              Defender
+              {strings.defend}
             </Button>
           )}
           {ctx.system.combat.flee.enabled && encounter?.fleeSceneId && (
             <Button variant="outline" disabled={busy} onClick={() => act({ t: "combat", action: "flee" })}>
               <Flag className="size-4" />
-              Fugir
+              {strings.flee}
             </Button>
           )}
           {consumables.map((item) => (
             <Button key={item!.id} variant="ghost" disabled={busy} onClick={() => act({ t: "combat", action: "item", itemId: item!.id })}>
-              Usar {text(item!.name)}
+              {strings.use} {text(item!.name)}
             </Button>
           ))}
+          {ctx.system.combat.equipInCombat &&
+            state.bag
+              .map((stack) => ctx.items.get(stack.itemId))
+              .filter((item) => item && (item.slot || item.hands > 0))
+              .map((item) => (
+                <Button key={`equip-${item!.id}`} variant="ghost" disabled={busy} onClick={() => act({ t: "equip", itemId: item!.id })}>
+                  {strings.equip} {text(item!.name)}
+                </Button>
+              ))}
         </div>
       )}
     </div>
   );
 }
 
-export function ShopPanel({ ctx, state, shop, text, act, busy }: { ctx: GameContext; state: GameState; shop: ShopDef; text: Text; act: (action: PlayAction) => void; busy: boolean }) {
+export function ShopPanel({ ctx, state, shop, text, act, busy, strings }: { ctx: GameContext; state: GameState; shop: ShopDef; text: Text; act: (action: PlayAction) => void; busy: boolean; strings: ReaderStrings }) {
   const money = currency(ctx, state);
   const stockOf = (itemId: string, initial: number | null) => state.shopStock[state.sceneId]?.[itemId] ?? initial;
   const sellable = state.bag.map((stack) => ctx.items.get(stack.itemId)).filter((item) => item && item.value > 0 && item.droppable);
@@ -126,7 +133,7 @@ export function ShopPanel({ ctx, state, shop, text, act, busy }: { ctx: GameCont
       <p className="flex items-center justify-between gap-2 text-sm font-semibold text-foreground">
         <span className="flex items-center gap-2">
           <Coins className="size-4" aria-hidden />
-          Loja
+          {strings.shop}
         </span>
         <span className="tabular-nums text-muted-foreground">
           {text(ctx.system.currency.name)}: {formatNumber(money)}
@@ -139,14 +146,15 @@ export function ShopPanel({ ctx, state, shop, text, act, busy }: { ctx: GameCont
           const stock = stockOf(item.id, entry.stock);
           return (
             <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-2 text-sm">
-              <span className="min-w-0">
+              <GameImage url={item.imageMediaId ? ctx.story.media[item.imageMediaId] : null} name={text(item.name)} className="size-12 shrink-0" compact />
+              <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium text-foreground">{text(item.name)}</span>
                 {text(item.description) && <span className="block truncate text-xs text-muted-foreground">{text(item.description)}</span>}
               </span>
               <span className="flex shrink-0 items-center gap-2">
-                {stock !== null && <span className="text-xs text-muted-foreground">{stock} no estoque</span>}
+                {stock !== null && <span className="text-xs text-muted-foreground">{stock} {strings.inStock}</span>}
                 <Button size="sm" variant="outline" disabled={busy || money < entry.price || stock === 0} onClick={() => act({ t: "buy", itemId: item.id })}>
-                  Comprar · {formatNumber(entry.price)}
+                  {strings.buy} · {formatNumber(entry.price)}
                 </Button>
               </span>
             </li>
@@ -155,13 +163,13 @@ export function ShopPanel({ ctx, state, shop, text, act, busy }: { ctx: GameCont
       </ul>
       {sellable.length > 0 && (
         <details className="text-sm">
-          <summary className="cursor-pointer text-muted-foreground">Vender</summary>
+          <summary className="cursor-pointer text-muted-foreground">{strings.sell}</summary>
           <ul className="mt-2 space-y-1">
             {sellable.map((item) => (
               <li key={item!.id} className="flex items-center justify-between gap-2">
                 <span className="truncate text-foreground">{text(item!.name)}</span>
                 <Button size="sm" variant="ghost" disabled={busy} onClick={() => act({ t: "sell", itemId: item!.id })}>
-                  Vender · {formatNumber(Math.floor(item!.value * shop.sellRate))}
+                  {strings.sell} · {formatNumber(Math.floor(item!.value * shop.sellRate))}
                 </Button>
               </li>
             ))}
@@ -172,30 +180,30 @@ export function ShopPanel({ ctx, state, shop, text, act, busy }: { ctx: GameCont
   );
 }
 
-export function OverflowPanel({ ctx, stacks, text, act, openBag, busy }: { ctx: GameContext; stacks: Stack[]; text: Text; act: (action: PlayAction) => void; openBag: () => void; busy: boolean }) {
+export function OverflowPanel({ ctx, stacks, text, act, openBag, busy, strings }: { ctx: GameContext; stacks: Stack[]; text: Text; act: (action: PlayAction) => void; openBag: () => void; busy: boolean; strings: ReaderStrings }) {
   return (
     <div className="space-y-3 rounded-xl border border-destructive/40 bg-card p-3">
-      <p className="text-sm font-semibold text-foreground">A bolsa está cheia</p>
+      <p className="text-sm font-semibold text-foreground">{strings.overflowTitle}</p>
       <p className="text-sm text-muted-foreground">
         Não coube: {stacks.map((stack) => `${text(ctx.items.get(stack.itemId)?.name)}${stack.quantity > 1 ? ` ×${stack.quantity}` : ""}`).join(", ")}. Largue, use ou equipe algo para abrir espaço, ou deixe para trás.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button onClick={openBag}>Abrir a mochila</Button>
+        <Button onClick={openBag}>{strings.openBag}</Button>
         <Button variant="outline" disabled={busy} onClick={() => act({ t: "discard" })}>
-          Deixar para trás
+          {strings.leaveBehind}
         </Button>
       </div>
     </div>
   );
 }
 
-export function HistoryDialog({ ctx, state, text, locale, open, onOpenChange }: { ctx: GameContext; state: GameState; text: Text; locale: string; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function HistoryDialog({ ctx, state, text, locale, open, onOpenChange, strings }: { ctx: GameContext; state: GameState; text: Text; locale: string; open: boolean; onOpenChange: (open: boolean) => void; strings: ReaderStrings }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Histórico da partida</DialogTitle>
-          <DialogDescription>Escolhas, rolagens e mudanças, da mais recente para a primeira.</DialogDescription>
+          <DialogTitle>{strings.history}</DialogTitle>
+          <DialogDescription>{strings.historyHint}</DialogDescription>
         </DialogHeader>
         <ol className="space-y-3">
           {[...state.entries].reverse().map((entry, index) => {
@@ -220,108 +228,77 @@ export function HistoryDialog({ ctx, state, text, locale, open, onOpenChange }: 
   );
 }
 
-export function SavesDialog({
-  workId,
-  state,
-  open,
-  onOpenChange,
-  onLoad,
-  text,
-}: {
-  workId: string;
-  state: GameState;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onLoad: (saved: SavedGame) => void;
-  text: Text;
-}) {
-  const [slots, setSlots] = useState<ReaderSaveSlot[] | null>(null);
-  const [pending, startTransition] = useTransition();
-  const [names, setNames] = useState<Record<number, string>>({});
-  const refresh = () => startTransition(async () => setSlots(await listReaderSavesAction(workId)));
-  useEffect(() => {
-    if (open) refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
+// Desempenho do leitor com conta na obra: jornadas concluídas, quanto explorou, finais e as
+// conquistas (as do Graphic Novels e as que o autor definiu).
+export function ReaderAchievementsPanel({ ctx, stats, text, strings }: { ctx: GameContext; stats: ReaderStats; text: Text; strings: ReaderStrings }) {
+  const story = ctx.story;
+  const totals = totalsOf(story);
+  const explored = exploredPercent(stats, totals);
+  const endings = totals.endingIds.filter((id) => stats.endingsSeen.includes(id)).length;
+  const badges = [
+    ...readerAchievements(stats, totals),
+    ...[...ctx.achievements.values()]
+      .map((def) => ({ id: `obra:${def.id}`, name: def.name, description: def.description, unlocked: stats.achievements.includes(def.id), hidden: def.hidden }))
+      .filter((entry) => entry.unlocked || !entry.hidden),
+  ];
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4" aria-label={strings.achievementsLabel}>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p className="text-2xl font-bold tabular-nums text-foreground">{stats.completions}</p>
+          <p className="text-xs text-muted-foreground">{strings.journeys}</p>
+        </div>
+        <div>
+          <p className="text-2xl font-bold tabular-nums text-foreground">{explored}%</p>
+          <p className="text-xs text-muted-foreground">{strings.explored}</p>
+        </div>
+        <div>
+          <p className="text-2xl font-bold tabular-nums text-foreground">
+            {endings}/{totals.endingIds.length}
+          </p>
+          <p className="text-xs text-muted-foreground">{strings.endings}</p>
+        </div>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="meter" aria-label={strings.explored} aria-valuemin={0} aria-valuemax={100} aria-valuenow={explored}>
+        <div className="h-full rounded-full bg-primary" style={{ width: `${explored}%` }} />
+      </div>
+      <ul className="flex flex-wrap gap-1.5">
+        {badges.map((badge) => (
+          <li
+            key={badge.id}
+            title={text(badge.description)}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium",
+              badge.unlocked ? "border-chart-4 bg-chart-4/10 text-chart-4" : "border-border text-muted-foreground/56",
+            )}
+          >
+            <Trophy className="size-3.5" aria-hidden />
+            {text(badge.name)}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// Tela de subir de nível (opcional, texto do autor com {nivel}).
+export function LevelUpDialog({ level, message, text, strings, onClose, onDistribute }: { level: number; message: LocalizedText; text: Text; strings: ReaderStrings; onClose: () => void; onDistribute: (() => void) | null }) {
+  const body = text(message).replaceAll("{nivel}", String(level)).replaceAll("{level}", String(level));
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="text-center">
         <DialogHeader>
-          <DialogTitle>Salvamentos</DialogTitle>
-          <DialogDescription>Até 3 por obra, na sua conta, além da partida em andamento (salva sozinha).</DialogDescription>
+          <DialogTitle className="text-3xl">
+            {strings.levelUp} {level}!
+          </DialogTitle>
+          <DialogDescription className="whitespace-pre-line text-base">{body}</DialogDescription>
         </DialogHeader>
-        {state.hardcore ? (
-          <p className="text-sm text-muted-foreground">No modo hardcore a partida tem um salvamento só, o automático.</p>
-        ) : (
-          <ul className="space-y-2">
-            {[1, 2, 3].map((slot) => {
-              const current = slots?.find((entry) => entry.slot === slot);
-              return (
-                <li key={slot} className="space-y-2 rounded-lg border border-border p-3">
-                  <p className="text-sm font-medium text-foreground">
-                    {current ? current.name || `Espaço ${slot}` : `Espaço ${slot} — vazio`}
-                    {current && <span className="ms-2 text-xs font-normal text-muted-foreground">{text(current.chapterTitle)} · {new Date(current.updatedAt).toLocaleString("pt-BR")}</span>}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Input className="h-8 w-40" placeholder="Nome (opcional)" value={names[slot] ?? ""} maxLength={60} onChange={(event) => setNames({ ...names, [slot]: event.target.value })} />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          if (current && !window.confirm("Substituir este salvamento?")) return;
-                          const result = await saveReaderSlotAction(workId, slot, names[slot] ?? current?.name ?? "", toSaved(state));
-                          if (!result.ok) toast.error(result.error ?? "Não foi possível salvar.");
-                          else toast.success("Partida salva.");
-                          setSlots(await listReaderSavesAction(workId));
-                        })
-                      }
-                    >
-                      Salvar aqui
-                    </Button>
-                    {current && (
-                      <>
-                        <Button
-                          size="sm"
-                          disabled={pending}
-                          onClick={() =>
-                            startTransition(async () => {
-                              if (!window.confirm("Carregar este salvamento? A partida atual é substituída.")) return;
-                              const result = await loadReaderSlotAction(workId, slot);
-                              if (!result.ok) toast.error(result.error);
-                              else {
-                                onLoad(result.saved);
-                                onOpenChange(false);
-                              }
-                            })
-                          }
-                        >
-                          Carregar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={pending}
-                          onClick={() =>
-                            startTransition(async () => {
-                              if (!window.confirm("Apagar este salvamento?")) return;
-                              await deleteReaderSlotAction(workId, slot);
-                              setSlots(await listReaderSavesAction(workId));
-                            })
-                          }
-                        >
-                          Apagar
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <div className="flex justify-center gap-2">
+          {onDistribute && <Button onClick={onDistribute}>{strings.distribute}</Button>}
+          <Button variant="outline" onClick={onClose}>
+            {strings.close}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

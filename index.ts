@@ -67,19 +67,14 @@ export { getReaderProgressHandler as getReaderProgress } from "./features/readin
 export { saveReaderProgressHandler as saveReaderProgress } from "./features/reading/save-reader-progress/handler";
 export { startReaderGameHandler as startReaderGame } from "./features/reading/start-reader-game/handler";
 export { getSeriesCarryHandler as getSeriesCarry } from "./features/reading/get-series-carry/handler";
-export {
-  listReaderSavesHandler as listReaderSaves,
-  saveReaderSlotHandler as saveReaderSlot,
-  loadReaderSlotHandler as loadReaderSlot,
-  deleteReaderSlotHandler as deleteReaderSlot,
-} from "./features/reading/manage-reader-saves/handler";
+export { getReaderStatsHandler as getReaderStats } from "./features/reading/get-reader-stats/handler";
 
 export { blockDefinitions, blockRenderers } from "./blocks";
 export { novelsSeeds } from "./seeds";
 
 export type * from "./contracts/types";
 export type * from "./contracts/game";
-export type { ReaderSaveSlot } from "./features/reading/manage-reader-saves/types";
+export type { ReaderStats } from "./shared/reader-stats";
 export type { WorkStatsView } from "./features/stats/get-work-stats/types";
 export type { StoryIssue } from "./shared/story-validation";
 export type { WorkAdminListItem } from "./features/works/list-works/types";

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCoverage } from "../../components/sim-coverage";
 import "@xyflow/react/dist/style.css";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, useTransition, type CSSProperties } from "react";
@@ -120,6 +121,9 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
     [issues],
   );
 
+  const unreachableIds = useMemo(() => new Set(issues.filter((issue) => issue.code === "unreachable_scene" && issue.sceneId).map((issue) => issue.sceneId!)), [issues]);
+  const coverage = useCoverage(work.id);
+
   const nodes = useMemo<SceneFlowNode[]>(
     () =>
       scenes.map((scene) => ({
@@ -137,10 +141,12 @@ function Editor({ view }: { view: ChapterGraphEditorView }) {
           isStart: scene.id === startSceneId,
           isEnding: scene.isEnding,
           hasError: errorSceneIds.has(scene.id),
+          unreachable: unreachableIds.has(scene.id),
+          coverage: coverage ? (coverage[scene.id] ?? null) : null,
           onOpen: () => setEditingSceneId(scene.id),
         },
       })),
-    [scenes, selection, imageUrls, startSceneId, errorSceneIds, locale],
+    [scenes, selection, imageUrls, startSceneId, errorSceneIds, unreachableIds, coverage, locale],
   );
 
   // Escolhas paralelas (mesma origem e destino) desenham setas sobrepostas: o rótulo vai todo na

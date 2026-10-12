@@ -1,8 +1,8 @@
 "use server";
 
 import { isPluginActive } from "@venore/plugin-sdk";
-import { deleteReaderSlot, listReaderSaves, loadReaderSlot, saveReaderProgress, saveReaderSlot, startReaderGame } from "../../index";
-import type { ReaderSaveSlot } from "../../features/reading/manage-reader-saves/types";
+import { getReaderStats, saveReaderProgress, startReaderGame } from "../../index";
+import type { ReaderStats } from "../../shared/reader-stats";
 import { PLUGIN_KEY } from "../../shared/constants";
 import type { SavedGame } from "../../shared/engine/types";
 
@@ -20,26 +20,9 @@ export async function startReaderGameAction(workId: string, start: unknown): Pro
   return result.success ? { ok: true, saved: result.data } : { ok: false, error: result.error.message };
 }
 
-export async function listReaderSavesAction(workId: string): Promise<ReaderSaveSlot[]> {
-  if (!(await isPluginActive(PLUGIN_KEY))) return [];
-  const result = await listReaderSaves({ workId: String(workId) });
-  return result.success ? result.data : [];
-}
-
-export async function saveReaderSlotAction(workId: string, slot: number, name: string, state: unknown): Promise<{ ok: boolean; error?: string }> {
-  if (!(await isPluginActive(PLUGIN_KEY))) return { ok: false, error: "Indisponível." };
-  const result = await saveReaderSlot({ workId: String(workId), slot: Number(slot), name: String(name ?? ""), state });
-  return result.success ? { ok: true } : { ok: false, error: result.error.message };
-}
-
-export async function loadReaderSlotAction(workId: string, slot: number): Promise<{ ok: true; saved: SavedGame } | { ok: false; error: string }> {
-  if (!(await isPluginActive(PLUGIN_KEY))) return { ok: false, error: "Indisponível." };
-  const result = await loadReaderSlot({ workId: String(workId), slot: Number(slot) });
-  return result.success ? { ok: true, saved: result.data } : { ok: false, error: result.error.message };
-}
-
-export async function deleteReaderSlotAction(workId: string, slot: number): Promise<{ ok: boolean }> {
-  if (!(await isPluginActive(PLUGIN_KEY))) return { ok: false };
-  const result = await deleteReaderSlot({ workId: String(workId), slot: Number(slot) });
-  return { ok: result.success };
+// Desempenho atualizado depois de uma jornada (tela de fim).
+export async function getReaderStatsAction(workId: string): Promise<ReaderStats | null> {
+  if (!(await isPluginActive(PLUGIN_KEY))) return null;
+  const result = await getReaderStats({ workId: String(workId) });
+  return result.success ? result.data : null;
 }

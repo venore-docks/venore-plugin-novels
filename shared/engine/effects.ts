@@ -3,6 +3,7 @@ import type { VariableEffect } from "../../contracts/types";
 import { clampAll as clampLegacy, clampNumber } from "../variables";
 import type { GameContext } from "./context";
 import { evaluateNumber, num, type DiceRoll } from "./formula";
+import { itemCount } from "./rules";
 import { dieAt } from "./rng";
 import { currentLevel, fits, mergeStack, playerScope, resourceMax } from "./rules";
 import type { GameState, Stack } from "./types";
@@ -26,6 +27,8 @@ export function cloneState(state: GameState): GameState {
     quests: Object.fromEntries(Object.entries(state.quests).map(([id, quest]) => [id, { ...quest }])),
     training: { ...state.training },
     triggers: { ...state.triggers },
+    unlocked: [...(state.unlocked ?? [])],
+    notes: {},
     profile: { ...state.profile },
     combat: state.combat
       ? { ...state.combat, creatures: state.combat.creatures.map((creature) => ({ ...creature })) }
@@ -198,10 +201,12 @@ export function applyEffect(ctx: GameContext, draft: GameState, effect: Effect, 
     applyLegacy(ctx, draft, effect as VariableEffect);
     return;
   }
-  const scope = scopeFor(ctx, draft);
+  const rolls: DiceRoll[] = [];
+  const scope = scopeFor(ctx, draft, (roll) => rolls.push(roll));
   switch (effect.kind) {
     case "formula": {
       const value = evaluateNumber(effect.formula, scope, 0);
+      if (rolls.length > 0) draft.notes[effect.target] = rolls.map((roll) => `${roll.notation} = ${roll.total}`).join(", ");
       const current = num(draft.vars[effect.target]);
       const definition = ctx.variables.get(effect.target);
       if (definition && definition.type === "boolean") {
@@ -217,9 +222,27 @@ export function applyEffect(ctx: GameContext, draft: GameState, effect: Effect, 
     case "item": {
       const quantity = Math.max(0, Math.round(evaluateNumber(effect.quantity, scope, 1)));
       if (effect.operation === "give") addItem(ctx, draft, effect.itemId, quantity);
-      else removeItem(ctx, draft, effect.itemId, quantity);
+      else if (effect.operation === "take") removeItem(ctx, draft, effect.itemId, quantity);
+      else {
+        const current = itemCount(ctx, draft, effect.itemId);
+        if (current > quantity) removeItem(ctx, draft, effect.itemId, current - quantity);
+        else if (current < quantity) addItem(ctx, draft, effect.itemId, quantity - current);
+      }
       break;
     }
+    case "lose_random_item": {
+      const roll = roller(draft);
+      const quantity = Math.max(0, Math.round(evaluateNumber(effect.quantity, scope, 1)));
+      for (let index = 0; index < quantity; index += 1) {
+        const candidates = draft.bag.filter((stack) => ctx.items.get(stack.itemId)?.droppable);
+        if (candidates.length === 0) break;
+        removeItem(ctx, draft, candidates[roll(candidates.length) - 1].itemId, 1);
+      }
+      break;
+    }
+    case "unlock":
+      if (ctx.system.encyclopedia.some((entry) => entry.id === effect.entryId) && !draft.unlocked.includes(effect.entryId)) draft.unlocked.push(effect.entryId);
+      break;
     case "equip": {
       const inBag = draft.bag.some((stack) => stack.itemId === effect.itemId);
       if (!inBag) addItem(ctx, draft, effect.itemId, 1);

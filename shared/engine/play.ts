@@ -50,7 +50,8 @@ type SummaryEntry =
   | { kind: "level"; label: LocalizedText; value: number }
   | { kind: "status"; label: LocalizedText; value: boolean }
   | { kind: "quest"; label: LocalizedText; value: string }
-  | { kind: "achievement"; label: LocalizedText; value: boolean };
+  | { kind: "achievement"; label: LocalizedText; value: boolean }
+  | { kind: "unlock"; label: LocalizedText; value: boolean };
 
 function summarize(ctx: GameContext, state: GameState): Map<string, SummaryEntry> {
   const summary = new Map<string, SummaryEntry>();
@@ -87,6 +88,10 @@ function summarize(ctx: GameContext, state: GameState): Map<string, SummaryEntry
   for (const [id, quest] of Object.entries(state.quests)) {
     const def = ctx.quests.get(id);
     if (def) summary.set(`quest:${id}`, { kind: "quest", label: def.name, value: `${quest.state}:${quest.step}` });
+  }
+  for (const id of state.unlocked ?? []) {
+    const entry = ctx.system.encyclopedia.find((candidate) => candidate.id === id);
+    if (entry) summary.set(`unlock:${id}`, { kind: "unlock", label: entry.name, value: true });
   }
   for (const id of state.achievements) {
     const def = ctx.achievements.get(id);
@@ -137,9 +142,21 @@ function diff(before: Map<string, SummaryEntry>, after: Map<string, SummaryEntry
       case "achievement":
         if (!a && b) changes.push({ type: "achievement", key, label: entry.label });
         break;
+      case "unlock":
+        if (!a && b) changes.push({ type: "unlock", key, label: entry.label });
+        break;
     }
   }
   return changes;
+}
+
+// Rolagens que mudaram um valor ("1d8 = 5") vão para o detalhe do chip.
+function withNotes(changes: Change[], notes: Record<string, string>): Change[] {
+  return changes.map((change) => {
+    if (change.type !== "value") return change;
+    const key = change.key.slice(change.key.indexOf(":") + 1);
+    return notes[key] ? { ...change, detail: notes[key] } : change;
+  });
 }
 
 // ------------------------------------------------------------------ cenas
@@ -378,6 +395,8 @@ function blankState(ctx: GameContext, seed: string, visitedEndings: string[], ac
     seenCreatures: [],
     hardcore: false,
     triggers: {},
+    unlocked: [],
+    notes: {},
     level: 1,
     seed,
     counter: 0,
@@ -481,7 +500,7 @@ export function applyAction(ctx: GameContext, state: GameState, action: PlayActi
     const error = applyChoose(ctx, draft, base.choiceId);
     if (error) return { ok: false, reason: error };
     draft.rerollBase = { state: rerollBase, choiceId: base.choiceId, rolls: draft.rerollBase?.rolls ?? base.rolls };
-    draft.entries[draft.entries.length - 1]?.changes.push(...diff(before, summarize(ctx, draft)));
+    draft.entries[draft.entries.length - 1]?.changes.push(...withNotes(diff(before, summarize(ctx, draft)), draft.notes));
     draft.log = [...state.log, action];
     return { ok: true, state: draft };
   }
@@ -506,7 +525,8 @@ export function applyAction(ctx: GameContext, state: GameState, action: PlayActi
       break;
     }
     case "equip":
-      if (inCombat) error = "Durante a luta, só ações de combate.";
+      if (inCombat && ctx.system.combat.equipInCombat && scene) error = combatRound(ctx, draft, { action: "equip", itemId: action.itemId });
+      else if (inCombat) error = "Durante a luta, só ações de combate.";
       else if (!ctx.on("equipment")) error = "Equipamento desligado.";
       else {
         const item = ctx.items.get(action.itemId);
@@ -516,7 +536,8 @@ export function applyAction(ctx: GameContext, state: GameState, action: PlayActi
       }
       break;
     case "unequip":
-      if (inCombat) error = "Durante a luta, só ações de combate.";
+      if (inCombat && ctx.system.combat.equipInCombat && scene) error = combatRound(ctx, draft, { action: "unequip", itemId: action.itemId });
+      else if (inCombat) error = "Durante a luta, só ações de combate.";
       else error = unequipItem(ctx, draft, action.itemId);
       break;
     case "use": {
@@ -671,7 +692,11 @@ export function applyAction(ctx: GameContext, state: GameState, action: PlayActi
     if (redirect) moveTo(ctx, draft, redirect);
   }
   if (action.t !== "choose") draft.rerollBase = null;
-  const changes = action.t === "start" ? [] : diff(before, summarize(ctx, draft));
+  // Efeitos "até a próxima luta" acabam quando a luta termina.
+  if (state.combat && !state.combat.result && (!draft.combat || draft.combat.result)) {
+    draft.effects = draft.effects.filter((active) => !ctx.statusEffects.get(active.id)?.untilCombat);
+  }
+  const changes = action.t === "start" ? [] : withNotes(diff(before, summarize(ctx, draft)), draft.notes);
   draft.entries[draft.entries.length - 1]?.changes.push(...changes);
   draft.log.push(action);
   return { ok: true, state: draft };

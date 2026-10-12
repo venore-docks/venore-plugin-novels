@@ -87,6 +87,7 @@ export function collectMediaIds(records: Pick<StoryRecords, "work" | "scenes" | 
   for (const item of records.items ?? []) if (item.imageMediaId) ids.add(item.imageMediaId);
   for (const creature of records.creatures ?? []) if (creature.imageMediaId) ids.add(creature.imageMediaId);
   for (const vocation of records.work.gameSystem?.character.vocations ?? []) if (vocation.imageMediaId) ids.add(vocation.imageMediaId);
+  for (const entry of records.work.gameSystem?.encyclopedia ?? []) if (entry.imageMediaId) ids.add(entry.imageMediaId);
   if (records.work.coverMediaId) ids.add(records.work.coverMediaId);
   for (const scene of records.scenes) for (const id of sceneMediaIds(scene.blocks)) ids.add(id);
   for (const member of records.cast) if (member.portraitMediaId) ids.add(member.portraitMediaId);

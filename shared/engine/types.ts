@@ -49,7 +49,8 @@ export type Change =
   | { type: "status"; key: string; label: LocalizedText; on: boolean }
   | { type: "quest"; key: string; label: LocalizedText; state: "active" | "done" | "failed" | "step" }
   | { type: "achievement"; key: string; label: LocalizedText }
-  | { type: "overflow"; key: string; label: LocalizedText; quantity: number };
+  | { type: "overflow"; key: string; label: LocalizedText; quantity: number }
+  | { type: "unlock"; key: string; label: LocalizedText };
 
 export type RollView = {
   label: LocalizedText;
@@ -62,7 +63,8 @@ export type RollView = {
 
 export type CombatLogLine = {
   round: number;
-  kind: "attack" | "miss" | "defend" | "flee" | "flee-fail" | "item" | "heal" | "enemy-flee" | "victory" | "defeat" | "single";
+  kind: "attack" | "miss" | "defend" | "flee" | "flee-fail" | "item" | "heal" | "enemy-flee" | "victory" | "defeat" | "single" | "equip";
+  critical?: boolean;
   actor: LocalizedText;
   target: LocalizedText | null;
   amount: number | null;
@@ -116,6 +118,10 @@ export type GameState = {
   // Estado de cada recurso no último gatilho ("zero", "full" ou ""): o gatilho só dispara na
   // passagem, não a cada ação enquanto o recurso continua zerado.
   triggers: Record<string, string>;
+  // Verbetes da enciclopédia desbloqueados nesta partida.
+  unlocked: string[];
+  // Só durante uma ação: rolagens que mudaram um valor ("1d8 = 5"), para o chip de mudança.
+  notes: Record<string, string>;
   // Último nível já contado (pontos e efeitos de subir de nível aplicados até ele).
   level: number;
   seed: string;

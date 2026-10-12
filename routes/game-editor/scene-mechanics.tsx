@@ -2,8 +2,9 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { Button, Input, Switch } from "@venore/plugin-sdk/ui";
-import type { EncounterDef, SceneMechanics, ShopDef } from "../../contracts/game";
+import { COMBAT_EVENTS, type CombatEvent, type EncounterDef, type SceneMechanics, type ShopDef } from "../../contracts/game";
 import { name, SELECT_CLASS, type GameCatalog } from "./catalog";
+import { NameInput } from "./fields";
 import { FormulaInput } from "./formula-input";
 import { ItemSelect, SceneSelect } from "./rules";
 
@@ -17,10 +18,22 @@ function emptyEncounter(catalog: GameCatalog): EncounterDef {
     defeatSceneId: null,
     fleeSceneId: null,
     single: { roll: "1d20", dc: "12", hpLoss: "1d6" },
+    messages: {},
   };
 }
 
 const emptyShop = (): ShopDef => ({ items: [], sellRate: 0.5 });
+
+const COMBAT_EVENT_LABELS: Record<CombatEvent, string> = {
+  playerHit: "Você acerta",
+  playerMiss: "Você erra",
+  enemyHit: "A criatura acerta",
+  enemyMiss: "A criatura erra",
+  critical: "Golpe crítico",
+  victory: "Vitória",
+  defeat: "Derrota",
+  flee: "Fuga",
+};
 
 export function SceneMechanicsEditor({
   catalog,
@@ -160,6 +173,26 @@ export function SceneMechanicsEditor({
               </label>
             ))}
           </div>
+          {encounter.mode === "rounds" && (
+            <details className="rounded-md border border-border/60 p-2">
+              <summary className="cursor-pointer text-sm font-medium text-foreground">Frases do combate (opcional)</summary>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Use <code>{"{atacante}"}</code>, <code>{"{alvo}"}</code> e <code>{"{dano}"}</code>. Vazio = frase padrão.
+              </p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {COMBAT_EVENTS.map((event) => (
+                  <NameInput
+                    key={event}
+                    catalog={catalog}
+                    label={COMBAT_EVENT_LABELS[event]}
+                    value={encounter.messages[event] ?? {}}
+                    maxLength={200}
+                    onChange={(value) => setEncounter({ messages: { ...encounter.messages, [event]: value } })}
+                  />
+                ))}
+              </div>
+            </details>
+          )}
         </div>
       )}
 

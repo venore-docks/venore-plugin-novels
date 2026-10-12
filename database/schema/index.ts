@@ -156,21 +156,25 @@ export const readerProgress = novelsSchema.table(
   (table) => [primaryKey({ columns: [table.userId, table.workId] })],
 );
 
-// Salvamentos nomeados do leitor com conta (0.13.0): até 3 por obra, além da partida em andamento.
-export const readerSaves = novelsSchema.table(
-  "reader_saves",
+// Desempenho do leitor com conta numa obra (0.14.0): jornadas concluídas, o que já viu de todas as
+// jornadas (cenas, escolhas, finais) e conquistas do autor. Base das conquistas do leitor.
+export const readerWorkStats = novelsSchema.table(
+  "reader_work_stats",
   {
     userId: text("user_id").notNull(),
     workId: text("work_id")
       .notNull()
       .references(() => works.id, { onDelete: "cascade" }),
-    slot: integer("slot").notNull(),
-    name: text("name").notNull().default(""),
-    sceneLabel: jsonb("scene_label").$type<LocalizedText>().notNull().default({}),
-    state: jsonb("state").$type<SavedGame>().notNull(),
+    completions: integer("completions").notNull().default(0),
+    // Semente da última jornada contada como concluída (a mesma jornada não conta duas vezes).
+    lastCompletedSeed: text("last_completed_seed"),
+    scenesSeen: jsonb("scenes_seen").$type<string[]>().notNull().default([]),
+    choicesSeen: jsonb("choices_seen").$type<string[]>().notNull().default([]),
+    endingsSeen: jsonb("endings_seen").$type<string[]>().notNull().default([]),
+    achievements: jsonb("achievements").$type<string[]>().notNull().default([]),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.workId, table.slot] }), check("reader_saves_slot_range", sql`${table.slot} between 1 and 3`)],
+  (table) => [primaryKey({ columns: [table.userId, table.workId] })],
 );
 
 // ------------------------------------------------------------------ catálogo de tags (0.9.0)

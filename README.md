@@ -78,7 +78,9 @@ módulo esconde a configuração, nunca apaga.
 - **Motor puro** (`shared/engine/`): a partida é um registro de ações a partir de uma semente. O
   mesmo código roda no leitor, no servidor (refaz a partida ao salvar; quem tem conta recebe a
   semente do servidor, e trocar de semente no meio é recusado), no validador e no simulador.
-  Progresso salvo no formato antigo é convertido na primeira leitura.
+  Desde a 0.14.0, o progresso só é salvo para quem tem conta, depois de cada escolha, e só para a
+  frente: o servidor recusa registro que não continua o salvo (não dá para voltar e tentar outra
+  opção; outro caminho = **Nova jornada**, com semente nova). "Voltar" só existe no modo teste.
 - **Modelos** (Graphic Novels → Modelos de jogo, permissão `novels.systems.manage`): Aventura
   simples, RPG de fantasia, Venore padrão (fórmulas da planilha com redução R/(R+k) sobre o HP
   máximo atual), Tibia-like e Terror com sanidade. Modelos são pacotes JSON
@@ -91,7 +93,33 @@ módulo esconde a configuração, nunca apaga.
   "Converter variáveis antigas" (barra → recurso, inventário → item, capacidade → peso).
 - **Para o leitor**: HUD com recursos e nível, ficha em abas (atributos com distribuição de pontos,
   mochila com equipar/usar/largar, equipamento, diário, conquistas, bestiário), histórico da
-  partida e até 3 salvamentos nomeados por obra (com conta).
+  partida e conquistas da obra (com conta).
+
+### 0.14.0
+
+- **Dado 3D**: ao rolar, os dados são lançados por cima da página, quicam girando e param no
+  resultado (d6 em cubo, demais em poliedro), depois fica o cartão com o detalhamento. Com
+  movimento reduzido no sistema, só o cartão.
+- **Desempenho do leitor** (`novels.reader_work_stats`, uma linha por leitor × obra): jornadas
+  concluídas (uma por semente), cenas/escolhas/finais vistos somando todas as jornadas e o
+  **% explorado** da obra. Conquistas do leitor calculadas daí (Primeira jornada, Veterano 3×,
+  Lenda 10×, Explorador 50%, Todos os finais, Completista 100%) mais as do autor. A tabela de
+  salvamentos nomeados (`reader_saves`) saiu (migration 0007).
+- **Imagens**: item, criatura, vocação e verbete mostram a imagem cadastrada ou um cartão com as
+  iniciais e o nome (`components/game-image.tsx`), no leitor e nas listas do admin.
+- **Leitor**: comparação do item com o equipado, silhueta do equipamento, detalhe do dado nas
+  mudanças, aviso de nível novo (com mensagem do autor), ícones de efeito no HUD, enciclopédia
+  (lugares, personagens, história; efeito "Desbloquear verbete"), frases do autor no combate,
+  textos do leitor em pt/en/es.
+- **Regras novas**: crítico no combate (chance por fórmula × multiplicador), trocar equipamento
+  na luta gastando a rodada, peso acima do limite bloqueando a fuga, efeito que acaba no fim da
+  próxima luta, "perder item aleatório", item "deixar com exatamente N" (a conversão de
+  "definir como N" usa isso), fórmulas `equipado.área`, `equipado.área.atributo` e
+  `soma_modificadores("atributo")`; o validador avisa efeito/condição de módulo desligado.
+- **Autor**: simulador com estratégias (aleatória, explorador, cauteloso, agressivo) rodando em
+  lotes sem travar a tela; grafo destaca cena inalcançável e mostra o % da última simulação;
+  prévia das fórmulas troca de nível com um clique; "Ver como o leitor" mostra a barra do
+  personagem.
 
 ## Painel do personagem (0.7.0)
 

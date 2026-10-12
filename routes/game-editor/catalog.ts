@@ -15,6 +15,8 @@ export type GameCatalog = {
   scenes: { id: string; label: string }[];
   // Todas as cenas da obra (gatilhos de recurso podem ir para outro capítulo).
   allScenes: { id: string; label: string }[];
+  // URL das imagens já usadas (vocação, verbete), para o seletor mostrar a atual.
+  media?: Record<string, string>;
 };
 
 export const SELECT_CLASS = "h-9 min-w-0 max-w-full rounded-md border border-border bg-background px-2 text-sm text-foreground";
@@ -70,6 +72,13 @@ export function formulaNames(catalog: GameCatalog): { name: string; hint: string
     names.push({ name: system.progression.pointsKey, hint: name(catalog, system.progression.pointsName, "pontos") });
   }
   if (system.modules.shops && system.currency.mode === "counter") names.push({ name: system.currency.key, hint: name(catalog, system.currency.name, "moeda") });
+  if (system.modules.equipment) {
+    for (const slot of system.slots) {
+      const label = name(catalog, slot.name, slot.key);
+      names.push({ name: `equipado.${slot.key}`, hint: `itens em ${label}` });
+      for (const attribute of system.attributes) names.push({ name: `equipado.${slot.key}.${attribute.key}`, hint: `bônus de ${label} em ${name(catalog, attribute.name, attribute.key)}` });
+    }
+  }
   return names.filter((entry) => entry.name);
 }
 
@@ -90,6 +99,7 @@ export const FUNCTION_HINTS: { name: string; hint: string }[] = [
   { name: "etapa", hint: 'etapa("id_da_missão")' },
   { name: "conquista", hint: 'conquista("id")' },
   { name: "efeito", hint: 'efeito("id")' },
+  { name: "soma_modificadores", hint: 'soma_modificadores("forca") — bônus de itens e efeitos' },
 ];
 
 // Nomes do combate: dado e os dois lados (atacante./defensor.) com as chaves de atributo.

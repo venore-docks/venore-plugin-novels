@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Backpack, Copy, GripVertical, Pencil, Plus, Search, Skull, Trash2 } from "lucide-react";
+import { Copy, GripVertical, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Button,
@@ -17,6 +17,7 @@ import {
   type PickableMedia,
 } from "@venore/plugin-sdk/ui";
 import { ITEM_RARITIES, ITEM_TYPES, type Creature, type CreatureRecord, type Item, type ItemRecord } from "../../contracts/game";
+import { GameImage } from "../../components/game-image";
 import { useDragReorder } from "../../components/use-drag-reorder";
 import { toGameKey } from "../../shared/game-input";
 import { pickText } from "../../shared/localized-text";
@@ -45,7 +46,6 @@ type Entry = { id: string; key: string; name: Item["name"]; imageMediaId: string
 function CatalogList<T extends Entry>({
   title,
   description,
-  icon,
   records,
   media,
   locale,
@@ -60,7 +60,6 @@ function CatalogList<T extends Entry>({
 }: {
   title: string;
   description: string;
-  icon: ReactNode;
   records: T[];
   media: Record<string, string>;
   locale: string;
@@ -118,12 +117,7 @@ function CatalogList<T extends Entry>({
                 className={cn("flex min-w-0 items-center gap-2 rounded-lg border bg-background p-2", rarity ? RARITY_BORDER[rarity] : "border-border", reorder.dragging === record.id && "opacity-50")}
               >
                 {!normalized && <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground" aria-hidden />}
-                {image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={image} alt="" className="size-10 shrink-0 rounded-md border border-border object-contain" />
-                ) : (
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">{icon}</span>
-                )}
+                <GameImage url={image} name={pickText(record.name, locale, locale) || record.key} className="size-10 shrink-0 object-contain" compact />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-foreground">{pickText(record.name, locale, locale) || record.key}</span>
                   <span className="block truncate text-xs text-muted-foreground">{details(record)}</span>
@@ -199,7 +193,6 @@ export function ItemCatalog({ workId, catalog, records, media }: { workId: strin
       <CatalogList
         title="Itens"
         description="Cadastre uma vez e use nas cenas (dar, tirar, equipar, saque), nas lojas e nas vocações."
-        icon={<Backpack className="size-5" aria-hidden />}
         records={records}
         media={media}
         locale={catalog.locale}
@@ -415,7 +408,6 @@ export function CreatureCatalog({ workId, catalog, records, media }: { workId: s
       <CatalogList
         title="Bestiário"
         description="Inimigos dos encontros. Os valores da ficha de cada um entram nas fórmulas de combate como atacante.chave e defensor.chave."
-        icon={<Skull className="size-5" aria-hidden />}
         records={records}
         media={media}
         locale={catalog.locale}

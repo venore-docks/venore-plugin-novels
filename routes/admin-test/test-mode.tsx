@@ -9,7 +9,8 @@ import { adminWorkPath } from "../../shared/constants";
 import { createContext } from "../../shared/engine/context";
 import { num } from "../../shared/engine/formula";
 import { currentLevel } from "../../shared/engine/rules";
-import { compareBuilds, simulateRuns, type BuildPoint, type RunSummary } from "../../shared/engine/simulate";
+import { saveCoverage } from "../../components/sim-coverage";
+import { compareBuilds, SIM_STRATEGIES, simulateRunsInChunks, type BuildPoint, type RunSummary, type SimStrategy } from "../../shared/engine/simulate";
 import type { GameState, PlayAction, Stack } from "../../shared/engine/types";
 import { pickText } from "../../shared/localized-text";
 import { StoryReader } from "../reader/story-reader";
@@ -177,12 +178,21 @@ function JumpPanel({
   );
 }
 
+const STRATEGY_LABELS: Record<SimStrategy, string> = {
+  random: "Aleatória",
+  explorer: "Explorador (prefere cena nova)",
+  cautious: "Cauteloso (evita teste, foge)",
+  aggressive: "Agressivo (só ataca)",
+};
+
 function Simulator({ story }: { story: Story }) {
   const ctx = useMemo(() => createContext(story), [story]);
   const locale = story.work.defaultLocale;
   const text = (value: Record<string, string> | undefined) => pickText(value ?? {}, locale, locale);
   const [runs, setRuns] = useState(300);
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(0);
+  const [strategy, setStrategy] = useState<SimStrategy>("random");
   const [summary, setSummary] = useState<RunSummary | null>(null);
   const [builds, setBuilds] = useState<BuildPoint[] | null>(null);
   const label = (sceneId: string) => story.scenes.find((scene) => scene.id === sceneId)?.label || "cena";
@@ -194,24 +204,35 @@ function Simulator({ story }: { story: Story }) {
     <section className="mx-auto w-full max-w-2xl space-y-4 rounded-xl border border-border bg-card p-4">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold text-foreground">Simulador de balanceamento</h2>
-        <p className="text-sm text-muted-foreground">Partidas automáticas com escolhas aleatórias (o mesmo motor do leitor): % de cada final, cenas nunca alcançadas, onde os recursos zeram e onde a partida empaca.</p>
+        <p className="text-sm text-muted-foreground">Partidas automáticas (o mesmo motor do leitor): % de cada final, cenas nunca alcançadas, onde os recursos zeram e onde a partida empaca.</p>
       </div>
       <div className="flex flex-wrap items-end gap-2">
         <label className="space-y-1 text-xs text-muted-foreground">
           Partidas
           <Input type="number" min={10} max={3000} className="w-28" value={String(runs)} onChange={(event) => setRuns(Math.max(10, Math.min(3000, Math.trunc(Number(event.target.value) || 10))))} />
         </label>
+        <label className="space-y-1 text-xs text-muted-foreground">
+          Estratégia
+          <select className="block h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground" value={strategy} onChange={(event) => setStrategy(event.target.value as SimStrategy)}>
+            {SIM_STRATEGIES.map((option) => (
+              <option key={option} value={option}>
+                {STRATEGY_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
         <Button
           disabled={busy}
-          onClick={() => {
+          onClick={async () => {
             setBusy(true);
-            setTimeout(() => {
-              setSummary(simulateRuns(ctx, runs, `sim-${Date.now()}`));
-              setBusy(false);
-            }, 20);
+            setDone(0);
+            const result = await simulateRunsInChunks(ctx, runs, { seedPrefix: `sim-${Date.now()}`, strategy, onProgress: setDone });
+            setSummary(result);
+            saveCoverage(story.work.id, Object.fromEntries(story.scenes.map((scene) => [scene.id, Math.round(((result.visited.get(scene.id) ?? 0) / Math.max(1, result.runs)) * 100)])));
+            setBusy(false);
           }}
         >
-          {busy ? "Simulando..." : "Simular"}
+          {busy ? `Simulando... ${Math.round((done / runs) * 100)}%` : "Simular"}
         </Button>
         {ctx.on("combat") && ctx.creatures.size > 0 && ctx.system.combat.actions.length > 0 && (
           <Button variant="outline" disabled={busy} onClick={() => setBuilds(compareBuilds(ctx, 10))}>
@@ -254,7 +275,9 @@ function Simulator({ story }: { story: Story }) {
             {summary.stuck.size === 0 && <p className="text-muted-foreground">Nenhuma.</p>}
           </div>
           <div className="space-y-1 text-sm">
-            <p className="font-medium text-foreground">Cenas nunca alcançadas</p>
+            <p className="font-medium text-foreground">
+              Cenas nunca alcançadas ({Math.round((summary.visited.size / Math.max(1, story.scenes.length)) * 100)}% da obra visitada)
+            </p>
             {unreached.length === 0 ? <p className="text-muted-foreground">Todas foram visitadas.</p> : <p className="text-foreground">{unreached.map((scene) => scene.label || "cena sem nome").join(", ")}</p>}
           </div>
         </div>

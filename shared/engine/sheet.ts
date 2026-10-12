@@ -1,6 +1,7 @@
 import type {
   AchievementDef,
   Creature,
+  EncyclopediaEntryDef,
   EquipmentSlotDef,
   Item,
   ProfileFieldDef,
@@ -93,6 +94,7 @@ export type CharacterSheetV2 = {
   vocation: VocationDef | null;
   currency: { name: LocalizedText; value: number } | null;
   bestiary: Creature[];
+  encyclopedia: EncyclopediaEntryDef[];
   // Há algo para mostrar no HUD (rodapé) e no painel (diálogo).
   hasHud: boolean;
   hasPanel: boolean;
@@ -230,6 +232,7 @@ export function buildSheet(ctx: GameContext, state: GameState): CharacterSheetV2
     achievements.length > 0 ||
     profile.length > 0 ||
     bestiary.length > 0 ||
+    (state.unlocked ?? []).length > 0 ||
     Boolean(legacy && (legacy.skills.length > 0 || legacy.hasInventory));
 
   return {
@@ -248,6 +251,7 @@ export function buildSheet(ctx: GameContext, state: GameState): CharacterSheetV2
     vocation,
     currency: ctx.on("shops") ? { name: system.currency.name, value: currency(ctx, state) } : null,
     bestiary,
+    encyclopedia: ctx.system.encyclopedia.filter((entry) => (state.unlocked ?? []).includes(entry.id)),
     hasHud,
     hasPanel,
   };

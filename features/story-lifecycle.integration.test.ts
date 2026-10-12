@@ -21,7 +21,7 @@ import { updateWork } from "./works/update-work/service";
 import { applySystemTemplate, saveWorkAsTemplate, listSystemTemplates } from "./game/system-templates/service";
 import { saveItem, deleteItem } from "./game/manage-items/service";
 import { startReaderGame } from "./reading/start-reader-game/service";
-import { listReaderSaves, loadReaderSlot, saveReaderSlot } from "./reading/manage-reader-saves/service";
+import { getReaderStats } from "./reading/get-reader-stats/service";
 import { getWorkStats } from "./stats/get-work-stats/service";
 import { convertLegacyVariables } from "./works/convert-legacy-variables/service";
 import { createContext } from "../shared/engine/context";
@@ -61,13 +61,16 @@ describe("novels — ciclo da obra (integração)", () => {
     const reader = await seedUser({ name: "Leitora" });
     const state = { sceneId: story.data.chapters[0].startSceneId!, vars: { coragem: 0, lanterna: false }, path: [], visitedEndings: [] };
 
-    expect((await saveReaderProgress({ workId: story.data.work.id, progress: { kind: "legacy", state }, userId: reader.id })).success).toBe(true);
+    // Progresso no formato antigo não é mais aceito: a jornada começa no servidor (semente nova).
+    expect((await saveReaderProgress({ workId: story.data.work.id, progress: { kind: "legacy", state }, userId: reader.id })).success).toBe(false);
+    const started = await startReaderGame({ workId: story.data.work.id, userId: reader.id, start: { t: "start" } });
+    if (!started.success) throw new Error(started.error.message);
     const progress = await getReaderProgress({ workId: story.data.work.id, userId: reader.id });
-    expect(progress.success && (progress.data?.state as { sceneId?: string } | undefined)?.sceneId).toBe(state.sceneId);
+    expect(progress.success && (progress.data?.state as { seed?: string } | undefined)?.seed).toBe(started.data.seed);
 
     await unpublishWork({ workId: story.data.work.id, actorId: "u" });
     expect((await getPublishedStory({ slug: "o-farol" })).success).toBe(false);
-    expect((await saveReaderProgress({ workId: story.data.work.id, progress: { kind: "legacy", state }, userId: reader.id })).success).toBe(false);
+    expect((await saveReaderProgress({ workId: story.data.work.id, progress: { kind: "saved", saved: started.data }, userId: reader.id })).success).toBe(false);
   });
 
   it("recusa grafo que quebraria obra publicada e aceita depois de despublicar", async () => {
@@ -197,14 +200,15 @@ describe("novels — ciclo da obra (integração)", () => {
     // Semente trocada no meio da partida é recusada.
     expect((await saveReaderProgress({ workId, userId: reader.id, progress: { kind: "saved", saved: { ...toSaved(state), seed: "forjada" } } })).success).toBe(false);
 
-    const slot = await saveReaderSlot({ workId, slot: 1, name: "Antes do farol", saved: toSaved(state), userId: reader.id });
-    expect(slot.success).toBe(true);
-    expect((await listReaderSaves({ workId, userId: reader.id })).success).toBe(true);
-    expect((await loadReaderSlot({ workId, slot: 1, userId: reader.id })).success).toBe(true);
+    // Voltar na história (registro que não continua o salvo) é recusado.
+    expect((await saveReaderProgress({ workId, userId: reader.id, progress: { kind: "saved", saved: started.data } })).success).toBe(false);
+    // Desempenho somado: cenas vistas e escolhas feitas nesta jornada.
+    const stats = await getReaderStats({ workId, userId: reader.id });
+    expect(stats.success && stats.data?.choicesSeen.length).toBe(2);
 
-    const stats = await getWorkStats({ workId });
-    expect(stats.success && stats.data.readers).toBe(1);
-    expect(stats.success && stats.data.choices.length).toBe(2);
+    const workStats = await getWorkStats({ workId });
+    expect(workStats.success && workStats.data.readers).toBe(1);
+    expect(workStats.success && workStats.data.choices.length).toBe(2);
 
     // Modelo aplicado num rascunho novo, item novo no catálogo e o sistema salvo como modelo.
     const draft = await createWork({ title: "Arena", slug: "arena", defaultLocale: "pt-BR", actorId: "u" });

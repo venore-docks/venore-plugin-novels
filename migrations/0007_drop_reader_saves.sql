@@ -1,0 +1,1 @@
+DROP TABLE "novels"."reader_saves" CASCADE;

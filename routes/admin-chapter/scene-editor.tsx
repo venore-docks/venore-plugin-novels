@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlignLeft,
   ArrowDown,
@@ -35,6 +35,10 @@ import { BlockEditor } from "./block-editors";
 import type { GameCatalog } from "../game-editor/catalog";
 import { EffectsEditor } from "../game-editor/rules";
 import { SceneMechanicsEditor } from "../game-editor/scene-mechanics";
+import { GameHud } from "../reader/game-hud";
+import { contextFromParts } from "../../shared/engine/context";
+import { sampleState } from "../../shared/engine/play";
+import { buildSheet } from "../../shared/engine/sheet";
 
 const BLOCK_ICONS: Record<SceneBlockType, LucideIcon> = {
   text: AlignLeft,
@@ -191,11 +195,14 @@ export function SceneEditor({
             )}
 
             {preview ? (
-              blocks.length > 0 ? (
-                <SceneBlocksView blocks={blocks} locale={locale} fallbackLocale={work.defaultLocale} media={media} cast={cast} eager />
-              ) : (
-                <p className="px-4 text-sm text-muted-foreground">Cena vazia.</p>
-              )
+              <div className="space-y-3">
+                {blocks.length > 0 ? (
+                  <SceneBlocksView blocks={blocks} locale={locale} fallbackLocale={work.defaultLocale} media={media} cast={cast} eager />
+                ) : (
+                  <p className="px-4 text-sm text-muted-foreground">Cena vazia.</p>
+                )}
+                <PreviewHud catalog={catalog} />
+              </div>
             ) : (
               <ol className="space-y-2">
                 {reorder.order.map((id, index) => {
@@ -372,4 +379,15 @@ function AddBlockMenu({ onAdd }: { onAdd: (type: SceneBlockType) => void }) {
       })}
     </div>
   );
+}
+
+// Barra do personagem como o leitor vê no começo da partida (valores iniciais).
+function PreviewHud({ catalog }: { catalog: GameCatalog }) {
+  const sheet = useMemo(() => {
+    if (!Object.values(catalog.system.modules).some(Boolean)) return null;
+    const ctx = contextFromParts({ system: catalog.system, variables: catalog.variables, items: catalog.items, locale: catalog.locale });
+    return buildSheet(ctx, sampleState(ctx));
+  }, [catalog]);
+  if (!sheet) return null;
+  return <GameHud sheet={sheet} text={(value) => pickText(value ?? {}, catalog.locale, catalog.locale)} onOpen={() => undefined} alert={false} inline />;
 }

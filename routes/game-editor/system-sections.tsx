@@ -7,6 +7,7 @@ import type {
   AttributeDef,
   CombatActionDef,
   DerivedDef,
+  EncyclopediaEntryDef,
   GameSystem,
   ProfileFieldDef,
   QuestDef,
@@ -16,7 +17,7 @@ import type {
 } from "../../contracts/game";
 import { evaluateNumber } from "../../shared/engine/formula";
 import { name, SELECT_CLASS, type GameCatalog } from "./catalog";
-import { ColorPicker, DefinitionList, Field, KeyInput, ModifiersEditor, NameInput, NumberInput, Toggle, uniqueId } from "./fields";
+import { ColorPicker, DefinitionList, Field, ImageField, KeyInput, ModifiersEditor, NameInput, NumberInput, Toggle, uniqueId } from "./fields";
 import { FormulaInput } from "./formula-input";
 import { ConditionsEditor, CostsEditor, EffectsEditor, ItemSelect, SceneSelect } from "./rules";
 
@@ -189,6 +190,7 @@ export function ProgressionSection({ catalog, system, set }: SectionProps) {
         <KeyInput label="Chave do nível" value={progression.levelKey} onChange={(levelKey) => update({ levelKey })} />
         <KeyInput label="Chave dos pontos" value={progression.pointsKey} onChange={(pointsKey) => update({ pointsKey })} />
       </div>
+      <NameInput catalog={catalog} label="Mensagem ao subir de nível (opcional)" value={progression.levelUpMessage} onChange={(levelUpMessage) => update({ levelUpMessage })} maxLength={300} multiline />
       <div className="space-y-2 rounded-md border border-border/60 p-2">
         <Field label="Curva de XP">
           <select className={SELECT_CLASS} value={progression.curve.kind} onChange={(event) => update({ curve: event.target.value === "table" ? { kind: "table", thresholds: [100, 300, 600, 1000] } : { kind: "formula", formula: "50 * (n - 1) * n" } })}>
@@ -289,6 +291,7 @@ export function InventorySection({ catalog, system, set }: SectionProps) {
               </select>
             </Field>
             <Toggle label="Itens equipados contam no peso" checked={inventory.weight.countEquipped} onChange={(countEquipped) => update({ weight: { ...inventory.weight, countEquipped } })} />
+            <Toggle label="Acima do peso não dá para fugir" hint="No combate, a opção Fugir fica bloqueada enquanto passar do limite." checked={inventory.weight.blockFlee} onChange={(blockFlee) => update({ weight: { ...inventory.weight, blockFlee } })} />
             {inventory.weight.overLimit === "penalty" && (
               <ModifiersEditor catalog={catalog} label="Penalidade" value={inventory.weight.penalty} onChange={(penalty) => update({ weight: { ...inventory.weight, penalty } })} />
             )}
@@ -415,7 +418,12 @@ export function CombatSection({ catalog, system, set }: SectionProps) {
         </Field>
         <NumberInput label="Dano mínimo" min={0} value={combat.minDamage} onChange={(minDamage) => update({ minDamage: Math.max(0, minDamage) })} />
         <NumberInput label="Redução máxima (0 a 1)" min={0} max={1} step={0.05} value={combat.maxReduction} onChange={(maxReduction) => update({ maxReduction: Math.max(0, Math.min(1, maxReduction)) })} hint="Teto da redução de dano: 0,75 = nunca reduz mais que 75%." />
+        <Field label="Chance de crítico (%)" hint="Fórmula; vazio ou 0 = sem crítico. Ex: 5 + destreza / 4">
+          <FormulaInput catalog={catalog} ariaLabel="Chance de crítico" value={combat.critical.chance} onChange={(chance) => update({ critical: { ...combat.critical, chance } })} allowEmpty combat />
+        </Field>
+        <NumberInput label="Dano do crítico (×)" min={1} max={10} step={0.25} value={combat.critical.multiplier} onChange={(multiplier) => update({ critical: { ...combat.critical, multiplier: Math.max(1, Math.min(10, multiplier)) } })} />
       </div>
+      <Toggle label="Trocar equipamento durante a luta" hint="Equipar ou desequipar gasta a rodada (a criatura ataca)." checked={combat.equipInCombat} onChange={(equipInCombat) => update({ equipInCombat })} />
       <p className="text-xs text-muted-foreground">
         Nas fórmulas: <code>dado</code>, <code>atacante.chave</code> e <code>defensor.chave</code>. Redução com retorno decrescente: <code>defensor.defesa / (defensor.defesa + 50)</code>.
       </p>
@@ -579,6 +587,7 @@ export function CharacterSection({ catalog, system, set }: SectionProps) {
             <>
               <NameInput catalog={catalog} label="Nome" value={vocation.name} onChange={(value) => change({ name: value })} />
               <NameInput catalog={catalog} label="Descrição" value={vocation.description} onChange={(description) => change({ description })} maxLength={300} multiline />
+              <ImageField catalog={catalog} value={vocation.imageMediaId} onChange={(imageMediaId) => change({ imageMediaId })} />
               <div className="space-y-1">
                 <p className="text-sm font-medium text-foreground">Valores iniciais</p>
                 {Object.entries(vocation.values).map(([key, value]) => (
@@ -664,7 +673,7 @@ export function ShopsSection({ catalog, system, set }: SectionProps) {
 }
 
 export function StatusEffectsSection({ catalog, system, set }: SectionProps) {
-  const create = (): StatusEffectDef => ({ id: uniqueId("efeito", system.statusEffects.map((effect) => effect.id)), name: t(catalog, "Novo efeito"), color: "chart-5", duration: 3, perScene: [], modifiers: [] });
+  const create = (): StatusEffectDef => ({ id: uniqueId("efeito", system.statusEffects.map((effect) => effect.id)), name: t(catalog, "Novo efeito"), color: "chart-5", icon: "", untilCombat: false, duration: 3, perScene: [], modifiers: [] });
   return (
     <DefinitionList
       items={system.statusEffects}
@@ -682,6 +691,10 @@ export function StatusEffectsSection({ catalog, system, set }: SectionProps) {
               <Input type="number" min={1} value={effect.duration === null ? "" : String(effect.duration)} onChange={(event) => update({ duration: event.target.value === "" ? null : Math.max(1, Math.trunc(Number(event.target.value) || 1)) })} />
             </Field>
             <ColorPicker value={effect.color} onChange={(color) => update({ color })} />
+            <Field label="Ícone no HUD" hint="Um emoji ou símbolo curto. Ex: ☠ 🛡">
+              <Input value={effect.icon} maxLength={4} onChange={(event) => update({ icon: event.target.value })} />
+            </Field>
+            <Toggle label="Acaba no fim da próxima luta" checked={effect.untilCombat} onChange={(untilCombat) => update({ untilCombat })} />
           </div>
           <ModifiersEditor catalog={catalog} value={effect.modifiers} onChange={(modifiers) => update({ modifiers })} />
           <div className="space-y-1">
@@ -790,5 +803,40 @@ export function SeriesSection({ catalog, system, set, works }: SectionProps & { 
         </fieldset>
       )}
     </div>
+  );
+}
+
+const ENTRY_KINDS: Record<EncyclopediaEntryDef["kind"], string> = { place: "Lugar", character: "Personagem", lore: "História" };
+
+export function EncyclopediaSection({ catalog, system, set }: SectionProps) {
+  const create = (): EncyclopediaEntryDef => ({ id: uniqueId("verbete", system.encyclopedia.map((entry) => entry.id)), kind: "place", name: t(catalog, "Novo verbete"), description: {}, imageMediaId: null });
+  return (
+    <DefinitionList
+      items={system.encyclopedia}
+      onChange={(encyclopedia) => set({ encyclopedia })}
+      create={create}
+      addLabel="Verbete"
+      empty='Lugares, personagens e história. Cada verbete aparece para o leitor quando uma cena usa o efeito "Desbloquear verbete".'
+      title={(entry) => `${ENTRY_KINDS[entry.kind]} · ${name(catalog, entry.name, entry.id)}`}
+      render={(entry, update) => (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <NameInput catalog={catalog} label="Nome" value={entry.name} onChange={(value) => update({ name: value })} />
+            <KeyInput label="Id" value={entry.id} onChange={(id) => update({ id })} />
+            <Field label="Tipo">
+              <select className={SELECT_CLASS} value={entry.kind} onChange={(event) => update({ kind: event.target.value as EncyclopediaEntryDef["kind"] })}>
+                {Object.entries(ENTRY_KINDS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <NameInput catalog={catalog} label="Texto" value={entry.description} onChange={(description) => update({ description })} maxLength={1200} multiline />
+          <ImageField catalog={catalog} value={entry.imageMediaId} onChange={(imageMediaId) => update({ imageMediaId })} />
+        </>
+      )}
+    />
   );
 }

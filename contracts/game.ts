@@ -33,7 +33,11 @@ export type Effect =
   | VariableEffect
   | { kind: "formula"; target: string; operation: "set" | "add"; formula: Formula }
   | { kind: "restore"; target: string }
-  | { kind: "item"; operation: "give" | "take"; itemId: string; quantity: Formula }
+  | { kind: "item"; operation: "give" | "take" | "set"; itemId: string; quantity: Formula }
+  // Perde itens ao acaso (só os que podem ser largados), ex: ao zerar a vida.
+  | { kind: "lose_random_item"; quantity: Formula }
+  // Desbloqueia um verbete da enciclopédia (lugar, personagem, história).
+  | { kind: "unlock"; entryId: string }
   | { kind: "equip"; itemId: string }
   | { kind: "unequip"; itemId: string }
   | { kind: "loot"; entries: LootEntry[] }
@@ -108,6 +112,8 @@ export type ProgressionDef = {
   // Teto relativo ao nível ("nivel + 5"); vazio = sem teto.
   attributeCap: Formula;
   onLevelUp: Effect[];
+  // Tela "Você subiu para o nível {nivel}" (vazio = só o aviso na lista de mudanças).
+  levelUpMessage: LocalizedText;
 };
 
 export type InventoryDef = {
@@ -119,6 +125,8 @@ export type InventoryDef = {
     countEquipped: boolean;
     overLimit: "block" | "penalty";
     penalty: Modifier[];
+    // Acima do limite não dá para fugir de luta.
+    blockFlee: boolean;
   };
   space: { enabled: boolean; name: LocalizedText; base: number };
   hands: { enabled: boolean; name: LocalizedText; count: number };
@@ -155,6 +163,22 @@ export type CombatDef = {
   flee: { enabled: boolean; roll: Formula; dc: Formula };
   minDamage: number;
   maxReduction: number;
+  // Crítico: chance em % (fórmula) e multiplicador do dano.
+  critical: { chance: Formula; multiplier: number };
+  // Equipar/desequipar durante a luta gasta a rodada (desligado = só fora da luta).
+  equipInCombat: boolean;
+};
+
+export const COMBAT_EVENTS = ["playerHit", "playerMiss", "enemyHit", "enemyMiss", "critical", "victory", "defeat", "flee"] as const;
+export type CombatEvent = (typeof COMBAT_EVENTS)[number];
+
+// Verbete da enciclopédia (lugares, personagens, história), desbloqueado por efeito de cena.
+export type EncyclopediaEntryDef = {
+  id: string;
+  kind: "place" | "character" | "lore";
+  name: LocalizedText;
+  description: LocalizedText;
+  imageMediaId: string | null;
 };
 
 export type ProfileFieldDef = {
@@ -185,6 +209,10 @@ export type StatusEffectDef = {
   color: AccentColor;
   // Em cenas; null = até ser removido.
   duration: number | null;
+  // Acaba no fim da próxima luta.
+  untilCombat: boolean;
+  // Ícone curto no HUD (emoji ou símbolo).
+  icon: string;
   perScene: Effect[];
   modifiers: Modifier[];
 };
@@ -208,6 +236,7 @@ export type GameSystem = {
   statusEffects: StatusEffectDef[];
   quests: QuestDef[];
   achievements: AchievementDef[];
+  encyclopedia: EncyclopediaEntryDef[];
   hardcore: boolean;
   series: { previousWorkId: string | null; carry: string[] };
 };
@@ -243,6 +272,8 @@ export type EncounterDef = {
   fleeSceneId: string | null;
   // Modo "single": um teste resolve a luta; a derrota tira hpLoss.
   single: { roll: Formula; dc: Formula; hpLoss: Formula };
+  // Frases do autor por evento ({atacante}, {alvo}, {dano}); vazio = linha gerada.
+  messages: Partial<Record<CombatEvent, LocalizedText>>;
 };
 
 export type ShopDef = { items: { itemId: string; price: number; stock: number | null }[]; sellRate: number };

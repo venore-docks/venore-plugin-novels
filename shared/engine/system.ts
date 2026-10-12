@@ -1,4 +1,5 @@
 import {
+  COMBAT_EVENTS,
   GAME_MODULES,
   type ChoiceMechanics,
   type GameModule,
@@ -38,9 +39,10 @@ export function emptySystem(): GameSystem {
       ],
       attributeCap: "",
       onLevelUp: [],
+      levelUpMessage: {},
     },
     inventory: {
-      weight: { enabled: false, name: t("Peso", "Weight"), unit: t("oz"), max: "400", countEquipped: true, overLimit: "block", penalty: [] },
+      weight: { enabled: false, name: t("Peso", "Weight"), unit: t("oz"), max: "400", countEquipped: true, overLimit: "block", penalty: [], blockFlee: false },
       space: { enabled: false, name: t("Mochila", "Backpack"), base: 8 },
       hands: { enabled: false, name: t("Mãos", "Hands"), count: 2 },
     },
@@ -63,12 +65,15 @@ export function emptySystem(): GameSystem {
       flee: { enabled: true, roll: "1d20", dc: "10" },
       minDamage: 1,
       maxReduction: 0.9,
+      critical: { chance: "", multiplier: 2 },
+      equipInCombat: false,
     },
     character: { fields: [], vocations: [], startingPoints: 0 },
     currency: { mode: "counter", key: "moedas", name: t("Moedas", "Coins"), itemId: null },
     statusEffects: [],
     quests: [],
     achievements: [],
+    encyclopedia: [],
     hardcore: false,
     series: { previousWorkId: null, carry: [] },
   };
@@ -103,6 +108,7 @@ export function normalizeSystem(raw: unknown): GameSystem {
   const enemy = isObject(combat.enemy) ? combat.enemy : {};
   const defend = isObject(combat.defend) ? combat.defend : {};
   const flee = isObject(combat.flee) ? combat.flee : {};
+  const critical = isObject(combat.critical) ? combat.critical : {};
   const character = isObject(raw.character) ? raw.character : {};
   const currency = isObject(raw.currency) ? raw.currency : {};
   const series = isObject(raw.series) ? raw.series : {};
@@ -175,6 +181,7 @@ export function normalizeSystem(raw: unknown): GameSystem {
         : base.progression.pointCosts,
       attributeCap: str(progression.attributeCap),
       onLevelUp: sanitizeEffects(progression.onLevelUp),
+      levelUpMessage: text(progression.levelUpMessage),
     },
     inventory: {
       weight: {
@@ -185,6 +192,7 @@ export function normalizeSystem(raw: unknown): GameSystem {
         countEquipped: bool(weight.countEquipped, true),
         overLimit: oneOf(weight.overLimit, ["block", "penalty"] as const, "block"),
         penalty: modifiers(weight.penalty),
+        blockFlee: bool(weight.blockFlee),
       },
       space: { enabled: bool(space.enabled), name: text(space.name, base.inventory.space.name), base: Math.max(0, Math.trunc(num(space.base, 8))) },
       hands: { enabled: bool(hands.enabled), name: text(hands.name, base.inventory.hands.name), count: Math.max(0, Math.trunc(num(hands.count, 2))) },
@@ -225,6 +233,11 @@ export function normalizeSystem(raw: unknown): GameSystem {
       flee: { enabled: bool(flee.enabled, true), roll: str(flee.roll, "1d20"), dc: str(flee.dc, "10") },
       minDamage: Math.max(0, num(combat.minDamage, 1)),
       maxReduction: Math.max(0, Math.min(0.99, num(combat.maxReduction, 0.9))),
+      critical: {
+        chance: str(critical.chance),
+        multiplier: Math.max(1, Math.min(10, num(critical.multiplier, 2))),
+      },
+      equipInCombat: bool(combat.equipInCombat),
     },
     character: {
       fields: list<Record<string, unknown>>(character.fields)
@@ -267,6 +280,8 @@ export function normalizeSystem(raw: unknown): GameSystem {
         name: text(effect.name),
         color: color(effect.color),
         duration: typeof effect.duration === "number" && effect.duration > 0 ? Math.trunc(effect.duration) : null,
+        untilCombat: bool(effect.untilCombat),
+        icon: str(effect.icon).slice(0, 4),
         perScene: sanitizeEffects(effect.perScene),
         modifiers: modifiers(effect.modifiers),
       })),
@@ -283,6 +298,15 @@ export function normalizeSystem(raw: unknown): GameSystem {
     achievements: list<Record<string, unknown>>(raw.achievements)
       .filter(isObject)
       .map((achievement) => ({ id: str(achievement.id), name: text(achievement.name), description: text(achievement.description), hidden: bool(achievement.hidden) })),
+    encyclopedia: list<Record<string, unknown>>(raw.encyclopedia)
+      .filter(isObject)
+      .map((entry) => ({
+        id: str(entry.id),
+        kind: oneOf(entry.kind, ["place", "character", "lore"] as const, "lore"),
+        name: text(entry.name),
+        description: text(entry.description),
+        imageMediaId: typeof entry.imageMediaId === "string" && entry.imageMediaId ? entry.imageMediaId : null,
+      })),
     hardcore: bool(raw.hardcore),
     series: {
       previousWorkId: typeof series.previousWorkId === "string" && series.previousWorkId ? series.previousWorkId : null,
@@ -318,6 +342,14 @@ export function normalizeSceneMechanics(raw: unknown): SceneMechanics {
           defeatSceneId: sceneRef(encounter.defeatSceneId),
           fleeSceneId: sceneRef(encounter.fleeSceneId),
           single: { roll: str(single.roll, "1d20"), dc: str(single.dc, "10"), hpLoss: str(single.hpLoss, "0") },
+          messages: isObject(encounter.messages)
+            ? Object.fromEntries(
+                COMBAT_EVENTS.filter((event) => isObject((encounter.messages as Record<string, unknown>)[event])).map((event) => [
+                  event,
+                  text((encounter.messages as Record<string, unknown>)[event]),
+                ]),
+              )
+            : {},
         }
       : null,
     shop: shop

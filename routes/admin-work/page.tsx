@@ -216,6 +216,7 @@ async function SystemTab({ view }: { view: WorkEditorView }) {
       <SystemEditor
         key={work.updatedAt.toISOString()}
         workId={work.id}
+        media={view.media}
         workTitle={work.title}
         locale={work.defaultLocale}
         locales={work.locales}

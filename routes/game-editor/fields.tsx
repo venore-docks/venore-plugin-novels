@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, Plus, Trash2 } from "lucide-react";
-import { Button, Input, Switch, cn } from "@venore/plugin-sdk/ui";
+import { Button, Input, MediaPickerField, Switch, cn, type PickableMedia } from "@venore/plugin-sdk/ui";
 import type { Modifier } from "../../contracts/game";
 import { ACCENT_COLORS, type AccentColor, type LocalizedText } from "../../contracts/types";
 import { LocalizedInput } from "../../components/localized-input";
@@ -219,4 +219,11 @@ export function uniqueId(base: string, taken: string[]): string {
   let candidate = root;
   for (let index = 2; taken.includes(candidate); index += 1) candidate = `${root}_${index}`.slice(0, 40);
   return candidate;
+}
+
+// Imagem opcional (vocação, verbete): sem imagem, o leitor vê o cartão com o nome.
+export function ImageField({ catalog, value, onChange, label = "Imagem (opcional)" }: { catalog: GameCatalog; value: string | null; onChange: (id: string | null) => void; label?: string }) {
+  const url = value ? catalog.media?.[value] : undefined;
+  const [initial] = useState<PickableMedia | null>(value && url ? { id: value, url, filename: "imagem", contentType: "image/*" } : null);
+  return <MediaPickerField name="imageMediaId" label={label} initialMedia={initial} onSelect={(media) => onChange(media?.id ?? null)} />;
 }

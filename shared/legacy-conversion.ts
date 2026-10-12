@@ -93,11 +93,8 @@ export function planLegacyConversion(input: {
     }
     const amount = typeof current.value === "number" ? current.value : 0;
     if (current.operation === "add") return amount === 0 ? [] : [{ kind: "item", operation: amount > 0 ? "give" : "take", itemId: ref, quantity: String(Math.abs(amount)) }];
-    // "definir como N": tira tudo e dá N.
-    return [
-      { kind: "item", operation: "take", itemId: ref, quantity: "999999" },
-      ...(amount > 0 ? [{ kind: "item" as const, operation: "give" as const, itemId: ref, quantity: String(amount) }] : []),
-    ];
+    // "definir como N": deixa exatamente N na mochila.
+    return [{ kind: "item", operation: "set", itemId: ref, quantity: String(Math.max(0, amount)) }];
   };
   const condition = (current: Condition): Condition => {
     if (!isLegacyCondition(current)) return current;

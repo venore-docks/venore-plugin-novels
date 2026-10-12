@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType } from "react";
-import { Dices, History, Pause, Play, RotateCcw, Save, Undo2, Volume2, VolumeX } from "lucide-react";
+import { Dices, History, Pause, Play, RotateCcw, Undo2, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Button, cn } from "@venore/plugin-sdk/ui";
 import type { LocalizedText, ReaderState, Story, VariableValue } from "../../contracts/types";
@@ -16,31 +16,29 @@ import { interpolateBlocks, interpolateText } from "../../shared/engine/interpol
 import { applyAction, fromLegacy, isSavedGame, newGame, nextStep, replay, toSaved, undo, type ChoiceView } from "../../shared/engine/play";
 import { playerScope } from "../../shared/engine/rules";
 import { buildSheet } from "../../shared/engine/sheet";
-import type { GameState, PlayAction, SavedGame } from "../../shared/engine/types";
+import type { GameState, PlayAction, RollView, SavedGame } from "../../shared/engine/types";
 import { localeLabel } from "../../shared/locales";
 import { pickText } from "../../shared/localized-text";
+import type { ReaderStats } from "../../shared/reader-stats";
 import { computedBadges } from "../../shared/tag-catalog";
-import { saveReaderProgressAction, startReaderGameAction } from "./actions";
+import { getReaderStatsAction, saveReaderProgressAction, startReaderGameAction } from "./actions";
 import { CharacterCreation } from "./character-creation";
-import { DiceRoll } from "./dice-roll";
+import { DiceRoll, DiceThrow } from "./dice-roll";
 import { ChangeChips, CombatLog, formatNumber, GameHud, SheetDialog } from "./game-hud";
-import { CombatPanel, HistoryDialog, OverflowPanel, SavesDialog, ShopPanel } from "./game-panels";
+import { CombatPanel, HistoryDialog, LevelUpDialog, OverflowPanel, ReaderAchievementsPanel, ShopPanel } from "./game-panels";
+import { readerStrings, type ReaderStrings } from "./strings";
 
 type ServerProgress = { state: SavedGame | ReaderState; updatedAt: string };
-type LocalGame = { saved: SavedGame; updatedAt: string };
 
 const LOCALE_KEY = "novels:locale";
 const AUTO_READ_KEY = "novels:auto-read";
-const gameKey = (workId: string) => `novels:game:${workId}`;
-// Progresso do formato antigo (antes da 0.10.0): lido uma vez e convertido.
-const legacyKey = (workId: string) => `novels:progress:${workId}`;
 
-// localStorage pode lançar (aba anônima, cota, bloqueio): toda leitura/escrita é best-effort.
+// localStorage só guarda preferências (idioma, leitura em voz alta). A jornada é salva só na conta.
 function writeLocal(key: string, value: unknown) {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // sem armazenamento local: a leitura continua, só não sobrevive a um reload
+    // sem armazenamento local: só perde a preferência
   }
 }
 
@@ -68,15 +66,19 @@ function parse<T>(raw: string | null): T | null {
 
 const noopSubscribe = () => () => {};
 
-function totalRolls(state: GameState | null): number {
-  return state ? state.entries.reduce((sum, entry) => sum + entry.rolls.length, 0) : 0;
+function allRolls(state: GameState | null): RollView[] {
+  return state ? state.entries.flatMap((entry) => entry.rolls) : [];
 }
 
+// Leitor (0.14.0): a jornada é salva só para quem tem conta, depois de cada escolha, e só anda para
+// a frente — para seguir outro caminho, o leitor começa uma nova jornada. O modo teste do autor
+// não salva e pode voltar.
 export function StoryReader({
   story,
   signedIn,
   serverProgress,
   carry,
+  stats: initialStats = null,
   mode = "public",
   TestPanel,
 }: {
@@ -85,57 +87,51 @@ export function StoryReader({
   serverProgress: ServerProgress | null;
   // Valores herdados da obra anterior da série (servidor já calculou).
   carry?: Record<string, VariableValue>;
-  // "test": modo teste do autor (rascunho, sem salvar, aceita pular para cena).
+  // Desempenho do leitor com conta (jornadas, explorado, conquistas).
+  stats?: ReaderStats | null;
+  // "test": modo teste do autor (rascunho, sem salvar, aceita pular para cena e voltar).
   mode?: "public" | "test";
   TestPanel?: ComponentType<{ state: GameState | null; jump: (action: Extract<PlayAction, { t: "debug" }>) => void }>;
 }) {
   const ctx = useMemo(() => createContext(story, { debug: mode === "test" }), [story, mode]);
-  const persistent = mode === "public";
+  const testing = mode === "test";
+  const persistent = !testing && signedIn;
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const storedLocale = useSyncExternalStore(subscribeStorage, () => readRaw(LOCALE_KEY), () => null);
-  const storedGame = useSyncExternalStore(subscribeStorage, () => (persistent ? readRaw(gameKey(story.work.id)) : null), () => null);
-  const storedLegacy = useSyncExternalStore(subscribeStorage, () => (persistent ? readRaw(legacyKey(story.work.id)) : null), () => null);
   const storedAutoRead = useSyncExternalStore(subscribeStorage, () => readRaw(AUTO_READ_KEY), () => null);
   const [chosenLocale, setChosenLocale] = useState<string | null>(null);
   const [chosenAutoRead, setChosenAutoRead] = useState<boolean | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
+  const [stats, setStats] = useState<ReaderStats | null>(initialStats);
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [savesOpen, setSavesOpen] = useState(false);
-  // Rolagens com índice a partir daqui animam (as que acabaram de acontecer).
-  const [animateFrom, setAnimateFrom] = useState(Number.POSITIVE_INFINITY);
+  const [throwing, setThrowing] = useState<{ roll: RollView; key: number } | null>(null);
+  const [levelUp, setLevelUp] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioSceneRef = useRef<string | null>(null);
   const [playingSceneId, setPlayingSceneId] = useState<string | null>(null);
   const lastSceneRef = useRef<HTMLElement | null>(null);
   const shouldScroll = useRef(false);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Salvamentos em fila: um de cada vez, na ordem das escolhas.
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
 
   const savedLocale = parse<string>(storedLocale);
   const locale = chosenLocale ?? (savedLocale && story.work.locales.includes(savedLocale) ? savedLocale : story.work.defaultLocale);
+  const strings: ReaderStrings = readerStrings(locale);
   const autoRead = chosenAutoRead ?? parse<boolean>(storedAutoRead) === true;
   const audioFor = (sceneId: string) => story.audio[sceneId]?.[locale] ?? null;
   const hasAudio = story.scenes.some((scene) => audioFor(scene.id));
   const text = (value: LocalizedText | undefined) => pickText(value ?? {}, locale, story.work.defaultLocale);
   const profileFields = ctx.on("character") ? ctx.system.character.fields : [];
 
-  // Partida salva: a mais recente entre o navegador e a conta, refeita pelo motor.
+  // Jornada salva na conta, refeita pelo motor.
   const saved = useMemo<GameState | null>(() => {
-    if (!persistent) return null;
-    const local = parse<LocalGame>(storedGame);
-    const legacy = parse<{ state: ReaderState; updatedAt: string }>(storedLegacy);
-    const candidates: { state: SavedGame | ReaderState; updatedAt: string }[] = [];
-    if (local?.saved) candidates.push({ state: local.saved, updatedAt: local.updatedAt });
-    if (legacy?.state) candidates.push(legacy);
-    if (serverProgress) candidates.push(serverProgress);
-    candidates.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    const newest = candidates[0];
-    if (!newest) return null;
-    if (isSavedGame(newest.state)) return replay(ctx, newest.state).state;
-    return fromLegacy(ctx, newest.state);
-  }, [persistent, storedGame, storedLegacy, serverProgress, ctx]);
+    if (!persistent || !serverProgress) return null;
+    if (isSavedGame(serverProgress.state)) return replay(ctx, serverProgress.state).state;
+    return fromLegacy(ctx, serverProgress.state);
+  }, [persistent, serverProgress, ctx]);
 
   useEffect(() => {
     if (shouldScroll.current && lastSceneRef.current) {
@@ -147,14 +143,14 @@ export function StoryReader({
   function persist(next: GameState) {
     if (!persistent) return;
     const savedGame = toSaved(next);
-    writeLocal(gameKey(story.work.id), { saved: savedGame, updatedAt: new Date().toISOString() } satisfies LocalGame);
-    if (!signedIn) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      void saveReaderProgressAction(story.work.id, savedGame).then((result) => {
-        if (!result.ok && result.error === "novels.seed_mismatch") toast.error("Esta partida não é a que está salva na sua conta (outro aparelho?). Recarregue a página.");
-      });
-    }, 800);
+    const finished = Boolean(ctx.scenes.get(next.sceneId)?.isEnding);
+    saveQueue.current = saveQueue.current.then(async () => {
+      const result = await saveReaderProgressAction(story.work.id, savedGame);
+      if (!result.ok && (result.error === "novels.seed_mismatch" || result.error === "novels.no_going_back")) {
+        toast.error(result.error === "novels.no_going_back" ? strings.noGoingBack : "Esta jornada não é a que está salva na sua conta. Recarregue a página.");
+      }
+      if (result.ok && finished) setStats(await getReaderStatsAction(story.work.id));
+    });
   }
 
   // Chamado dentro do clique: o Safari do iPhone só deixa tocar áudio a partir de um gesto.
@@ -172,12 +168,18 @@ export function StoryReader({
     setPlayingSceneId(null);
   }
 
-  function show(next: GameState, scroll = true, animate = true) {
+  function show(next: GameState, options: { scroll?: boolean; save?: boolean; animate?: boolean } = {}) {
+    const { scroll = true, save = true, animate = true } = options;
     const sceneChanged = next.sceneId !== game?.sceneId || next.path.length !== game?.path.length;
-    setAnimateFrom(animate ? totalRolls(game) : Number.POSITIVE_INFINITY);
+    const before = allRolls(game).length;
+    const after = allRolls(next);
+    if (animate && after.length > before) setThrowing({ roll: after[after.length - 1], key: after.length });
+    const changes = next.entries[next.entries.length - 1]?.changes ?? [];
+    const level = changes.find((change) => change.type === "level");
+    if (animate && level && level.type === "level" && text(ctx.system.progression.levelUpMessage)) setLevelUp(level.value);
     shouldScroll.current = scroll && sceneChanged;
     setGame(next);
-    persist(next);
+    if (save) persist(next);
     if (sceneChanged) {
       if (autoRead && next.sceneId) playScene(next.sceneId);
       else stopAudio();
@@ -196,26 +198,27 @@ export function StoryReader({
 
   async function startGame(start: Extract<PlayAction, { t: "start" }>) {
     const withCarry = carry && Object.keys(carry).length > 0 ? { ...start, carry } : start;
-    const memory = { visitedEndings: game?.visitedEndings ?? saved?.visitedEndings ?? [], achievements: game?.achievements ?? saved?.achievements ?? [] };
     setBusy(true);
     try {
-      // Com conta: a semente dos dados vem do servidor (o progresso não pode ser forjado).
-      if (persistent && signedIn) {
+      // Com conta: a semente dos dados vem do servidor (a jornada não pode ser forjada).
+      if (persistent) {
         const result = await startReaderGameAction(story.work.id, withCarry);
-        if (result.ok) {
-          const { state } = replay(ctx, result.saved);
-          setCreating(false);
-          show(state, false, false);
+        if (!result.ok) {
+          toast.error(result.error);
           return;
         }
+        setCreating(false);
+        show(replay(ctx, result.saved).state, { scroll: false, save: false, animate: false });
+        return;
       }
+      const memory = { visitedEndings: game?.visitedEndings ?? [], achievements: game?.achievements ?? [] };
       const result = newGame(ctx, { start: withCarry, ...memory });
       if (!result.ok) {
         toast.error(result.reason);
         return;
       }
       setCreating(false);
-      show(result.state, false, false);
+      show(result.state, { scroll: false, save: false, animate: false });
     } finally {
       setBusy(false);
     }
@@ -244,20 +247,6 @@ export function StoryReader({
     writeLocal(AUTO_READ_KEY, next);
   }
 
-  const audioElement = (
-    <audio
-      ref={audioRef}
-      preload="none"
-      onPlay={() => setPlayingSceneId(audioSceneRef.current)}
-      onPause={() => setPlayingSceneId(null)}
-      onEnded={() => setPlayingSceneId(null)}
-      className="hidden"
-    />
-  );
-
-  const { work } = story;
-  const endingsTotal = story.scenes.filter((scene) => scene.isEnding).length;
-  const badges = computedBadges(story.badges, { interactive: isInteractive(story.choices), hasAudio });
   // Modo teste: pula para a cena com o estado escolhido (começa uma partida se não houver).
   function jump(action: Extract<PlayAction, { t: "debug" }>) {
     let base = game;
@@ -273,12 +262,26 @@ export function StoryReader({
     if (!result.ok) toast.error(result.reason);
     else {
       setCreating(false);
-      setAnimateFrom(Number.POSITIVE_INFINITY);
-      shouldScroll.current = true;
-      setGame(result.state);
+      show(result.state, { save: false, animate: false });
     }
   }
+
+  const audioElement = (
+    <audio
+      ref={audioRef}
+      preload="none"
+      onPlay={() => setPlayingSceneId(audioSceneRef.current)}
+      onPause={() => setPlayingSceneId(null)}
+      onEnded={() => setPlayingSceneId(null)}
+      className="hidden"
+    />
+  );
+
+  const { work } = story;
+  const endingsTotal = story.scenes.filter((scene) => scene.isEnding).length;
+  const badges = computedBadges(story.badges, { interactive: isInteractive(story.choices), hasAudio });
   const panel = TestPanel ? <TestPanel state={game} jump={jump} /> : null;
+  const achievementsPanel = persistent && stats ? <ReaderAchievementsPanel ctx={ctx} stats={stats} text={text} strings={strings} /> : null;
 
   if (!game) {
     return (
@@ -298,7 +301,7 @@ export function StoryReader({
             {hasAudio && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input type="checkbox" checked={autoRead} onChange={(event) => setAutoRead(event.target.checked)} className="size-4 rounded-sm border-border" />
-                Ler em voz alta enquanto avanço
+                {strings.readAloud}
               </label>
             )}
             {!creating && (
@@ -307,39 +310,41 @@ export function StoryReader({
                   <>
                     <Button
                       onClick={() => {
-                        setAnimateFrom(Number.POSITIVE_INFINITY);
                         setGame(saved);
                       }}
                     >
-                      Continuar
+                      {strings.continue}
                     </Button>
-                    <Button variant="outline" disabled={busy} onClick={beginNew}>
-                      Começar de novo
+                    <Button
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => {
+                        if (window.confirm(strings.newJourneyConfirm)) beginNew();
+                      }}
+                    >
+                      {strings.newJourney}
                     </Button>
                   </>
                 ) : (
                   <Button disabled={!hydrated || busy} onClick={beginNew}>
-                    Começar a ler
+                    {strings.start}
                   </Button>
                 )}
               </div>
             )}
-            {saved && saved.visitedEndings.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                Finais descobertos: {saved.visitedEndings.length} de {endingsTotal}
-              </p>
-            )}
-            {persistent && !signedIn && <p className="text-xs text-muted-foreground">Seu progresso fica salvo neste navegador. Entre na sua conta para levar para outros aparelhos e ter salvamentos.</p>}
+            {!testing && <p className="text-xs text-muted-foreground">{persistent ? strings.noGoingBack : strings.signInToSave}</p>}
           </div>
         </div>
-        {creating && <CharacterCreation ctx={ctx} text={text} busy={busy} onStart={(start) => void startGame(start)} />}
+        {achievementsPanel}
+        {creating && <CharacterCreation ctx={ctx} text={text} strings={strings} media={story.media} busy={busy} onStart={(start) => void startGame(start)} />}
       </div>
     );
   }
 
   const step = nextStep(ctx, game);
   const sheet = buildSheet(ctx, game);
-  const canUndo = !game.hardcore && game.log.some((action, index) => index > 0 && action.t === "choose");
+  // Voltar só no modo teste do autor: o leitor segue em frente ou começa uma nova jornada.
+  const canUndo = testing && game.log.some((action, index) => index > 0 && action.t === "choose");
   const lastAction = game.log[game.log.length - 1];
   const canReroll = ctx.on("dice") && ctx.system.dice.reroll.enabled && !game.hardcore && Boolean(game.rerollBase) && (lastAction?.t === "choose" || lastAction?.t === "reroll");
   const rerollCost = ctx.system.dice.reroll.cost
@@ -356,11 +361,32 @@ export function StoryReader({
     return chapter ? `${number}. ${text(chapter.title)}` : "";
   };
   const alert = Boolean(sheet.level && sheet.level.points > 0) || game.overflow.length > 0;
-  let rollIndex = 0;
+  const goBack = () => {
+    const previous = undo(ctx, game);
+    if (previous) show(previous, { save: false, animate: false });
+  };
 
   return (
     <div className={sheet.hasHud || sheet.hasPanel ? "mx-auto w-full max-w-2xl pb-44" : "mx-auto w-full max-w-2xl pb-24"}>
       {audioElement}
+      {throwing && <DiceThrow key={throwing.key} roll={throwing.roll} text={text} strings={strings} onDone={() => setThrowing(null)} />}
+      {levelUp !== null && (
+        <LevelUpDialog
+          level={levelUp}
+          message={ctx.system.progression.levelUpMessage}
+          text={text}
+          strings={strings}
+          onClose={() => setLevelUp(null)}
+          onDistribute={
+            sheet.level && sheet.level.points > 0
+              ? () => {
+                  setLevelUp(null);
+                  setSheetOpen(true);
+                }
+              : null
+          }
+        />
+      )}
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
         <p className="min-w-0 truncate text-sm font-medium text-foreground">
           {text(work.title)}
@@ -372,7 +398,7 @@ export function StoryReader({
             <Button
               size="icon"
               variant={autoRead ? "secondary" : "ghost"}
-              aria-label={autoRead ? "Parar a leitura em voz alta" : "Ler em voz alta"}
+              aria-label={strings.readAloud}
               aria-pressed={autoRead}
               onClick={() => {
                 const next = !autoRead;
@@ -384,57 +410,30 @@ export function StoryReader({
               {autoRead ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
             </Button>
           )}
-          <Button size="icon" variant="ghost" aria-label="Histórico da partida" onClick={() => setHistoryOpen(true)}>
+          <Button size="icon" variant="ghost" aria-label={strings.history} onClick={() => setHistoryOpen(true)}>
             <History className="size-4" />
           </Button>
-          {persistent && signedIn && (
-            <Button size="icon" variant="ghost" aria-label="Salvamentos" onClick={() => setSavesOpen(true)}>
-              <Save className="size-4" />
-            </Button>
-          )}
-          {!game.hardcore && (
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label="Voltar para a última escolha"
-              disabled={!canUndo}
-              onClick={() => {
-                const previous = undo(ctx, game);
-                if (previous) show(previous, true, false);
-              }}
-            >
+          {canUndo && (
+            <Button size="icon" variant="ghost" aria-label={strings.undo} onClick={goBack}>
               <Undo2 className="size-4" />
             </Button>
           )}
           <Button
             size="icon"
             variant="ghost"
-            aria-label="Recomeçar"
+            aria-label={strings.newJourney}
             onClick={() => {
-              if (window.confirm("Recomeçar a história do início? Os finais e conquistas descobertos continuam.")) beginNew();
+              if (window.confirm(strings.newJourneyConfirm)) beginNew();
             }}
           >
             <RotateCcw className="size-4" />
           </Button>
         </div>
       </header>
+      {!persistent && !testing && <p className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">{strings.signInToSave}</p>}
       {panel && <div className="px-4 pt-4">{panel}</div>}
-      <SheetDialog sheet={sheet} text={text} title={text(work.title)} open={sheetOpen} onOpenChange={setSheetOpen} act={act} canAct={!game.combat || Boolean(game.combat.result)} />
-      <HistoryDialog ctx={ctx} state={game} text={text} locale={locale} open={historyOpen} onOpenChange={setHistoryOpen} />
-      {persistent && signedIn && (
-        <SavesDialog
-          workId={work.id}
-          state={game}
-          text={text}
-          open={savesOpen}
-          onOpenChange={setSavesOpen}
-          onLoad={(loaded) => {
-            const { state } = replay(ctx, loaded);
-            show(state, false, false);
-            window.scrollTo({ top: 0 });
-          }}
-        />
-      )}
+      <SheetDialog sheet={sheet} text={text} title={text(work.title)} open={sheetOpen} onOpenChange={setSheetOpen} act={act} canAct={!game.combat || Boolean(game.combat.result) || ctx.system.combat.equipInCombat} media={story.media} strings={strings} />
+      <HistoryDialog ctx={ctx} state={game} text={text} locale={locale} open={historyOpen} onOpenChange={setHistoryOpen} strings={strings} />
       <GameHud sheet={sheet} text={text} onOpen={() => setSheetOpen(true)} alert={alert} />
 
       {game.entries.map((entry, position) => {
@@ -447,16 +446,15 @@ export function StoryReader({
             {(!previous || previous.chapterId !== scene.chapterId) && (
               <h2 className="px-4 pb-2 pt-10 text-center text-sm font-semibold uppercase tracking-caps text-muted-foreground">{chapterTitle(scene.chapterId)}</h2>
             )}
-            <article ref={isLast ? lastSceneRef : undefined} className="scroll-mt-24 space-y-5 pb-8">
-              {entry.rolls.map((roll, index) => {
-                const globalIndex = rollIndex++;
-                return <DiceRoll key={`${position}-${index}-${game.log.length}`} roll={roll} animate={globalIndex >= animateFrom} text={text} />;
-              })}
+            <article ref={isLast ? lastSceneRef : undefined} className={cn("scroll-mt-24 space-y-5 pb-8", isLast && throwing && "invisible")}>
+              {entry.rolls.map((roll, index) => (
+                <DiceRoll key={`${position}-${index}`} roll={roll} text={text} strings={strings} />
+              ))}
               {audioFor(scene.id) && (
                 <div className="px-4">
                   <Button size="sm" variant="outline" aria-pressed={playingSceneId === scene.id} onClick={() => (playingSceneId === scene.id ? stopAudio() : playScene(scene.id))}>
                     {playingSceneId === scene.id ? <Pause className="size-4" /> : <Play className="size-4" />}
-                    {playingSceneId === scene.id ? "Pausar" : "Ouvir"}
+                    {playingSceneId === scene.id ? strings.pause : strings.listen}
                   </Button>
                 </div>
               )}
@@ -468,7 +466,7 @@ export function StoryReader({
                 cast={story.cast}
                 eager={position < 2}
               />
-              <CombatLog lines={entry.combat} text={text} />
+              <CombatLog lines={entry.combat} text={text} messages={scene.mechanics.encounter?.messages} />
               <ChangeChips changes={entry.changes} text={text} />
             </article>
           </Fragment>
@@ -479,15 +477,16 @@ export function StoryReader({
         {canReroll && (
           <Button variant="outline" size="sm" disabled={busy} onClick={() => act({ t: "reroll" })}>
             <Dices className="size-4" />
-            Rolar de novo{rerollCost ? ` (custa ${rerollCost})` : ""}
+            {strings.reroll}
+            {rerollCost ? ` (${strings.costs} ${rerollCost})` : ""}
           </Button>
         )}
 
-        {step.kind === "overflow" && <OverflowPanel ctx={ctx} stacks={step.stacks} text={text} act={act} openBag={() => setSheetOpen(true)} busy={busy} />}
+        {step.kind === "overflow" && <OverflowPanel ctx={ctx} stacks={step.stacks} text={text} act={act} openBag={() => setSheetOpen(true)} busy={busy} strings={strings} />}
 
-        {step.kind === "combat" && <CombatPanel ctx={ctx} state={game} mode={step.mode} text={text} act={act} busy={busy} />}
+        {step.kind === "combat" && <CombatPanel ctx={ctx} state={game} mode={step.mode} text={text} act={act} busy={busy} strings={strings} />}
 
-        {(step.kind === "choices" || step.kind === "dead-end") && step.shop && <ShopPanel ctx={ctx} state={game} shop={step.shop} text={text} act={act} busy={busy} />}
+        {(step.kind === "choices" || step.kind === "dead-end") && step.shop && <ShopPanel ctx={ctx} state={game} shop={step.shop} text={text} act={act} busy={busy} strings={strings} />}
 
         {step.kind === "choices" &&
           step.choices.map((view) => (
@@ -496,47 +495,35 @@ export function StoryReader({
 
         {step.kind === "next-chapter" && (
           <Button className="w-full" onClick={() => act({ t: "continue" })}>
-            Próximo capítulo: {chapterTitle(step.chapterId)}
+            {strings.nextChapter}: {chapterTitle(step.chapterId)}
           </Button>
         )}
 
         {step.kind === "ending" && (
           <div className="space-y-3 rounded-lg border border-border bg-card p-4 text-center">
-            <p className="text-xs uppercase tracking-caps text-muted-foreground">Fim</p>
+            <p className="text-xs uppercase tracking-caps text-muted-foreground">{strings.theEnd}</p>
             {text(step.scene.endingTitle) && <p className="text-xl font-semibold text-foreground">{text(step.scene.endingTitle)}</p>}
             <p className="text-sm text-muted-foreground">
-              Finais descobertos: {game.visitedEndings.length} de {endingsTotal}
-              {ctx.achievements.size > 0 && ` · Conquistas: ${game.achievements.length} de ${ctx.achievements.size}`}
+              {strings.endingsFound}: {Math.max(game.visitedEndings.length, stats?.endingsSeen.length ?? 0)} / {endingsTotal}
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               {canUndo && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const previous = undo(ctx, game);
-                    if (previous) show(previous, true, false);
-                  }}
-                >
-                  Voltar para a última escolha
+                <Button variant="outline" onClick={goBack}>
+                  {strings.undo}
                 </Button>
               )}
-              <Button onClick={beginNew}>Jogar de novo</Button>
+              <Button onClick={beginNew}>{strings.playAgain}</Button>
             </div>
           </div>
         )}
+        {step.kind === "ending" && achievementsPanel}
 
         {step.kind === "dead-end" && !step.shop && (
           <div className="space-y-3 rounded-lg border border-border bg-card p-4 text-center">
-            <p className="text-sm text-muted-foreground">A história continua em breve.</p>
+            <p className="text-sm text-muted-foreground">{strings.comingSoon}</p>
             {canUndo && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const previous = undo(ctx, game);
-                  if (previous) show(previous, true, false);
-                }}
-              >
-                Voltar para a última escolha
+              <Button variant="outline" onClick={goBack}>
+                {strings.undo}
               </Button>
             )}
           </div>

@@ -30,7 +30,16 @@ export function sanitizeEffect(raw: unknown): Effect | null {
     case "restore":
       return { kind: "restore", target: str(raw.target, 60) };
     case "item":
-      return { kind: "item", operation: raw.operation === "take" ? "take" : "give", itemId: id(raw.itemId), quantity: str(raw.quantity, 200) || "1" };
+      return {
+        kind: "item",
+        operation: raw.operation === "take" ? "take" : raw.operation === "set" ? "set" : "give",
+        itemId: id(raw.itemId),
+        quantity: str(raw.quantity, 200) || "1",
+      };
+    case "lose_random_item":
+      return { kind: "lose_random_item", quantity: str(raw.quantity, 200) || "1" };
+    case "unlock":
+      return { kind: "unlock", entryId: id(raw.entryId) };
     case "equip":
       return { kind: "equip", itemId: id(raw.itemId) };
     case "unequip":

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildStory } from "../../../shared/story-fixture.test-support";
 
-const mocks = { findWorkById: vi.fn(), findStoryRecords: vi.fn(), findProgressSeed: vi.fn(), upsertReaderProgress: vi.fn() };
+const mocks = { findWorkById: vi.fn(), findStoryRecords: vi.fn(), findStoredProgress: vi.fn(), saveProgressAndStats: vi.fn() };
 vi.mock("./store", () => Object.fromEntries(Object.entries(mocks).map(([key, fn]) => [key, (...args: unknown[]) => fn(...args)])));
 
 const story = buildStory();
@@ -13,22 +13,31 @@ describe("saveReaderProgress", () => {
     Object.values(mocks).forEach((mock) => mock.mockReset());
     mocks.findWorkById.mockResolvedValue(work);
     mocks.findStoryRecords.mockResolvedValue({ work, chapters: story.chapters, scenes: story.scenes, choices: story.choices, cast: [], items: [], creatures: [] });
-    mocks.upsertReaderProgress.mockResolvedValue(new Date("2026-10-07T00:00:00Z"));
+    mocks.saveProgressAndStats.mockResolvedValue(new Date("2026-10-07T00:00:00Z"));
   });
 
-  it("refaz a partida e guarda só o trecho válido", async () => {
-    mocks.findProgressSeed.mockResolvedValue("abc");
+  it("refaz a partida, guarda só o trecho válido e soma o desempenho", async () => {
+    mocks.findStoredProgress.mockResolvedValue({ ...saved, log: [{ t: "start" }] });
     const { saveReaderProgress } = await import("./service");
     const result = await saveReaderProgress({ workId: "w1", userId: "u1", progress: { kind: "saved", saved: { ...saved, log: [...saved.log, { t: "choose", choiceId: "nao-existe" }] } } });
     expect(result).toEqual({ success: true, data: { updatedAt: expect.any(Date), truncated: true } });
-    expect(mocks.upsertReaderProgress.mock.calls[0][2].log).toEqual(saved.log);
+    expect(mocks.saveProgressAndStats.mock.calls[0][2].log).toEqual(saved.log);
+    const merge = mocks.saveProgressAndStats.mock.calls[0][3];
+    expect(merge({ completions: 0, lastCompletedSeed: null, scenesSeen: [], choicesSeen: [], endingsSeen: [], achievements: [] }).choicesSeen).toEqual(["a-b"]);
   });
 
   it("recusa trocar de semente no meio da partida", async () => {
-    mocks.findProgressSeed.mockResolvedValue("outra");
+    mocks.findStoredProgress.mockResolvedValue({ ...saved, seed: "outra" });
     const { saveReaderProgress } = await import("./service");
     const result = await saveReaderProgress({ workId: "w1", userId: "u1", progress: { kind: "saved", saved } });
     expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.seed_mismatch" }) });
-    expect(mocks.upsertReaderProgress).not.toHaveBeenCalled();
+    expect(mocks.saveProgressAndStats).not.toHaveBeenCalled();
+  });
+
+  it("não deixa voltar na história para escolher outra opção", async () => {
+    mocks.findStoredProgress.mockResolvedValue(saved);
+    const { saveReaderProgress } = await import("./service");
+    const result = await saveReaderProgress({ workId: "w1", userId: "u1", progress: { kind: "saved", saved: { ...saved, log: [{ t: "start" }, { t: "choose", choiceId: "outra" }] } } });
+    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: "novels.no_going_back" }) });
   });
 });

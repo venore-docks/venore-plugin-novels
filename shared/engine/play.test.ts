@@ -260,6 +260,7 @@ function rpgStory(system = rpgSystem()): Story {
             defeatSceneId: "morte",
             fleeSceneId: null,
             single: { roll: "1d20", dc: "10", hpLoss: "2" },
+            messages: {},
           },
         },
       }),

@@ -40,6 +40,7 @@ export function formulaChecker(input: Pick<GameValidationInput, "system" | "vari
     const refs = formulaReferences(parsed.node);
     for (const name of refs.names) {
       if (names.has(name) || extraNames.includes(name)) continue;
+      if (/^(equipado|equipped)\.[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_.]*)?$/.test(name)) continue;
       if (extraNames.some((prefix) => prefix.endsWith(".") && name.startsWith(prefix))) continue;
       return `"${name}" não existe`;
     }
@@ -123,6 +124,7 @@ export function validateGameSystem(input: GameValidationInput): GameIssue[] {
     formula("Combate, dano dos inimigos", system.combat.enemy.damage, combatNames);
     formula("Combate, redução contra inimigos", system.combat.enemy.reduction, combatNames);
     formula("Combate, acerto dos inimigos", system.combat.enemy.hit, combatNames, true);
+    formula("Combate, chance de crítico", system.combat.critical.chance, combatNames, true);
     formula("Combate, fuga (rolagem)", system.combat.flee.roll);
     formula("Combate, fuga (dificuldade)", system.combat.flee.dc);
     const actionKeys = new Set<string>();
@@ -197,13 +199,25 @@ export function validateEffect(effect: Effect, input: GameValidationInput, where
     case "item":
     case "equip":
     case "unequip":
+      if (!system.modules.inventory) error("module_off", "efeito de item, mas o inventário está desligado.");
+      else if (effect.kind !== "item" && !system.modules.equipment) error("module_off", "equipar à força, mas o equipamento está desligado.");
       if (!itemIds.has(effect.itemId)) error("missing_item", "item que não existe mais.");
       if (effect.kind === "item") {
         const problem = check(effect.quantity);
         if (problem) error("invalid_formula", `quantidade: ${problem}.`);
       }
       break;
+    case "lose_random_item": {
+      if (!system.modules.inventory) error("module_off", "perder item, mas o inventário está desligado.");
+      const problem = check(effect.quantity);
+      if (problem) error("invalid_formula", `quantidade: ${problem}.`);
+      break;
+    }
+    case "unlock":
+      if (!system.modules.bestiary || !system.encyclopedia.some((entry) => entry.id === effect.entryId)) error("unknown_entry", "verbete da enciclopédia que não existe.");
+      break;
     case "loot":
+      if (!system.modules.inventory) error("module_off", "saque, mas o inventário está desligado.");
       for (const entry of effect.entries) if (!itemIds.has(entry.itemId)) error("missing_item", "saque com item que não existe mais.");
       break;
     case "xp": {
@@ -241,6 +255,7 @@ export function validateCondition(condition: Condition, input: GameValidationInp
     case "item":
     case "equipped":
     case "fits":
+      if (!input.system.modules.inventory) error("module_off", "condição de item, mas o inventário está desligado.");
       if (!itemIds.has(condition.itemId)) error("missing_item", "condição com item que não existe mais.");
       break;
     case "quest":

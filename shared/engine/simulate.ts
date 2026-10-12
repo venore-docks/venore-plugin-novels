@@ -4,7 +4,7 @@ import { cloneState } from "./effects";
 import { num } from "./formula";
 import { applyAction, newGame, nextStep, sampleState } from "./play";
 import { randomAt } from "./rng";
-import { attributeCap, pointCost, xpForLevel } from "./rules";
+import { attributeCap, pointCost, resourceMax, xpForLevel } from "./rules";
 import type { GameState, PlayAction } from "./types";
 
 // Simulador de balanceamento (seção 13 do documento): o mesmo motor do leitor jogando sozinho.
@@ -21,12 +21,17 @@ export type RunSummary = {
 
 const MAX_STEPS = 400;
 
+// Como o "leitor robô" escolhe: aleatório; explorador (prefere cena ainda não vista); cauteloso
+// (evita teste e custo, defende e foge com pouca vida); agressivo (sempre ataca, nunca foge).
+export type SimStrategy = "random" | "explorer" | "cautious" | "aggressive";
+export const SIM_STRATEGIES: SimStrategy[] = ["random", "explorer", "cautious", "aggressive"];
+
 function pick<T>(list: T[], seed: string, counter: number): T {
   return list[Math.floor(randomAt(seed, counter) * list.length)];
 }
 
 // Uma partida com escolhas aleatórias. Ficha: vocação e pontos aleatórios.
-export function simulateRun(ctx: GameContext, seed: string): { state: GameState; steps: number; death: string | null } {
+export function simulateRun(ctx: GameContext, seed: string, strategy: SimStrategy = "random"): { state: GameState; steps: number; death: string | null } {
   const character = ctx.system.character;
   let counter = 10_000;
   const allocations: Record<string, number> = {};
@@ -56,14 +61,27 @@ export function simulateRun(ctx: GameContext, seed: string): { state: GameState;
     if (step.kind === "choices") {
       const enabled = step.choices.filter((view) => view.enabled);
       if (enabled.length === 0) break;
-      action = { t: "choose", choiceId: pick(enabled, seed, counter++).choice.id };
+      let pool = enabled;
+      if (strategy === "explorer") {
+        const fresh = enabled.filter((view) => !state.path.includes(view.choice.targetSceneId));
+        if (fresh.length > 0) pool = fresh;
+      } else if (strategy === "cautious") {
+        const safe = enabled.filter((view) => !view.test && view.costs.length === 0);
+        if (safe.length > 0) pool = safe;
+      }
+      action = { t: "choose", choiceId: pick(pool, seed, counter++).choice.id };
     } else if (step.kind === "next-chapter") action = { t: "continue" };
     else if (step.kind === "overflow") action = { t: "discard" };
     else if (step.kind === "combat") {
       if (step.mode === "single") action = { t: "combat", action: "single" };
       else {
         const actions = ctx.system.combat.actions.map((entry) => entry.key);
-        action = { t: "combat", action: actions.length > 0 ? pick(actions, seed, counter++) : "defend" };
+        const hpKey = ctx.system.combat.hpResource;
+        const low = num(state.vars[hpKey]) <= resourceMax(ctx, state, hpKey) * 0.3;
+        if (strategy === "cautious" && low && ctx.system.combat.flee.enabled) action = { t: "combat", action: "flee" };
+        else if (strategy === "cautious" && low && ctx.system.combat.defend.enabled) action = { t: "combat", action: "defend" };
+        else if (strategy === "aggressive" && actions.length > 0) action = { t: "combat", action: actions[0] };
+        else action = { t: "combat", action: actions.length > 0 ? pick(actions, seed, counter++) : "defend" };
       }
     } else break;
     // Pontos de nível: distribui no primeiro atributo que der.
@@ -95,20 +113,44 @@ export function simulateRun(ctx: GameContext, seed: string): { state: GameState;
   return { state, steps, death };
 }
 
-export function simulateRuns(ctx: GameContext, runs: number, seedPrefix = "sim"): RunSummary {
-  const summary: RunSummary = { runs: 0, endings: new Map(), stuck: new Map(), deaths: new Map(), visited: new Map(), averageSteps: 0 };
-  let totalSteps = 0;
+export function emptySummary(): RunSummary {
+  return { runs: 0, endings: new Map(), stuck: new Map(), deaths: new Map(), visited: new Map(), averageSteps: 0 };
+}
+
+function addRun(ctx: GameContext, summary: RunSummary, run: ReturnType<typeof simulateRun>) {
+  const { state, steps, death } = run;
+  summary.averageSteps = Math.round(((summary.averageSteps * summary.runs + steps) / (summary.runs + 1)) * 10) / 10;
+  summary.runs += 1;
+  const scene = ctx.scenes.get(state.sceneId);
+  if (scene?.isEnding) summary.endings.set(scene.id, (summary.endings.get(scene.id) ?? 0) + 1);
+  else if (state.sceneId) summary.stuck.set(state.sceneId, (summary.stuck.get(state.sceneId) ?? 0) + 1);
+  if (death) summary.deaths.set(death, (summary.deaths.get(death) ?? 0) + 1);
+  for (const sceneId of new Set(state.path)) summary.visited.set(sceneId, (summary.visited.get(sceneId) ?? 0) + 1);
+}
+
+export function simulateRuns(ctx: GameContext, runs: number, seedPrefix = "sim", strategy: SimStrategy = "random"): RunSummary {
+  const summary = emptySummary();
+  for (let index = 0; index < runs; index += 1) addRun(ctx, summary, simulateRun(ctx, `${seedPrefix}-${index}`, strategy));
+  return summary;
+}
+
+// Em lotes, devolvendo a vez ao navegador entre eles: a tela não trava e a barra de progresso anda.
+export async function simulateRunsInChunks(
+  ctx: GameContext,
+  runs: number,
+  options: { seedPrefix: string; strategy: SimStrategy; chunk?: number; onProgress?: (done: number) => void; cancelled?: () => boolean },
+): Promise<RunSummary> {
+  const summary = emptySummary();
+  const chunk = options.chunk ?? 25;
   for (let index = 0; index < runs; index += 1) {
-    const { state, steps, death } = simulateRun(ctx, `${seedPrefix}-${index}`);
-    summary.runs += 1;
-    totalSteps += steps;
-    const scene = ctx.scenes.get(state.sceneId);
-    if (scene?.isEnding) summary.endings.set(scene.id, (summary.endings.get(scene.id) ?? 0) + 1);
-    else if (state.sceneId) summary.stuck.set(state.sceneId, (summary.stuck.get(state.sceneId) ?? 0) + 1);
-    if (death) summary.deaths.set(death, (summary.deaths.get(death) ?? 0) + 1);
-    for (const sceneId of new Set(state.path)) summary.visited.set(sceneId, (summary.visited.get(sceneId) ?? 0) + 1);
+    addRun(ctx, summary, simulateRun(ctx, `${options.seedPrefix}-${index}`, options.strategy));
+    if ((index + 1) % chunk === 0) {
+      options.onProgress?.(index + 1);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (options.cancelled?.()) break;
+    }
   }
-  summary.averageSteps = summary.runs > 0 ? Math.round((totalSteps / summary.runs) * 10) / 10 : 0;
+  options.onProgress?.(summary.runs);
   return summary;
 }
 
@@ -165,7 +207,7 @@ export function compareBuilds(ctx: GameContext, maxLevel = 10, samples = 60): Bu
       onZero: {},
       noRegen: true,
       shop: null,
-      encounter: { creatures: [{ creatureId: creature.id, count: 1 }], mode: "rounds" as const, victorySceneId: null, defeatSceneId: null, fleeSceneId: null, single: { roll: "0", dc: "0", hpLoss: "0" } },
+      encounter: { creatures: [{ creatureId: creature.id, count: 1 }], mode: "rounds" as const, victorySceneId: null, defeatSceneId: null, fleeSceneId: null, single: { roll: "0", dc: "0", hpLoss: "0" }, messages: {} },
     },
   };
   const damage = (base: GameState): number => {

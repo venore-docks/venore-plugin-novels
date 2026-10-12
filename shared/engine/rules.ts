@@ -129,6 +129,14 @@ export function playerScope(
         if (name === progression.levelKey) return levelFromXp(ctx, num(state.vars[progression.xpKey]));
         if (name === progression.xpKey || name === progression.pointsKey) return num(state.vars[name]);
       }
+      // equipado.<área> = quantos itens; equipado.<área>.<alvo> = soma dos modificadores deles.
+      if (name.startsWith("equipado.") || name.startsWith("equipped.")) {
+        const [, slotName, target] = name.split(".");
+        const slot = slotName === "maos" || slotName === "hands" ? "__hands" : slotName;
+        const equipped = (state.equipped[slot] ?? []).map((id) => ctx.items.get(id)).filter((item): item is Item => Boolean(item));
+        if (!target) return equipped.length;
+        return equipped.reduce((sum, item) => sum + item.modifiers.filter((modifier) => modifier.target === target).reduce((total, modifier) => total + modifier.amount, 0), 0);
+      }
       if (name.endsWith(".max")) {
         const key = name.slice(0, -4);
         if (ctx.resources.has(key)) return resourceMax(ctx, state, key, options);
@@ -160,6 +168,9 @@ export function playerScope(
     call(name, args) {
       const key = String(args[0] ?? "");
       switch (name) {
+        case "soma_modificadores":
+        case "sum_modifiers":
+          return modifiersFor(ctx, state, key, options);
         case "tem":
         case "has": {
           const item = ctx.itemsByKey.get(key);
@@ -213,7 +224,7 @@ export function knownFormulaNames(ctx: Pick<GameContext, "system" | "variables" 
   return names;
 }
 
-export const CONTEXT_FUNCTIONS = new Set(["tem", "has", "equipado", "equipped", "cabe", "fits", "perfil", "profile", "missao", "quest", "etapa", "conquista", "efeito"]);
+export const CONTEXT_FUNCTIONS = new Set(["soma_modificadores", "sum_modifiers", "tem", "has", "equipado", "equipped", "cabe", "fits", "perfil", "profile", "missao", "quest", "etapa", "conquista", "efeito"]);
 
 // ------------------------------------------------------------------ inventário
 

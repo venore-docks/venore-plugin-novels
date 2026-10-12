@@ -105,10 +105,12 @@ const EFFECT_KINDS: { kind: EffectKind; label: string; available: (catalog: Game
   { kind: "equip", label: "Equipar à força", available: (catalog) => catalog.system.modules.equipment && catalog.items.length > 0 },
   { kind: "unequip", label: "Desequipar à força", available: (catalog) => catalog.system.modules.equipment && catalog.items.length > 0 },
   { kind: "loot", label: "Item aleatório (saque)", available: (catalog) => catalog.system.modules.inventory && catalog.items.length > 0 },
+  { kind: "lose_random_item", label: "Perder item aleatório", available: (catalog) => catalog.system.modules.inventory },
   { kind: "xp", label: "Dar experiência", available: (catalog) => catalog.system.modules.progression },
   { kind: "status", label: "Efeito com duração", available: (catalog) => catalog.system.modules.effects && catalog.system.statusEffects.length > 0 },
   { kind: "quest", label: "Missão", available: (catalog) => catalog.system.modules.quests && catalog.system.quests.length > 0 },
   { kind: "achievement", label: "Conquista", available: (catalog) => catalog.system.modules.achievements && catalog.system.achievements.length > 0 },
+  { kind: "unlock", label: "Desbloquear verbete", available: (catalog) => catalog.system.encyclopedia.length > 0 },
 ];
 
 function newEffect(kind: EffectKind, catalog: GameCatalog): Effect {
@@ -138,6 +140,10 @@ function newEffect(kind: EffectKind, catalog: GameCatalog): Effect {
       return { kind: "quest", operation: "start", questId: catalog.system.quests[0]?.id ?? "" };
     case "achievement":
       return { kind: "achievement", achievementId: catalog.system.achievements[0]?.id ?? "" };
+    case "lose_random_item":
+      return { kind: "lose_random_item", quantity: "1" };
+    case "unlock":
+      return { kind: "unlock", entryId: catalog.system.encyclopedia[0]?.id ?? "" };
   }
 }
 
@@ -250,9 +256,10 @@ function EffectRow({ catalog, effect, onChange }: { catalog: GameCatalog; effect
     case "item":
       return (
         <>
-          <select aria-label="Dar ou tirar" className={SELECT_CLASS} value={current.operation} onChange={(event) => onChange({ ...current, operation: event.target.value as "give" | "take" })}>
+          <select aria-label="Dar ou tirar" className={SELECT_CLASS} value={current.operation} onChange={(event) => onChange({ ...current, operation: event.target.value as "give" | "take" | "set" })}>
             <option value="give">dar</option>
             <option value="take">tirar</option>
+            <option value="set">deixar com exatamente</option>
           </select>
           <FormulaInput catalog={catalog} ariaLabel="Quantidade" className="w-20" value={current.quantity} onChange={(quantity) => onChange({ ...current, quantity })} />
           <ItemSelect catalog={catalog} value={current.itemId} onChange={(itemId) => onChange({ ...current, itemId })} />
@@ -305,6 +312,23 @@ function EffectRow({ catalog, effect, onChange }: { catalog: GameCatalog; effect
           {catalog.system.achievements.map((achievement) => (
             <option key={achievement.id} value={achievement.id}>
               {name(catalog, achievement.name, achievement.id)}
+            </option>
+          ))}
+        </select>
+      );
+    case "lose_random_item":
+      return (
+        <>
+          <FormulaInput catalog={catalog} ariaLabel="Quantos itens" className="w-20" value={current.quantity} onChange={(quantity) => onChange({ ...current, quantity })} />
+          <span className="self-center text-xs text-muted-foreground">item(ns) da mochila, sorteados (equipados e não descartáveis ficam)</span>
+        </>
+      );
+    case "unlock":
+      return (
+        <select aria-label="Verbete" className={SELECT_CLASS} value={current.entryId} onChange={(event) => onChange({ ...current, entryId: event.target.value })}>
+          {catalog.system.encyclopedia.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {name(catalog, entry.name, entry.id)}
             </option>
           ))}
         </select>

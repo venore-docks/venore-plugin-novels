@@ -208,8 +208,8 @@ function fantasy(): SystemTemplatePackage {
       },
       currency: { mode: "counter", key: "ouro", name: t("Ouro", "Gold"), itemId: null },
       statusEffects: [
-        { id: "envenenado", name: t("Envenenado", "Poisoned"), color: "chart-5", duration: 3, perScene: heal("hp", "-2"), modifiers: [] },
-        { id: "abencoado", name: t("Abençoado", "Blessed"), color: "chart-4", duration: 5, perScene: [], modifiers: [{ target: "defesa", amount: 2 }] },
+        { id: "envenenado", name: t("Envenenado", "Poisoned"), color: "chart-5", icon: "☠", untilCombat: false, duration: 3, perScene: heal("hp", "-2"), modifiers: [] },
+        { id: "abencoado", name: t("Abençoado", "Blessed"), color: "chart-4", icon: "✦", untilCombat: true, duration: 5, perScene: [], modifiers: [{ target: "defesa", amount: 2 }] },
       ],
     },
     [
@@ -370,7 +370,7 @@ function horror(): SystemTemplatePackage {
         resource("sanidade", t("Sanidade", "Sanity"), t("San", "San"), "chart-7", "10", { lowPercent: 30 }),
       ],
       attributes: [attribute("coragem", t("Coragem", "Courage"), "COR", 2, { showInHud: true }), attribute("percepcao", t("Percepção", "Perception"), "PER", 2, { showInHud: true })],
-      statusEffects: [{ id: "abalado", name: t("Abalado", "Shaken"), color: "chart-7", duration: 3, perScene: heal("sanidade", "-1"), modifiers: [{ target: "coragem", amount: -1 }] }],
+      statusEffects: [{ id: "abalado", name: t("Abalado", "Shaken"), color: "chart-7", icon: "☁", untilCombat: false, duration: 3, perScene: heal("sanidade", "-1"), modifiers: [{ target: "coragem", amount: -1 }] }],
     },
   );
 }
