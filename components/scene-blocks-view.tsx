@@ -65,8 +65,22 @@ export function SceneBlocksView({
   const castById = new Map(cast.map((member) => [member.id, member]));
   const loading = eager ? "eager" : "lazy";
 
+  // Imagem de fundo "página inteira": fica fixa atrás da cena toda enquanto o leitor rola, com um
+  // véu na cor de fundo do site (tema e modo claro/escuro) para o texto continuar legível.
+  const pageBackdrop = blocks.find((block) => block.type === "backdrop" && block.layout === "page" && block.mediaId && media[block.mediaId]);
+  const pageUrl = pageBackdrop?.type === "backdrop" && pageBackdrop.mediaId ? media[pageBackdrop.mediaId] : null;
+
   return (
-    <div className="space-y-6">
+    <div className={cn("relative isolate space-y-6", pageUrl && "min-h-[100svh] py-16")}>
+      {pageUrl && pageBackdrop?.type === "backdrop" && (
+        <div aria-hidden className="absolute inset-0 -z-10 overflow-clip">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pageUrl} alt="" loading={loading} className="sticky top-0 block h-[100svh] w-full object-cover" />
+          <div className="absolute inset-0 bg-background/65" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-linear-to-b from-background to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-background to-transparent" />
+        </div>
+      )}
       {blocks.map((block) => {
         switch (block.type) {
           case "text": {
@@ -166,20 +180,22 @@ export function SceneBlocksView({
               </p>
             );
           case "backdrop": {
-            // Imagem no topo, esmaecendo na cor de fundo do site (tema e modo claro/escuro); o texto
-            // começa sobre a parte de baixo, já no degradê.
             const url = block.mediaId ? media[block.mediaId] : null;
             const text = t(block.text);
+            // Página inteira: a imagem já está no fundo da cena; aqui fica só o texto.
+            if (block.layout === "page" && url) return text ? <Paragraphs key={block.id} text={text} className={cn("px-4", PROSE)} /> : null;
+            // Topo: imagem no tamanho dela (sem proporção fixa), esmaecendo na cor de fundo do site;
+            // o texto começa sobre a parte de baixo, já no degradê.
             return (
               <div key={block.id}>
                 {url && (
                   <div className="relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={t(block.alt)} loading={loading} className="block aspect-[4/5] w-full object-cover sm:aspect-video" />
-                    <div aria-hidden className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-b from-transparent via-background/85 to-background" />
+                    <img src={url} alt={t(block.alt)} loading={loading} className="block max-h-[85svh] w-full object-cover" />
+                    <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-b from-transparent to-background" />
                   </div>
                 )}
-                {text && <Paragraphs text={text} className={cn("relative px-4", PROSE, url && "-mt-24 sm:-mt-32")} />}
+                {text && <Paragraphs text={text} className={cn("relative px-4", PROSE, url && "-mt-16 sm:-mt-24")} />}
               </div>
             );
           }

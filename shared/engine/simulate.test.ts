@@ -15,9 +15,9 @@ describe("simulador", () => {
     expect(summary.visited.has("c")).toBe(false);
   });
 
-  it("build equilibrada contra pura usa custo crescente (Venore padrão)", () => {
-    const venore = BUILT_IN_TEMPLATES.find((template) => template.key === "venore_padrao")!;
-    const ctx = contextFromParts({ system: venore.system, variables: [], creatures: venore.creatures });
+  it("build equilibrada contra pura usa custo crescente (RPG de fantasia)", () => {
+    const fantasy = BUILT_IN_TEMPLATES.find((template) => template.key === "rpg_fantasia")!;
+    const ctx = contextFromParts({ system: fantasy.system, variables: [], items: fantasy.items, creatures: fantasy.creatures });
     const points = compareBuilds(ctx, 5, 20);
     expect(points).toHaveLength(5);
     for (const point of points) {

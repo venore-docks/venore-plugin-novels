@@ -19,7 +19,7 @@ describe("modelos de sistema (service)", () => {
   it("lista os modelos do plugin antes dos importados", async () => {
     const { listSystemTemplates } = await import("./service");
     const result = await listSystemTemplates();
-    expect(result.success && result.data.map((template) => template.key)).toEqual(["aventura_simples", "rpg_fantasia", "venore_padrao", "tibia_like", "terror_sanidade"]);
+    expect(result.success && result.data.map((template) => template.key)).toEqual(["aventura_simples", "rpg_fantasia", "tibia_like", "terror_sanidade"]);
   });
 
   it("aplicar um modelo do plugin grava sistema, itens e criaturas", async () => {

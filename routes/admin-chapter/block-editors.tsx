@@ -280,13 +280,41 @@ export function BlockEditor({
       return (
         <div className="space-y-3">
           <div className="relative overflow-hidden rounded-md">
-            <ImagePreview mediaId={block.mediaId} context={context} className="aspect-video rounded-none" />
-            {block.mediaId && <div aria-hidden className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-b from-transparent via-background/85 to-background" />}
+            <ImagePreview mediaId={block.mediaId} context={context} className="max-h-64 rounded-none" />
+            {block.mediaId &&
+              (block.layout === "page" ? (
+                <div aria-hidden className="absolute inset-0 bg-background/65" />
+              ) : (
+                <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-b from-transparent to-background" />
+              ))}
           </div>
           <MediaField label="Imagem de fundo" mediaId={block.mediaId} context={context} onPick={(mediaId) => onChange({ ...block, mediaId })} />
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Onde a imagem fica">
+            {(
+              [
+                ["top", "Só o topo", "No tamanho da imagem, esmaecendo no fundo"],
+                ["page", "Página inteira", "Fundo da cena toda, fixo enquanto rola"],
+              ] as const
+            ).map(([layout, label, hint]) => (
+              <button
+                key={layout}
+                type="button"
+                role="radio"
+                aria-checked={(block.layout ?? "top") === layout}
+                onClick={() => onChange({ ...block, layout })}
+                className={cn(
+                  "min-w-0 flex-1 rounded-md border px-3 py-2 text-start text-sm",
+                  (block.layout ?? "top") === layout ? "border-primary bg-primary/5 text-foreground" : "border-border text-muted-foreground hover:bg-muted",
+                )}
+              >
+                <span className="block font-medium text-foreground">{label}</span>
+                <span className="block text-xs">{hint}</span>
+              </button>
+            ))}
+          </div>
           <ProseField
             value={block.text[locale] ?? ""}
-            placeholder="Texto que começa sobre o degradê, na cor de fundo do site."
+            placeholder={block.layout === "page" ? "Texto sobre a imagem (a cena inteira fica com ela de fundo)." : "Texto que começa sobre o degradê, na cor de fundo do site."}
             onChange={(value) => onChange({ ...block, text: localizedPatch(block.text, locale, value) })}
           />
           <AltField value={block.alt} context={context} onChange={(alt) => onChange({ ...block, alt })} />

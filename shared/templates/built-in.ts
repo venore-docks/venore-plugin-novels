@@ -227,62 +227,6 @@ function fantasy(): SystemTemplatePackage {
   );
 }
 
-// ------------------------------------------------------------------ Venore padrão (planilha)
-
-// As fórmulas do protótipo, com os ajustes do documento: dado 1d10 ÷ 10 no lugar do sorteio de 0
-// a 1, redução R/(R+k) (nunca chega a 100%) sobre o HP máximo atual.
-function venore(): SystemTemplatePackage {
-  const base = emptySystem();
-  const reduction = (resist: string) => `(defensor.hp.max * defensor.${resist}) / (defensor.hp.max * defensor.${resist} + 100000)`;
-  const damage = (skill: string) => `atacante.${skill} * dado + teto(atacante.nivel * dado * 0.25)`;
-  return pkg(
-    "venore_padrao",
-    t("Venore padrão", "Venore standard"),
-    t(
-      "As fórmulas da planilha de combate: dano por habilidade × dado, redução por HP × resistência com retorno decrescente, AP para magias.",
-      "The combat spreadsheet formulas: skill × die damage, HP × resistance reduction with diminishing returns, AP for spells.",
-    ),
-    {
-      ...base,
-      modules: modules("resources", "attributes", "dice", "progression", "combat", "inventory", "equipment", "bestiary"),
-      resources: [
-        resource("hp", t("Pontos de vida", "Hit points"), t("HP", "HP"), "chart-2", "150 + 15 * (nivel - 1)"),
-        resource("ap", t("Pontos de ação", "Action points"), t("AP", "AP"), "chart-6", "50 + 5 * (nivel - 1)", { regen: "5" }),
-      ],
-      attributes: [
-        attribute("resistencia_fisica", t("Resistência física", "Physical resistance"), "RF", 10, { showInHud: true }),
-        attribute("resistencia_magica", t("Resistência mágica", "Magic resistance"), "RM", 10, { showInHud: true }),
-        attribute("corpo_a_corpo", t("Corpo a corpo", "Melee"), "CC", 10, { kind: "skill", showInHud: true, training: { enabled: true, threshold: "10 + valor" } }),
-        attribute("distancia", t("Distância", "Ranged"), "DIS", 10, { kind: "skill", showInHud: true, training: { enabled: true, threshold: "10 + valor" } }),
-        attribute("magica", t("Mágica", "Magic"), "MAG", 10, { kind: "skill", showInHud: true, training: { enabled: true, threshold: "10 + valor" } }),
-      ],
-      progression: { ...base.progression, pointsPerLevel: 3, attributeCap: "nivel + 15" },
-      inventory: { ...base.inventory, hands: { enabled: true, name: t("Mãos", "Hands"), count: 2 } },
-      slots: [
-        { key: "cabeca", name: t("Cabeça", "Head"), count: 1 },
-        { key: "corpo", name: t("Corpo", "Body"), count: 1 },
-        { key: "pernas", name: t("Pernas", "Legs"), count: 1 },
-        { key: "pes", name: t("Pés", "Feet"), count: 1 },
-      ],
-      combat: {
-        ...base.combat,
-        hpResource: "hp",
-        die: "1d10 / 10",
-        actions: [
-          action("corpo_a_corpo", t("Atacar (corpo a corpo)", "Melee attack"), damage("corpo_a_corpo"), reduction("resistencia_fisica"), { trains: "corpo_a_corpo" }),
-          action("distancia", t("Atirar", "Ranged attack"), damage("distancia"), reduction("resistencia_fisica"), { trains: "distancia" }),
-          action("magia", t("Magia", "Spell"), damage("magica"), reduction("resistencia_magica"), { trains: "magica", cost: [{ resource: "ap", amount: "10" }] }),
-        ],
-        enemy: { damage: damage("corpo_a_corpo"), reduction: reduction("resistencia_fisica"), hit: "" },
-        minDamage: 1,
-        maxReduction: 0.75,
-      },
-    },
-    [],
-    [creature("rato", t("Rato", "Rat"), 40, { corpo_a_corpo: 8, resistencia_fisica: 5, resistencia_magica: 5, nivel: 1 }, { xp: 50 })],
-  );
-}
-
 // ------------------------------------------------------------------ Tibia-like
 
 function tibiaLike(): SystemTemplatePackage {
@@ -375,7 +319,7 @@ function horror(): SystemTemplatePackage {
   );
 }
 
-export const BUILT_IN_TEMPLATES: SystemTemplatePackage[] = [simpleAdventure(), fantasy(), venore(), tibiaLike(), horror()];
+export const BUILT_IN_TEMPLATES: SystemTemplatePackage[] = [simpleAdventure(), fantasy(), tibiaLike(), horror()];
 
 export function builtInTemplate(key: string): SystemTemplatePackage | null {
   return BUILT_IN_TEMPLATES.find((template) => template.key === key) ?? null;

@@ -5,7 +5,7 @@ rascunho novo, com ids novos) e sai de qualquer obra pelo botão **Exportar** da
 desta pasta são as histórias de exemplo, uma por tipo de obra, oferecidas na tela de importação.
 
 Tipos (campo `kind`): `narrative` (só narrativa) e os modelos de sistema embutidos
-(`aventura_simples`, `rpg_fantasia`, `venore_padrao`, `tibia_like`, `terror_sanidade`).
+(`aventura_simples`, `rpg_fantasia`, `tibia_like`, `terror_sanidade`).
 
 ## Regras gerais
 

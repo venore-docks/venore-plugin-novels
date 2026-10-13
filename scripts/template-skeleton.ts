@@ -1,6 +1,6 @@
 // Esqueleto de pacote de obra a partir de um modelo de sistema embutido (sistema, variáveis,
 // itens e criaturas já no formato do pacote, referenciados pela chave). Uso:
-//   npx tsx scripts/template-skeleton.ts <aventura_simples|rpg_fantasia|venore_padrao|tibia_like|terror_sanidade|narrative> <saida.json>
+//   npx tsx scripts/template-skeleton.ts <aventura_simples|rpg_fantasia|tibia_like|terror_sanidade|narrative> <saida.json>
 import { writeFileSync } from "node:fs";
 import { WORK_PACKAGE_FORMAT, type WorkPackage } from "../contracts/work-package";
 import { BUILT_IN_TEMPLATES, builtInTemplate } from "../shared/templates/built-in";

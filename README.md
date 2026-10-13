@@ -82,8 +82,7 @@ módulo esconde a configuração, nunca apaga.
   frente: o servidor recusa registro que não continua o salvo (não dá para voltar e tentar outra
   opção; outro caminho = **Nova jornada**, com semente nova). "Voltar" só existe no modo teste.
 - **Modelos** (Graphic Novels → Modelos de jogo, permissão `novels.systems.manage`): Aventura
-  simples, RPG de fantasia, Venore padrão (fórmulas da planilha com redução R/(R+k) sobre o HP
-  máximo atual), Tibia-like e Terror com sanidade. Modelos são pacotes JSON
+  simples, RPG de fantasia, Tibia-like e Terror com sanidade. Modelos são pacotes JSON
   (`format: "venore-novels-system"`) que se importam como os plugins; a aba Sistema exporta o
   sistema da obra e importa o de outra. Aplicar copia (itens/criaturas casados pela chave).
 - **Para o autor**: passo "Sistema de jogo" no assistente, **Testar** / "Testar daqui" (rascunho a
@@ -121,6 +120,14 @@ módulo esconde a configuração, nunca apaga.
   prévia das fórmulas troca de nível com um clique; "Ver como o leitor" mostra a barra do
   personagem.
 
+## Imagem de fundo esmaecida (0.16.0)
+
+O bloco "Imagem de fundo esmaecida" escolhe onde a imagem fica: **só o topo** (no tamanho da
+própria imagem, até 85% da altura da tela, esmaecendo na cor de fundo do site com o texto começando
+no degradê) ou **página inteira** (fundo da cena toda, fixo enquanto o leitor rola, com véu na cor
+de fundo para o texto continuar legível). Blocos antigos continuam como "só o topo". O modelo de
+sistema "Venore padrão" saiu dos modelos embutidos (obras que já o aplicaram mantêm a cópia).
+
 ## Importar e exportar obras (0.15.0)
 
 - **Graphic Novels → Importar**: um arquivo `.json` no formato `venore-novels-work` vira um
@@ -132,7 +139,7 @@ módulo esconde a configuração, nunca apaga.
   elenco, sistema, itens e criaturas referenciados por chave legível. Imagens não viajam (o id de
   mídia é da instalação): o leitor mostra o cartão com o nome no lugar.
 - **Histórias de exemplo** (`examples/`), uma por tipo de obra, importáveis com um clique na mesma
-  tela: só narrativa, aventura simples, RPG de fantasia, Venore padrão, Tibia-like e terror com
+  tela: só narrativa, aventura simples, RPG de fantasia, Tibia-like e terror com
   sanidade.
 - Formato completo, com todos os efeitos, condições e mecânicas: [`examples/README.md`](examples/README.md).
   `scripts/check-work-package.ts` confere um pacote (formato, validador e simulador com as quatro

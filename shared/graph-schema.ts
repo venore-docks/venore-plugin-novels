@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DIVIDER_STYLES, IMAGE_ASPECTS, type ChapterGraph } from "../contracts/types";
+import { BACKDROP_LAYOUTS, DIVIDER_STYLES, IMAGE_ASPECTS, type ChapterGraph } from "../contracts/types";
 import { normalizeChoiceMechanics, normalizeSceneMechanics } from "./engine/system";
 import { sanitizeConditions, sanitizeEffects } from "./engine/sanitize";
 import { blocksFromLegacy } from "./scene-blocks";
@@ -45,7 +45,7 @@ const block = z.discriminatedUnion("type", [
     images: z.array(z.object({ mediaId: id, alt: short })).max(GRAPH_LIMITS.imagesPerGallery),
   }),
   z.object({ id, type: z.literal("divider"), style: z.enum(DIVIDER_STYLES) }),
-  z.object({ id, type: z.literal("backdrop"), mediaId: id.nullable(), alt: short, text }),
+  z.object({ id, type: z.literal("backdrop"), mediaId: id.nullable(), alt: short, text, layout: z.enum(BACKDROP_LAYOUTS).default("top") }),
 ]);
 
 // Cena no formato antigo (texto + lâmina, de um editor aberto antes da 0.9.0) vira blocos aqui.

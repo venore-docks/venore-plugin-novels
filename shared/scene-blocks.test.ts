@@ -4,7 +4,7 @@ import { parseInline, stripInline } from "./inline-format";
 import { blocksFromLegacy, normalizeBlocks, sceneExcerpt, sceneMediaIds, sceneWordStats } from "./scene-blocks";
 
 const blocks: SceneBlock[] = [
-  { id: "1", type: "backdrop", mediaId: "fundo", alt: {}, text: { "pt-BR": "O farol *apagado*." } },
+  { id: "1", type: "backdrop", mediaId: "fundo", alt: {}, text: { "pt-BR": "O farol *apagado*." }, layout: "top" },
   { id: "2", type: "gallery", images: [{ mediaId: "a", alt: {} }, { mediaId: "b", alt: {} }] },
   { id: "3", type: "text", text: { "pt-BR": "Um dois três quatro" } },
 ];

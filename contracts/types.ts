@@ -124,6 +124,8 @@ export type WorkTagGroupView = {
 export const IMAGE_ASPECTS = ["auto", "16:9", "4:3", "1:1", "3:4", "2:3"] as const;
 export type ImageAspect = (typeof IMAGE_ASPECTS)[number];
 export const DIVIDER_STYLES = ["line", "dots", "space"] as const;
+export const BACKDROP_LAYOUTS = ["top", "page"] as const;
+export type BackdropLayout = (typeof BACKDROP_LAYOUTS)[number];
 export type DividerStyle = (typeof DIVIDER_STYLES)[number];
 export const CAPTION_MAX_CHARS = 180;
 
@@ -136,7 +138,8 @@ export type SceneBlock =
   | { id: string; type: "speech"; castId: string | null; text: LocalizedText }
   | { id: string; type: "gallery"; images: { mediaId: string; alt: LocalizedText }[] }
   | { id: string; type: "divider"; style: DividerStyle }
-  | { id: string; type: "backdrop"; mediaId: string | null; alt: LocalizedText; text: LocalizedText };
+  // layout "top": imagem no topo esmaecendo no fundo; "page": fundo da cena inteira.
+  | { id: string; type: "backdrop"; mediaId: string | null; alt: LocalizedText; text: LocalizedText; layout: BackdropLayout };
 
 export type SceneBlockType = SceneBlock["type"];
 export const SCENE_BLOCK_TYPES: SceneBlockType[] = ["text", "image", "caption", "speech", "gallery", "divider", "backdrop"];

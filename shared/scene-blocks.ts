@@ -30,7 +30,7 @@ export const BLOCK_HINTS: Record<SceneBlockType, string> = {
   speech: "Diálogo destacado, com o nome e a cor de alguém do elenco.",
   gallery: "Duas ou três imagens lado a lado (empilhadas no celular).",
   divider: "Pausa dramática ou passagem de tempo.",
-  backdrop: "Imagem no topo, esmaecendo na cor de fundo do site; o texto fica no degradê.",
+  backdrop: "Imagem esmaecendo na cor de fundo do site: só no topo da cena ou de fundo na página inteira.",
 };
 
 export function newBlock(type: SceneBlockType, id: string): SceneBlock {
@@ -48,7 +48,7 @@ export function newBlock(type: SceneBlockType, id: string): SceneBlock {
     case "divider":
       return { id, type, style: "dots" };
     case "backdrop":
-      return { id, type, mediaId: null, alt: {}, text: {} };
+      return { id, type, mediaId: null, alt: {}, text: {}, layout: "top" };
   }
 }
 
@@ -150,7 +150,7 @@ export function normalizeBlocks(blocks: SceneBlock[], locales: string[]): SceneB
       case "divider":
         return { ...block, style: DIVIDER_STYLES.includes(block.style) ? block.style : "dots" };
       case "backdrop":
-        return { ...block, alt: text(block.alt), text: text(block.text) };
+        return { ...block, alt: text(block.alt), text: text(block.text), layout: block.layout === "page" ? "page" : "top" };
     }
   });
 }
