@@ -1,0 +1,4342 @@
+{
+  "format": "venore-novels-work",
+  "version": 1,
+  "kind": "aventura_simples",
+  "work": {
+    "slug": "o-mapa-das-ilhas-andarilhas",
+    "title": {
+      "pt-BR": "O Mapa das Ilhas Andarilhas"
+    },
+    "subtitle": {
+      "pt-BR": "Uma aventura de corda, vento e dados"
+    },
+    "synopsis": {
+      "pt-BR": "Todo ano as ilhas flutuantes do Vale da Arribação mudam de lugar, e todo ano alguém precisa levar o mapa novo até a Festa da Colheita antes que as lanternas se acendam. Este ano, com a Mestra Odila de tornozelo enfaixado, esse alguém é você: Nina Prumo, aprendiz de cartógrafa, com um tubo de couro nas costas, três pontos de sorte no bolso e um vale inteiro de pontes de corda pela frente."
+    },
+    "defaultLocale": "pt-BR",
+    "locales": [
+      "pt-BR"
+    ],
+    "tags": []
+  },
+  "variables": [
+    {
+      "key": "atraso",
+      "label": "Atraso (horas)",
+      "type": "number",
+      "initial": 0,
+      "display": "status",
+      "min": 0
+    },
+    {
+      "key": "pistas",
+      "label": "Pistas da nuvem parada",
+      "type": "number",
+      "initial": 0,
+      "display": "hidden",
+      "min": 0
+    },
+    {
+      "key": "trovisco",
+      "label": "Trovisco viaja junto",
+      "type": "boolean",
+      "initial": false,
+      "display": "hidden"
+    },
+    {
+      "key": "dica_odila",
+      "label": "Ouviu os conselhos da Mestra",
+      "type": "boolean",
+      "initial": false,
+      "display": "hidden"
+    },
+    {
+      "key": "rasura_divida",
+      "label": "Rasura deve um favor",
+      "type": "boolean",
+      "initial": false,
+      "display": "hidden"
+    }
+  ],
+  "system": {
+    "version": 1,
+    "modules": {
+      "resources": true,
+      "attributes": false,
+      "dice": true,
+      "inventory": false,
+      "equipment": false,
+      "progression": false,
+      "combat": false,
+      "effects": false,
+      "shops": false,
+      "quests": false,
+      "achievements": true,
+      "character": false,
+      "bestiary": false
+    },
+    "resources": [
+      {
+        "key": "vida",
+        "name": {
+          "pt-BR": "Vida",
+          "en": "Health"
+        },
+        "abbr": {
+          "pt-BR": "PV",
+          "en": "HP"
+        },
+        "color": "chart-2",
+        "max": "10",
+        "initial": "max",
+        "regen": "",
+        "regenInCombat": false,
+        "onZero": {
+          "sceneId": "fim_derrota",
+          "effects": []
+        },
+        "onFull": null,
+        "showInHud": true,
+        "lowPercent": 30
+      },
+      {
+        "key": "sorte",
+        "name": {
+          "pt-BR": "Sorte",
+          "en": "Luck"
+        },
+        "abbr": {
+          "pt-BR": "Sorte",
+          "en": "Luck"
+        },
+        "color": "chart-4",
+        "max": "3",
+        "initial": "max",
+        "regen": "",
+        "regenInCombat": false,
+        "onZero": null,
+        "onFull": null,
+        "showInHud": true,
+        "lowPercent": 0
+      }
+    ],
+    "attributes": [],
+    "derived": [],
+    "progression": {
+      "xpKey": "xp",
+      "xpName": {
+        "pt-BR": "Experiência",
+        "en": "Experience"
+      },
+      "levelKey": "nivel",
+      "levelName": {
+        "pt-BR": "Nível",
+        "en": "Level"
+      },
+      "curve": {
+        "kind": "formula",
+        "formula": "50 * (n - 1) * n"
+      },
+      "maxLevel": 100,
+      "pointsKey": "pontos",
+      "pointsName": {
+        "pt-BR": "Pontos",
+        "en": "Points"
+      },
+      "pointsPerLevel": 1,
+      "pointCosts": [
+        {
+          "upTo": 10,
+          "cost": 1
+        },
+        {
+          "upTo": 15,
+          "cost": 2
+        },
+        {
+          "upTo": null,
+          "cost": 3
+        }
+      ],
+      "attributeCap": "",
+      "onLevelUp": [],
+      "levelUpMessage": {}
+    },
+    "inventory": {
+      "weight": {
+        "enabled": false,
+        "name": {
+          "pt-BR": "Peso",
+          "en": "Weight"
+        },
+        "unit": {
+          "pt-BR": "oz"
+        },
+        "max": "400",
+        "countEquipped": true,
+        "overLimit": "block",
+        "penalty": [],
+        "blockFlee": false
+      },
+      "space": {
+        "enabled": false,
+        "name": {
+          "pt-BR": "Mochila",
+          "en": "Backpack"
+        },
+        "base": 8
+      },
+      "hands": {
+        "enabled": false,
+        "name": {
+          "pt-BR": "Mãos",
+          "en": "Hands"
+        },
+        "count": 2
+      }
+    },
+    "slots": [],
+    "dice": {
+      "showDc": "words",
+      "words": [
+        {
+          "upTo": 8,
+          "label": {
+            "pt-BR": "fácil",
+            "en": "easy"
+          }
+        },
+        {
+          "upTo": 14,
+          "label": {
+            "pt-BR": "médio",
+            "en": "medium"
+          }
+        },
+        {
+          "upTo": 1000,
+          "label": {
+            "pt-BR": "difícil",
+            "en": "hard"
+          }
+        }
+      ],
+      "reroll": {
+        "enabled": true,
+        "cost": [
+          {
+            "resource": "sorte",
+            "amount": "1"
+          }
+        ]
+      }
+    },
+    "combat": {
+      "hpResource": "",
+      "die": "1d10 / 10",
+      "actions": [],
+      "enemy": {
+        "damage": "max(1, atacante.ataque - defensor.defesa)",
+        "reduction": "0",
+        "hit": ""
+      },
+      "defend": {
+        "enabled": true,
+        "reductionBonus": 0.5
+      },
+      "flee": {
+        "enabled": true,
+        "roll": "1d20",
+        "dc": "10"
+      },
+      "minDamage": 1,
+      "maxReduction": 0.9,
+      "critical": {
+        "chance": "",
+        "multiplier": 2
+      },
+      "equipInCombat": false
+    },
+    "character": {
+      "fields": [],
+      "vocations": [],
+      "startingPoints": 0
+    },
+    "currency": {
+      "mode": "counter",
+      "key": "moedas",
+      "name": {
+        "pt-BR": "Moedas",
+        "en": "Coins"
+      },
+      "itemId": null
+    },
+    "statusEffects": [],
+    "quests": [],
+    "achievements": [
+      {
+        "id": "amigo_do_sapo",
+        "name": {
+          "pt-BR": "Tripulação de um sapo"
+        },
+        "description": {
+          "pt-BR": "Libertou Trovisco III e ganhou um aeronauta de ombro."
+        },
+        "hidden": false
+      },
+      {
+        "id": "pe_de_cabra",
+        "name": {
+          "pt-BR": "Pé de cabra"
+        },
+        "description": {
+          "pt-BR": "Atravessou a Ponte Comprida num passo perfeito (20 natural)."
+        },
+        "hidden": false
+      },
+      {
+        "id": "tombo_lendario",
+        "name": {
+          "pt-BR": "Tombo lendário"
+        },
+        "description": {
+          "pt-BR": "Tirou 1 natural no dado na pior hora possível."
+        },
+        "hidden": false
+      },
+      {
+        "id": "rasura_desmascarado",
+        "name": {
+          "pt-BR": "Borracha no Rasura"
+        },
+        "description": {
+          "pt-BR": "Desmascarou o Atlas dos Atalhos de Teodoro Rasura."
+        },
+        "hidden": false
+      },
+      {
+        "id": "decifradora",
+        "name": {
+          "pt-BR": "Decifradora"
+        },
+        "description": {
+          "pt-BR": "Respondeu os três enigmas de Mestre Quiçá."
+        },
+        "hidden": false
+      },
+      {
+        "id": "cidade_orvalho",
+        "name": {
+          "pt-BR": "A cidade que não estava no mapa"
+        },
+        "description": {
+          "pt-BR": "Encontrou Orvalho, a cidade dentro da nuvem parada."
+        },
+        "hidden": true
+      }
+    ],
+    "encyclopedia": [],
+    "hardcore": false,
+    "series": {
+      "previousWorkId": null,
+      "carry": []
+    }
+  },
+  "cast": [
+    {
+      "key": "nina",
+      "name": {
+        "pt-BR": "Nina Prumo"
+      },
+      "color": "primary"
+    },
+    {
+      "key": "odila",
+      "name": {
+        "pt-BR": "Mestra Odila"
+      },
+      "color": "chart-4"
+    },
+    {
+      "key": "trovisco",
+      "name": {
+        "pt-BR": "Trovisco III"
+      },
+      "color": "chart-2"
+    },
+    {
+      "key": "rasura",
+      "name": {
+        "pt-BR": "Teodoro Rasura"
+      },
+      "color": "chart-5"
+    },
+    {
+      "key": "quica",
+      "name": {
+        "pt-BR": "Mestre Quiçá"
+      },
+      "color": "chart-6"
+    },
+    {
+      "key": "garoa",
+      "name": {
+        "pt-BR": "Garoa"
+      },
+      "color": "chart-7"
+    }
+  ],
+  "items": [],
+  "creatures": [],
+  "chapters": [
+    {
+      "key": "cap1",
+      "title": {
+        "pt-BR": "O mapa e a corda"
+      },
+      "start": "c1_observatorio",
+      "scenes": [
+        {
+          "key": "c1_observatorio",
+          "label": "Observatório",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O sol ainda nem decidiu se vai nascer quando a Mestra Odila bate a bengala no assoalho do observatório, três vezes, como quem chama um gato teimoso. Você desce a escada em caracol com o cabelo em pé e uma meia em cada pé — de pares diferentes, mas ninguém precisa saber.\n\nPela janela redonda, o Vale da Arribação acorda devagar. As ilhas flutuantes boiam sobre o mar de nuvens como pães esquecidos numa sopa, ligadas umas às outras por pontes de corda que balançam ao vento. Todo ano elas mudam de lugar. Todo ano, alguém precisa desenhar o mapa novo. E todo ano, ao pôr do sol, esse mapa tem de chegar à Festa da Colheita, do outro lado do vale, para que as carroças saibam por onde passar.\n\nA Mestra está sentada num banquinho, com o tornozelo enfaixado apoiado numa abóbora — a mesma abóbora em que tropeçou ontem à noite."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Não ria. A abóbora estava fora do mapa. Agora escute: o tubo está pronto, o lacre está seco e eu não consigo descer nem a escada. Quem leva o mapa este ano é você, Nina."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Eu? Sozinha? Até a festa?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Até a praça da Vila Moenda, antes de acenderem as lanternas. Nem um minuto depois."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_gaveta",
+          "label": "A gaveta da Mestra",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Enquanto a Mestra procura os óculos que estão na própria testa, você abre a gaveta da escrivaninha — só para pegar um lápis de reserva, é claro. Lá dentro há lápis, sim, e também um ninho de barbantes, três biscoitos fossilizados e um mapa tão velho que as dobras viraram rasgos.\n\nÉ o vale de quarenta anos atrás. As ilhas estão em outros lugares, as pontes têm outros nomes, mas uma coisa chama sua atenção: bem no meio do vale, onde nunca houve nada além de uma nuvem parada, alguém desenhou a lápis uma espiral com três pontinhos em volta. Ao lado, numa letra miúda e apressada: *ela não anda*.\n\nVocê ergue o mapa contra a luz da janela."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Isso é rabisco de gente nova com sono. Fecha essa gaveta, que o sol não espera."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ela disse rápido demais. Gente que diz as coisas rápido demais sempre está escondendo alguma — você aprendeu isso com ela mesma."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_conselhos",
+          "label": "Conselhos de Odila",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A Mestra suspira como quem já esperava por isso. Puxa você pela manga até ficar na altura dos olhos dela, que são pequenos, cinzentos e capazes de medir uma distância de cabeça com erro de dois palmos."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Vou lhe dar três conselhos, que é o que se dá a uma aprendiz quando não se tem dinheiro. Primeiro: não confie em quem vende atalho. Segundo: ponte que canta está podre — corda boa fica quieta. Terceiro: se cruzar com o velho Quiçá, lembre que as respostas dele estão sempre no caminho."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Quem é o velho Quiçá?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Se você tiver sorte, ninguém. Agora vá."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ela enfia no seu bolso um pedaço de pão de mel embrulhado em papel de mapa — o que, vindo dela, é praticamente um abraço. Você desce os degraus do observatório repetindo os três conselhos baixinho, como quem decora uma reza."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "variable": "dica_odila",
+              "operation": "set",
+              "value": true
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_borda",
+          "label": "A borda oeste",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O vento da manhã cheira a capim molhado e a fermento: lá longe, do outro lado do vale, a Vila Moenda já está assando os pães da festa. Daqui, a vila é só um borrão de telhados vermelhos encostado na borda leste. Entre você e ela há um vale inteiro de ilhas que não ficam paradas.\n\nO tubo de couro nas suas costas pesa quase nada, mas parece pesar o mundo.\n\nA primeira travessia leva à Ilha da Figueira, uma pedra redonda coroada por uma árvore tão grande que as raízes pendem no vazio como cabelos molhados. Há dois jeitos de chegar lá. A Ponte do Bocejo, longa e mole, balança tanto que dizem que quem a atravessa sai com sono. E há o cesto da roldana: uma cesta de vime pendurada num cabo, que você mesma tem de puxar, palmo a palmo, até o outro lado.\n\nLá embaixo, as nuvens rolam devagar, brancas e fofas, como se nunca tivessem engolido nada."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_tabua",
+          "label": "Tábua podre",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Na metade da ponte, uma tábua estala de um jeito que nenhuma tábua deveria estalar. Num instante você está de pé; no outro, está pendurada pelos cotovelos, as pernas pedalando no nada, o tubo do mapa batendo nas suas costas como um coração de couro.\n\nLá embaixo, uma nuvem se abre, preguiçosa, e mostra por um segundo a escuridão azulada do fundo do vale. Depois se fecha de novo, como quem diz: *fica para a próxima*.\n\nVocê não sabe de onde tira força. Talvez das broas da festa, que ainda não comeu e se recusa a perder. Com um gemido nada elegante, arrasta o corpo de volta para as tábuas boas, rala os dois joelhos e fica um tempo deitada de barriga para cima, olhando o céu e respirando como um fole velho."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Tudo bem. Tudo ótimo. Primeira ponte. Faltam só... todas as outras."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_cesto",
+          "label": "O cesto da roldana",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O cesto range, a roldana geme e seus braços, depois de vinte puxadas, começam a reclamar com os ombros. A travessia é lenta, mas tem uma vantagem: pendurada no meio do cabo, sobre o vale, você enxerga tudo.\n\nAs ilhas se espalham diante de você como peças de um jogo que alguém esqueceu de guardar. A Figueira logo à frente. Mais além, a Ilha dos Cabritos, com suas manchinhas brancas. Mais longe ainda, o Farol Torto, que sempre parece prestes a cair e nunca cai. E, bem no centro do vale, uma nuvem diferente das outras: alta, redonda, imóvel como um travesseiro pregado no céu. Todas as nuvens do vale correm com o vento. Aquela não.\n\nA luneta da Mestra está no seu cinto. Se você soltar uma das mãos para usá-la, o cesto vai escorregar um pouco para trás."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_figueira",
+          "label": "Ilha da Figueira",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A Ilha da Figueira cheira a fruta madura e a terra que nunca viu chão. As raízes da árvore descem pelas bordas da pedra e somem nas nuvens, e há quem jure que, em noite de lua, dá para ouvir a figueira bebendo chuva lá de baixo.\n\nVocê mal pisa na grama e escuta uma voz. Uma voz grave, empolada, de alguém muito importante e muito ofendido."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Com licença! Com toda a licença do mundo! Há alguém aí com mãos? Duas, de preferência. Uma já ajudaria."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Entre os galhos baixos, preso numa teia de linha de pipa, balança um sapo do tamanho de um melão. É verde-musgo com bolinhas douradas, tem um papo enorme e transparente e usa — você precisa olhar duas vezes — um par de óculos de aviador."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Trovisco Terceiro, aeronauta, a seu dispor. Ou melhor, à sua mercê, dada a situação. Fui abalroado por uma pipa. Uma pipa! Eu, que já sobrevoei o Farol Torto três vezes sem escala!"
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_trovisco_balao",
+          "label": "Sapo à deriva",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você mal desfaz o terceiro nó quando Trovisco, nervoso, faz o que todo sapo-balão faz quando está nervoso: enche o papo. E enche. E enche. Em dois segundos ele é uma bola verde e dourada do tamanho de uma melancia, e a linha, agora frouxa, solta-se de vez.\n\nEle sobe. Você agarra a perna dele por reflexo. E então vocês dois sobem — você com os pés raspando a grama, depois os galhos, depois o nada.\n\nPor um instante muito longo, você vê a Ilha da Figueira lá embaixo, pequena como um prato. Aí o sapo solta o ar com um som que você vai ter vergonha de descrever pelo resto da vida, e vocês despencam de volta através da copa, folha por folha, galho por galho, até aterrissar numa pilha de figos maduros."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Isso... isso foi um pouso planejado. Absolutamente planejado."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você está grudenta, arranhada e cheirando a geleia. Ele, é claro, está ileso."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_trovisco_amigo",
+          "label": "Trovisco III, aeronauta",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Livre da linha, Trovisco ajeita os óculos, estufa o peito — sem estufar o papo, por precaução — e faz uma reverência tão funda que quase rola da pedra."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Minha salvadora! Nenhum aeronauta da linhagem dos Trovisco deixa dívida no ar. Para onde vai a senhorita, com esse tubo tão solene?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Para a Vila Moenda. Levar o mapa novo do vale antes do pôr do sol."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Atravessar o vale inteiro? A pé? Que coisa mais... terrestre. Pois bem, vou junto. Conheço cada corrente de vento daqui até a borda leste, e minha avó dizia que um sapo no ombro vale por duas cordas na mão."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele pula para o seu ombro sem esperar resposta. É mais pesado do que parece e mais quente do que você esperava, e cantarola baixinho, desafinado, alguma coisa sobre ventos e pedras. Você descobre que não se importa nem um pouco."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "variable": "trovisco",
+              "operation": "set",
+              "value": true
+            },
+            {
+              "kind": "achievement",
+              "achievementId": "amigo_do_sapo"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_trovisco_foge",
+          "label": "Linha cortada",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Um corte rápido do canivete e a linha se solta. O problema é que Trovisco estava preso de cabeça para baixo. O outro problema é que, de susto, ele enche o papo.\n\nEle sobe como uma rolha. Para cima, para cima, girando devagar, os óculos de aviador escorregando no nariz."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Isso é jeito de tratar um aeronauta?! Eu exijo... eu exijo uma descida digna!"
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Mas o vento da manhã já o pegou, e ele vai ficando pequeno, cada vez menor, até virar um pontinho verde contra o azul. A última coisa que você escuta é a voz dele, já distante:"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Os Trovisco não esquecem! Nem desfeita, nem favor!"
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você guarda o canivete. Bom, pelo menos ele está solto. Tecnicamente, você ajudou. Tecnicamente."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_bifurcacao",
+          "label": "Duas saídas",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Do lado leste da Figueira, o caminho se divide. À esquerda, uma ponte comprida e fina se estende até a ilha seguinte, e o vento passa pelas cordas dela fazendo um som bonito, quase uma música: um *uuuuu* grave e comprido, como alguém soprando a boca de uma garrafa.\n\nÀ direita, as raízes da figueira formam uma escadaria torta que desce pela face da pedra até uma trilha de ilhotas mais baixas. É o caminho seguro, dizem. Também é o mais demorado: cada degrau é de um tamanho, e alguns nem são degraus, só raízes com boa vontade.\n\nE bem à sua frente, flutuando devagar, uma ilhota do tamanho de uma carroça passa rente à borda, levada pelo vento na direção certa. Quem pulasse agora talvez caísse em cima dela. Talvez. Seria preciso uma boa dose de sorte."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_ponte_rompe",
+          "label": "A corda arrebenta",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A música da ponte fica mais aguda a cada passo — *uuu, uíí, iííí* — e você entende tarde demais que aquela canção era um aviso. Com um estalo seco, a corda de mão da direita arrebenta. A ponte vira de lado como uma rede, e você escorrega até ficar pendurada pelas mãos, as pernas balançando sobre o mar de nuvens.\n\nO tubo do mapa desliza pelas suas costas. Você o prende com o queixo, os dentes cerrados, e começa a avançar mão sobre mão, uma corda áspera de cada vez, os dedos queimando, os braços tremendo.\n\nQuando enfim alcança a outra ilha e rola para a grama, fica um tempo olhando a ponte que deixou para trás. Ela continua cantando, agora num tom baixinho, quase arrependido."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Corda boa fica quieta. Alguém devia escrever isso numa placa."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_raizes",
+          "label": "Escadaria de raízes",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Descer a escadaria de raízes é como descer as costas de um bicho muito velho e muito paciente. Os degraus são escorregadios de musgo, alguns estão do avesso, e em certos trechos você precisa sentar e escorregar de traseiro, agarrada aos fios das raízes.\n\nNo meio da descida, numa reentrância da pedra, há uma laje lisa diferente do resto, quase quadrada, como se alguém a tivesse posto ali de propósito. Está coberta de líquen, mas por baixo dele dá para adivinhar linhas entalhadas.\n\nUma lagartixa cinzenta, do tamanho do seu dedo mindinho, está deitada bem em cima da laje, tomando sol com a seriedade de um juiz. Quando você se aproxima, ela não foge: só vira a cabeça e olha para você, depois para a laje, depois para você de novo, como quem pergunta se você não vai ler o que está escrito ali.\n\nO sol já subiu um bom pedaço. Lá embaixo, a trilha de ilhotas segue para o leste, e cada minuto parado é um minuto a menos até as lanternas."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_pedra_espiral",
+          "label": "A laje entalhada",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Com a unha e a ponta do canivete, você raspa o líquen. Aparece primeiro uma linha curva, depois outra, depois outra: uma espiral perfeita, do tamanho de uma mão aberta, com três furinhos ao redor, fundos como se tivessem sido feitos com um prego.\n\nEmbaixo da espiral há uma seta, e a seta aponta para o centro do vale, onde aquela nuvem redonda continua parada no mesmo lugar de sempre, enquanto todas as outras passam correndo por ela.\n\nVocê copia o desenho no canto do caderno. Ao fechar o caderno, nota um trevo de quatro folhas crescendo numa fresta da laje, pequeno e teimoso. Você nunca acreditou nessas coisas. Mesmo assim, guarda o trevo entre as páginas. Mal não faz."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            },
+            {
+              "kind": "formula",
+              "target": "sorte",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_salto",
+          "label": "Salto de fé",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você corre, pisa na beirada e salta.\n\nPor um segundo que dura uma semana, não há nada embaixo dos seus pés além de vento e nuvem. O tubo do mapa bate nas suas costas. Seu estômago fica em algum lugar lá atrás, na Figueira, decidindo se vem junto.\n\nE então — *tum* — você cai de joelhos sobre a ilhota, que afunda um palmo com o seu peso e volta a subir, como um barco quando alguém pula dentro. Você rola na grama, rindo sem conseguir parar, o riso nervoso de quem acabou de fazer a maior besteira da vida e deu certo.\n\nA ilhota segue o vento como se nada tivesse acontecido, levando você para o leste mais depressa que qualquer ponte. Quando ela encosta de leve na ilha seguinte, você desembarca com a dignidade de uma princesa — se as princesas tivessem capim no cabelo."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_ponte_muda",
+          "label": "A ponte que não canta",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "*Ponte que canta está podre.* Você escuta a canção da ponte grande por um momento, depois dá as costas a ela e começa a procurar. Não demora: escondida atrás de uma cortina de raízes, há uma ponte estreita, velha, coberta de musgo — e completamente calada. O vento passa pelas cordas dela sem tirar um pio.\n\nVocê testa a primeira tábua com o pé. Firme. A segunda. Firme. As cordas de mão estão ásperas e grossas, do jeito que corda boa deve ser.\n\nAtravessar uma ponte silenciosa é estranho. Você escuta a própria respiração, o rangido do couro do tubo, um passarinho em algum lugar. Lá atrás, a ponte bonita continua cantando, e você se pergunta quanta gente já confiou nela só porque era bonita."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Obrigada, Mestra. Nunca vou dizer isso na sua frente, mas obrigada."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c1_outro_lado",
+          "label": "Do outro lado",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Quando você enfim pisa na trilha do outro lado da Figueira, o sol já está alto o bastante para esquentar a nuca. Você confere o tubo — inteiro, fechado, com o lacre de cera vermelha da Mestra intacto — e tira o mapa de dentro só por um segundo, só para ter certeza de que ele continua lá.\n\nContinua. As ilhas desenhadas em tinta marrom, as pontes em traço fino, as setas do vento em azul. Cada linha foi medida a passo, a corda e a paciência, durante um inverno inteiro de frio no observatório. Uma carroça que seguir esse mapa vai chegar inteira. Uma carroça que seguir o mapa do ano passado vai descobrir, do pior jeito possível, que a Ponte das Lavadeiras agora dá no vazio.\n\nVocê enrola o mapa de novo, com cuidado. À frente, uma ilha coberta de capim alto e bolinhas brancas espera por você.\n\nAs bolinhas brancas estão se mexendo. E mastigando alguma coisa."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        }
+      ],
+      "choices": [
+        {
+          "from": "c1_observatorio",
+          "to": "c1_borda",
+          "label": {
+            "pt-BR": "Pegar o tubo e partir já"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_observatorio",
+          "to": "c1_gaveta",
+          "label": {
+            "pt-BR": "Fuçar a gaveta da Mestra antes de sair"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_observatorio",
+          "to": "c1_conselhos",
+          "label": {
+            "pt-BR": "Pedir um último conselho"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_gaveta",
+          "to": "c1_borda",
+          "label": {
+            "pt-BR": "Guardar a espiral na memória e partir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_gaveta",
+          "to": "c1_conselhos",
+          "label": {
+            "pt-BR": "Insistir: pedir conselhos à Mestra"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_conselhos",
+          "to": "c1_borda",
+          "label": {
+            "pt-BR": "Guardar os conselhos e partir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_borda",
+          "to": "c1_figueira",
+          "label": {
+            "pt-BR": "Atravessar a Ponte do Bocejo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "2d6",
+              "dc": "7",
+              "label": {
+                "pt-BR": "Equilíbrio"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c1_tabua",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c1_borda",
+          "to": "c1_cesto",
+          "label": {
+            "pt-BR": "Ir pelo cesto da roldana"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_tabua",
+          "to": "c1_figueira",
+          "label": {
+            "pt-BR": "Levantar e terminar a travessia"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_cesto",
+          "to": "c1_figueira",
+          "label": {
+            "pt-BR": "Soltar uma mão e espiar a nuvem"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "11",
+              "label": {
+                "pt-BR": "Olho de cartógrafa"
+              },
+              "successEffects": [
+                {
+                  "kind": "formula",
+                  "target": "pistas",
+                  "operation": "add",
+                  "formula": "1"
+                }
+              ],
+              "failure": {
+                "targetSceneId": "c1_figueira",
+                "effects": []
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c1_cesto",
+          "to": "c1_figueira",
+          "label": {
+            "pt-BR": "Seguir puxando sem olhar para baixo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_figueira",
+          "to": "c1_trovisco_amigo",
+          "label": {
+            "pt-BR": "Desembaraçar o sapo com paciência"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "9",
+              "label": {
+                "pt-BR": "Dedos ágeis"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c1_trovisco_balao",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d4"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c1_figueira",
+          "to": "c1_trovisco_foge",
+          "label": {
+            "pt-BR": "Cortar a linha de uma vez"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_figueira",
+          "to": "c1_bifurcacao",
+          "label": {
+            "pt-BR": "Fingir que não ouviu e seguir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_trovisco_balao",
+          "to": "c1_trovisco_amigo",
+          "label": {
+            "pt-BR": "Desgrudar os figos do cabelo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_trovisco_amigo",
+          "to": "c1_bifurcacao",
+          "label": {
+            "pt-BR": "Seguir viagem com o sapo no ombro"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_trovisco_foge",
+          "to": "c1_bifurcacao",
+          "label": {
+            "pt-BR": "Seguir caminho, um pouco culpada"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_bifurcacao",
+          "to": "c1_outro_lado",
+          "label": {
+            "pt-BR": "Atravessar a ponte que canta"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "2d6",
+              "dc": "10",
+              "label": {
+                "pt-BR": "Travessia"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c1_ponte_rompe",
+                "effects": []
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": [
+                {
+                  "min": -50,
+                  "max": 4,
+                  "targetSceneId": "c1_ponte_rompe",
+                  "effects": [
+                    {
+                      "kind": "formula",
+                      "target": "vida",
+                      "operation": "add",
+                      "formula": "-1d6 - 1"
+                    }
+                  ]
+                },
+                {
+                  "min": 5,
+                  "max": 8,
+                  "targetSceneId": "c1_outro_lado",
+                  "effects": [
+                    {
+                      "kind": "formula",
+                      "target": "atraso",
+                      "operation": "add",
+                      "formula": "1"
+                    }
+                  ]
+                },
+                {
+                  "min": 9,
+                  "max": 50,
+                  "targetSceneId": "c1_outro_lado",
+                  "effects": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "from": "c1_bifurcacao",
+          "to": "c1_raizes",
+          "label": {
+            "pt-BR": "Descer pela escadaria de raízes"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_bifurcacao",
+          "to": "c1_salto",
+          "label": {
+            "pt-BR": "Saltar para a ilhota que passa"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "-1"
+            }
+          ],
+          "mechanics": {
+            "cost": [
+              {
+                "resource": "sorte",
+                "amount": "1"
+              }
+            ],
+            "whenUnavailable": "disable",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_bifurcacao",
+          "to": "c1_ponte_muda",
+          "label": {
+            "pt-BR": "Procurar uma ponte que não cante"
+          },
+          "conditions": [
+            {
+              "variable": "dica_odila",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_ponte_rompe",
+          "to": "c1_outro_lado",
+          "label": {
+            "pt-BR": "Juntar a dignidade e seguir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_raizes",
+          "to": "c1_pedra_espiral",
+          "label": {
+            "pt-BR": "Raspar o líquen da laje"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_raizes",
+          "to": "c1_outro_lado",
+          "label": {
+            "pt-BR": "Continuar descendo sem parar"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_pedra_espiral",
+          "to": "c1_outro_lado",
+          "label": {
+            "pt-BR": "Terminar a descida"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_salto",
+          "to": "c1_outro_lado",
+          "label": {
+            "pt-BR": "Desembarcar na ilha seguinte"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_ponte_muda",
+          "to": "c1_outro_lado",
+          "label": {
+            "pt-BR": "Seguir em frente"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        }
+      ]
+    },
+    {
+      "key": "cap2",
+      "title": {
+        "pt-BR": "As ilhas que andam"
+      },
+      "start": "c2_cabritos",
+      "scenes": [
+        {
+          "key": "c2_cabritos",
+          "label": "Ilha dos Cabritos",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "As bolinhas brancas são cabritos-de-nuvem: bichinhos do tamanho de um cachorro, com uma lã tão leve que eles flutuam um palmo acima do chão quando o vento sopra forte. São a coisa mais fofa do vale. São também, segundo a Mestra, *a praga mais mal-educada que já pastou neste mundo*.\n\nE estão comendo a ponte.\n\nA única ponte que sai desta ilha para o leste está coberta de cabritos. Eles mordiscam as cordas de mão com a concentração de quem faz isso há gerações. Um deles, de chifrinho torto, olha para você sem parar de mastigar e solta um *béééé* que, honestamente, soa como um desafio.\n\nSe continuarem nesse ritmo, logo não vai haver ponte nenhuma para atravessar. E a próxima ponte para o leste, segundo o mapa que você mesma ajudou a desenhar, fica a meio dia de caminhada daqui, do outro lado de um despenhadeiro que ninguém em sã consciência quer conhecer.\n\nVocê conta os cabritos. Doze. Treze, se contar o pequenininho dormindo dentro do balde de alguém."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_cabecada",
+          "label": "Cabeçada",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você corre, grita e agita os braços como um moinho desgovernado. A maior parte dos cabritos se espalha, assustada. O do chifrinho torto, não.\n\nEle abaixa a cabeça. Raspa o casco no chão. E vem.\n\nA cabeçada acerta você bem no meio da barriga, e a sensação é a de ser atropelada por um travesseiro muito determinado — um travesseiro com ossos. Você voa para trás, cai sentada no capim, rola, e quando consegue respirar de novo há três cabritos em cima de você, mastigando a barra da sua capa com grande interesse.\n\nMas a ponte está livre. O do chifre torto volta a pastar, satisfeito, como quem resolveu uma questão de honra."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Isso não conta como vitória sua. Eu é que deixei."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele não responde. Cabritos nunca respondem. Essa é a pior parte."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_cantiga",
+          "label": "Cantiga de ninar",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Trovisco pigarreia, ajeita os óculos e infla o papo só um pouquinho, o suficiente para fazer dele uma caixa de som. Então canta. É uma cantiga antiga, de notas compridas e graves, que parece mais vento que canção:"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Dorme, pedra, dorme, ilha, / que a tecelã já vem; / puxa o fio da nuvem parada, / que a cidade te quer bem. / Gira, gira a espiral, / três estrelas a guiar; / quem tem casa no orvalho / não precisa de lugar."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Um por um, os cabritos piscam devagar, dobram as patinhas e se aninham no capim, flutuando um tiquinho acima do chão e roncando baixinho. A ponte, mordida mas inteira, fica livre."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Onde você aprendeu isso?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Minha avó cantava. Dizia que era a canção da cidade que puxa as ilhas com fios de vento. Bobagem de sapo velho, naturalmente."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele diz *naturalmente* do mesmo jeito que a Mestra diz *rabisco de gente nova*. Você anota a letra inteira no caderno."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_espera",
+          "label": "Paciência de cabrito",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você se senta numa pedra e espera. Cabritos-de-nuvem, descobre, não têm pressa nenhuma. Comem a corda de mão esquerda, pensam um pouco, comem um pedaço da direita, deitam para fazer a digestão, levantam, comem uma tábua inteira só para ver qual é o gosto.\n\nEnquanto isso, você descobre um arbusto de amoras-do-ar, aquelas frutinhas roxas que crescem de cabeça para baixo e estalam na boca como bolhas de sabão. Come um punhado. Depois outro. São doces, frescas, e de algum jeito fazem os arranhões da manhã doerem menos.\n\nQuase uma hora depois, o rebanho decide que já comeu ponte suficiente por hoje e vai pastar do outro lado da ilha. A ponte ficou banguela, faltam tábuas aqui e ali, mas ainda dá para passar — desde que você olhe muito bem onde pisa."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "vida",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_farol",
+          "label": "O Farol Torto",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A ilha seguinte é a do Farol Torto, uma torre de pedra tão inclinada que parece estar tentando ler alguma coisa no chão. Ninguém acende o farol há anos; hoje ele serve de marco e de ponto de encontro para quem atravessa o vale.\n\nHoje, quem está lá é um homem alto e magro, de colete xadrez, com um bigode tão bem enrolado nas pontas que deve dar trabalho dormir. Está sentado numa cadeira dobrável à sombra da torre, tomando café numa xícara de porcelana, cercado de rolos de papel. Encostado no farol, um guarda-chuva enorme, de pano listrado, com alças de couro no cabo.\n\nQuando ele vê o tubo nas suas costas, o sorriso dele cresce até as orelhas."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Ora, ora! A aprendiz da Odila! Teodoro Rasura, cartógrafo independente, autor do famoso Atlas dos Atalhos. Que coincidência maravilhosa. Café?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Vai pela Ponte Comprida, aposto. Coitadinha, leva a tarde inteira. Eu conheço um atalho pelas Ilhas Gêmeas que corta o caminho pela metade. Posso desenhar agora mesmo, de graça. Ou então..."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele baixa a voz e dá um tapinha na bolsa de veludo pendurada no cinto, que tilinta de um jeito muito convincente."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_proposta",
+          "label": "A proposta",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Rasura abre a bolsa de veludo sobre a mesinha dobrável, devagar, como um mágico que revela a carta escolhida. Moedas. Moedas de prata e de cobre, e no meio delas, brilhando, três moedas de ouro com a cara da prefeita antiga."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Pense comigo, menina. Você atravessa o vale inteiro, rala os joelhos, quase morre umas quatro vezes, e no fim quem ganha os aplausos? A Odila. Sempre a Odila. Com isto aqui, você compra a sua própria luneta. O seu próprio observatório, quem sabe! E eu levo o mapa até a festa, confortavelmente, de guarda-chuva. Todo mundo sai ganhando."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "E a Mestra?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "A Odila vai receber o mapa do mesmo jeito, ora. Só que com uma assinatura um pouquinho... diferente. Ninguém repara em assinatura."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "As moedas brilham. O vento sopra. Lá longe, a Ponte Comprida balança sobre o maior vão do vale, e as suas pernas, só de olhar para ela, já começam a doer. Rasura empurra a bolsa dois dedos na sua direção. Depois mais dois. Ele está tão concentrado em você que deixou o famoso Atlas dos Atalhos aberto em cima da cadeira, desprotegido."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_recusa",
+          "label": "Sem ressentimentos",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Rasura põe a mão no peito como se você o tivesse ferido de morte. Depois ri, um riso comprido e cheio de dentes."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Muito bem, muito bem! Fiel à mestra. Admirável. Antiquado, mas admirável. Vá pela Ponte Comprida, então. Só tome cuidado, sim? Ouvi dizer que ela anda tão... frágil, ultimamente."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele dá uma piscadela. Você não gosta nada daquela piscadela.\n\nAntes que você possa responder, ele abre o guarda-chuva listrado, segura as alças de couro e corre para a beirada da ilha. Uma rajada enche o pano, e Teodoro Rasura sai planando pelo vale, o colete esvoaçando, a xícara de café ainda na mão.\n\nVocê fica sozinha com o Farol Torto e um pressentimento ruim. *Frágil* é uma palavra muito específica para alguém usar sem motivo."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_desmascara",
+          "label": "O Atlas dos Atalhos",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Quando Rasura se dá conta, o famoso Atlas já está nas suas mãos — vaidade de cartógrafo é coisa séria, e distração de vendedor também. Você folheia. E folheia. E quanto mais folheia, mais o seu queixo cai.\n\nAs Ilhas Gêmeas estão desenhadas lado a lado, unidas por uma ponte firme — só que as Gêmeas se separaram há três anos, e você mesma ajudou a medir. O Farol Torto aparece reto como uma vela. E a tinta de uma das pontes ainda está úmida: borra no seu dedo."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Esse atalho não existe. Você inventou hoje de manhã."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Inventar é uma palavra tão feia... Eu prefiro *antecipar*."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele tenta pegar o Atlas de volta, mas uma folha solta escorrega de dentro e cai aos seus pés. É um desenho antigo, a carvão: uma nuvem redonda, e dentro dela, janelas. Janelas acesas. Rasura fica vermelho até a ponta do bigode."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Isso eu vi. Juro pela minha xícara. Uma noite, voltando tarde, vi luz dentro da nuvem parada. Ninguém acredita, por isso nunca contei. Escute, menina: eu só queria que você se atrasasse um pouquinho, para a prefeita usar o meu mapa. Me deixe ir e não faço mais. Palavra de Rasura."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            },
+            {
+              "kind": "achievement",
+              "achievementId": "rasura_desmascarado"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_atalho",
+          "label": "O atalho das Gêmeas",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Seja pela pressa, seja pela lábia do homem do bigode, você acaba indo pelo atalho. E o atalho de Rasura começa bem: uma trilha de pedrinhas, uma ponte curta e firme, uma ilhota de flores amarelas. Você chega a pensar que talvez tenha julgado mal o homem do bigode.\n\nEntão a trilha acaba.\n\nDiante de você estão as Ilhas Gêmeas, ou o que o tempo fez delas. No mapa de Rasura, as duas aparecem coladinhas. Na vida real, há entre elas um vão de uns bons três metros, e da ponte sobraram só duas cordas penduradas, balançando ao vento como bigodes de gato.\n\nE a ilha onde você está não está vazia. Em cada fresta das pedras há um ninho, e em cima de tudo, observando você com olhinhos pretos e brilhantes, umas cinquenta gaivotas-ladras — as aves mais curiosas, barulhentas e cleptomaníacas do vale. Uma delas já está de olho na fivela dourada do seu tubo."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_planar",
+          "label": "Carona de gaivota",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você espera a gaivota mais gorda decolar, salta atrás dela e agarra as duas patas amarelas com as duas mãos.\n\nA gaivota grita. Você grita. As outras quarenta e nove gritam em solidariedade. Por um momento terrível, vocês duas despencam juntas em direção às nuvens — e então a ave, indignada, abre as asas, pega uma corrente de vento quente e plana.\n\nÉ a coisa mais idiota e mais bonita que você já fez. O vale passa lá embaixo em faixas de verde e branco, o vento enche sua capa, o tubo do mapa bate nas suas costas no ritmo das asas. A gaivota resmunga o caminho inteiro, num idioma que é só reclamação.\n\nEla larga você, sem aviso e sem delicadeza, num gramado morno, muito além das Gêmeas. Antes de ir embora, arranca um botão da sua capa. Como pagamento, você supõe. É justo."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_ponte_comprida",
+          "label": "A Ponte Comprida",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A Ponte Comprida atravessa o maior vão do vale: são duzentos passos de tábuas e cordas pendurados sobre o nada, e no meio dela o vento sopra tão forte que dizem que dá para se apoiar nele.\n\nVocê para na cabeceira. Algumas cordas de mão parecem desfiadas, outras parecem cortadas — com as tábuas balançando desse jeito, daqui não dá para ter certeza. No meio do caminho, um bando de gaivotas-ladras pousou na corda de cima e observa você chegar com aquela atenção perigosa que as gaivotas reservam para coisas brilhantes e gente distraída.\n\nO tubo de couro tem uma fivela dourada. Você nunca odiou tanto uma fivela.\n\nLá na outra ponta, pequenininha, a Ilha das Termas solta fiapos de vapor, como uma chaleira esquecida no fogo. Duzentos passos. Você já andou muito mais que isso hoje. Só que nunca em cima do nada, com vento contra e uma plateia de ladras."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_ponte_perfeita",
+          "label": "Pé de cabra",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você não pensa. Só corre.\n\nOs pés acham as tábuas boas sozinhos, como se soubessem o caminho de cor: pulam as podres, desviam das cordas cortadas, pisam leve onde a ponte afunda. No meio do vão, o vento empurra você de lado, e você se inclina contra ele sem perder o passo, como fazem os cabritos-de-nuvem. As gaivotas levantam voo atrasadas, confusas, bicando o ar onde você estava um segundo antes.\n\nDuzentos passos. Você chega do outro lado em menos tempo do que leva para contar.\n\nPara, dobra o corpo, apoia as mãos nos joelhos e só então começa a tremer — mas é um tremor bom, de quem acabou de fazer uma coisa impossível. Se a Mestra estivesse aqui, diria que foi sorte. Depois, quando achasse que você não estava ouvindo, contaria para todo mundo."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "achievement",
+              "achievementId": "pe_de_cabra"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_gaivotas",
+          "label": "Gaivotas-ladras",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "As gaivotas atacam todas ao mesmo tempo, num redemoinho de penas cinzentas, bicos amarelos e gritos que parecem gargalhadas. Bicam seu chapéu, sua orelha, seus dedos, a fivela dourada do tubo. Uma delas enfia o bico no seu bolso e sai voando, triunfante, com o seu lápis de reserva.\n\nVocê se encolhe e abraça o tubo contra o peito como se fosse um bebê — um bebê de couro, muito importante, cheio de linhas. Elas podem levar o chapéu, o lápis, até um pedaço da sua orelha. O mapa, não.\n\nQuando enfim conseguem arrancar a fivela dourada, as gaivotas perdem o interesse de uma vez, como se alguém tivesse tocado um sino que só elas ouvem, e vão embora brigando pelo prêmio. Você fica para trás, despenteada, bicada, com o coração aos pulos e o mapa intacto.\n\nSó então percebe onde está: agarrada às últimas tábuas, a um passo da pedra do outro lado. No meio da confusão, sem saber como, você não parou de avançar."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_engatinha",
+          "label": "Tábua por tábua",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você se ajoelha e avança de quatro, tábua por tábua, testando cada uma com a palma antes de pôr o peso. Os joelhos ralados reclamam. No meio do vão, o vento sopra tão forte que você precisa parar, abraçar uma tábua e esperar que ele se canse.\n\nAs gaivotas descem para olhar mais de perto. Uma pousa nas suas costas, anda até o tubo, bica a fivela dourada, e você diz *nem pense nisso* num tom tão parecido com o da Mestra Odila que a gaivota, ofendida, vai embora.\n\nLeva muito tempo. Leva tanto tempo que a sombra das cordas muda de lado nas tábuas. Mas quando você finalmente toca a pedra do outro lado, não tem um arranhão novo sequer — só uma câimbra na panturrilha e uma enorme vontade de nunca mais ver uma ponte na vida."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_reboque",
+          "label": "Rebocada pelo vento",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Trovisco estica as patinhas, prova o vento com a ponta da língua — um gesto que ele jura ser científico — e começa a encher o papo."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Segure firme na minha perna, senhorita, e não olhe para baixo. Ou olhe, se quiser: a vista é magnífica. Só não grite, que atrapalha a aerodinâmica."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você segura. Ele cresce até ficar do tamanho de uma abóbora gorda e, quando a rajada vem do oeste, simplesmente se deixa levar, puxando você pela ponte num passo leve, quase saltitante, os pés mal tocando as tábuas. As gaivotas olham para aquele sapo-balão com uma garota pendurada e decidem, sabiamente, que não querem nada com isso.\n\nNo meio do vão, ele começa a cantarolar. No fim, você está cantarolando junto."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Viu? Duas cordas na mão valem menos que um sapo no ombro. Minha avó nunca errava."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_termas",
+          "label": "Ilha das Termas",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A ilha seguinte cheira a ovo cozido e é morna sob os pés. Das rachaduras na pedra sobe vapor, e entre as rochas há poças de água quente, azul-leitosa, rodeadas de musgo macio. Ameixeiras tortas crescem na beira das poças, carregadas de ameixas-de-vapor: frutas gordas, de casca fina, que já nascem quentinhas.\n\nO sol passou do meio do céu. Seu corpo inteiro dói em lugares que você nem sabia que tinha, e a água quente parece chamar você pelo nome.\n\nAo longe, pela primeira vez, você enxerga a borda leste do vale: um paredão de pedra dourada e, lá no alto, quase invisíveis, as bandeirolas coloridas da Vila Moenda. Entre você e elas ainda resta o pedaço mais estranho do caminho.\n\nUma placa de madeira, meio comida pelo vapor, avisa em letras tortas: *banho de meia hora, descanso de meio dia*. Alguém riscou *meio dia* e escreveu por cima, com outra tinta: *mentira, é mais*."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_banho",
+          "label": "Banho morno",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você tira as botas, a capa e os pensamentos e entra na água até o queixo.\n\nÉ como ser abraçada por uma sopa muito gentil. Os joelhos ralados ardem por um segundo e depois esquecem que estavam ralados. Os ombros, duros desde a primeira ponte, derretem. O vapor sobe em volta e esconde o vale, e por um instante não existe festa, nem prazo, nem lanterna: só água quente e o barulhinho das bolhas subindo do fundo.\n\nVocê quase dorme. Quase. Um pedaço de você continua contando os minutos.\n\nQuando sai, a pele está enrugada como ameixa seca e o corpo inteiro parece novo. O sol avançou um bom pedaço no céu. Valeu cada minuto, você decide. Mas agora vai ter que correr."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "restore",
+              "target": "vida"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c2_meio_dia",
+          "label": "A tarde começa",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Depois das termas, a trilha sobe por uma sequência de ilhotas cada vez mais altas, como degraus de uma escada que alguém largou no céu. Você sobe todas, uma por uma, e no alto da última dá de cara com uma coisa que não estava em nenhum dos mapas que você já desenhou.\n\nDuas ilhas enormes, quase coladas, presas uma à outra por correntes de ferro grossas como troncos. Entre elas, um portão de pedra coberto de musgo, alto como três casas. E diante do portão, sentado como se estivesse ali desde antes de existir chão, alguém — ou alguma coisa — que parece uma montanha pequena com barba de musgo.\n\nA montanha abre um olho. O olho é do tamanho de uma roda de carroça e da cor de uma poça depois da chuva.\n\nVocê engole em seco e ajeita o tubo nas costas."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "fim_vendido",
+          "label": "Final: o mapa vendido",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Rasura conta as moedas na sua mão, uma por uma, com a delicadeza de quem conta pétalas. São mais moedas do que você já viu juntas na vida. Ele pega o tubo de couro, faz uma reverência exagerada, abre o guarda-chuva listrado e sai planando pelo vale, assobiando.\n\nVocê fica no Farol Torto com os bolsos pesados e a cabeça leve. Pela primeira vez no dia, não precisa correr para lugar nenhum. A sensação boa dura até o fim da tarde.\n\nDo alto do farol, você vê as lanternas da festa se acenderem lá longe. Dias depois, chegam as notícias: Rasura apresentou o mapa como se fosse dele, com uma assinatura enorme por cima da assinatura da Mestra, e foi nomeado Cartógrafo Oficial da Vila Moenda. Mas ele não sabia ler o mapa direito — nunca soube —, e na hora de explicar os ventos aos carroceiros, inventou. Três carroças de abóbora terminaram penduradas na Ponte das Lavadeiras, balançando sobre o nada, até que a vila inteira, com cordas e paciência, as puxou de volta.\n\nNinguém se feriu. Mas a Mestra Odila soube. A Mestra Odila sempre sabe."
+              }
+            },
+            {
+              "type": "divider",
+              "style": "line"
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ela não grita quando você volta. Não diz nada. Apenas pega as moedas da sua mão, guarda-as numa caixinha e escreve na tampa, com aquela letra miúda: *preço de uma aprendiz*.\n\nA caixinha está na prateleira do observatório até hoje. Você a vê todos os dias."
+              }
+            }
+          ],
+          "isEnding": true,
+          "endingTitle": {
+            "pt-BR": "Bolsos cheios"
+          },
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        }
+      ],
+      "choices": [
+        {
+          "from": "c2_cabritos",
+          "to": "c2_farol",
+          "label": {
+            "pt-BR": "Correr gritando para espantar o rebanho"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "10",
+              "label": {
+                "pt-BR": "Coragem"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c2_cabecada",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": {
+                "targetSceneId": "c2_cabecada",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6 - 2"
+                  },
+                  {
+                    "kind": "achievement",
+                    "achievementId": "tombo_lendario"
+                  }
+                ]
+              },
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c2_cabritos",
+          "to": "c2_cantiga",
+          "label": {
+            "pt-BR": "Pedir a Trovisco uma cantiga de ninar"
+          },
+          "conditions": [
+            {
+              "variable": "trovisco",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_cabritos",
+          "to": "c2_espera",
+          "label": {
+            "pt-BR": "Esperar os cabritos se fartarem"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_cabecada",
+          "to": "c2_farol",
+          "label": {
+            "pt-BR": "Atravessar enquanto eles mastigam"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_cantiga",
+          "to": "c2_farol",
+          "label": {
+            "pt-BR": "Atravessar na ponta dos pés"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_espera",
+          "to": "c2_farol",
+          "label": {
+            "pt-BR": "Atravessar a ponte banguela"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_farol",
+          "to": "c2_atalho",
+          "label": {
+            "pt-BR": "Aceitar o atalho de Rasura"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_farol",
+          "to": "c2_recusa",
+          "label": {
+            "pt-BR": "Recusar com educação"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_farol",
+          "to": "c2_proposta",
+          "label": {
+            "pt-BR": "Ouvir a proposta de compra"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_farol",
+          "to": "c2_desmascara",
+          "label": {
+            "pt-BR": "Pedir para ver o Atlas dos Atalhos"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "11",
+              "label": {
+                "pt-BR": "Faro"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c2_atalho",
+                "effects": []
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c2_proposta",
+          "to": "fim_vendido",
+          "label": {
+            "pt-BR": "Aceitar as moedas"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_proposta",
+          "to": "c2_recusa",
+          "label": {
+            "pt-BR": "Fechar a bolsa e recusar"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_proposta",
+          "to": "c2_desmascara",
+          "label": {
+            "pt-BR": "Espiar o Atlas enquanto ele fala"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "8",
+              "label": {
+                "pt-BR": "Faro"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c2_atalho",
+                "effects": []
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c2_recusa",
+          "to": "c2_ponte_comprida",
+          "label": {
+            "pt-BR": "Ir até a Ponte Comprida"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_desmascara",
+          "to": "c2_ponte_comprida",
+          "label": {
+            "pt-BR": "Deixar Rasura ir, mas cobrar o favor"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "variable": "rasura_divida",
+              "operation": "set",
+              "value": true
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_desmascara",
+          "to": "c2_ponte_comprida",
+          "label": {
+            "pt-BR": "Amarrar o guarda-chuva dele no farol"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_atalho",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Tomar distância e pular o vão"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "2d6",
+              "dc": "8",
+              "label": {
+                "pt-BR": "Salto"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c2_gaivotas",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c2_atalho",
+          "to": "c2_ponte_comprida",
+          "label": {
+            "pt-BR": "Voltar ao farol e ir pela Ponte Comprida"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "2"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_atalho",
+          "to": "c2_planar",
+          "label": {
+            "pt-BR": "Pegar carona numa gaivota"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [
+              {
+                "resource": "sorte",
+                "amount": "1"
+              }
+            ],
+            "whenUnavailable": "disable",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_planar",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Agradecer à gaivota, que já foi embora"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_ponte_comprida",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Atravessar correndo, de uma vez"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "10",
+              "label": {
+                "pt-BR": "Agilidade"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c2_gaivotas",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6"
+                  }
+                ]
+              },
+              "critical": {
+                "targetSceneId": "c2_ponte_perfeita",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "atraso",
+                    "operation": "add",
+                    "formula": "-1"
+                  }
+                ]
+              },
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c2_ponte_comprida",
+          "to": "c2_engatinha",
+          "label": {
+            "pt-BR": "Atravessar engatinhando"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_ponte_comprida",
+          "to": "c2_reboque",
+          "label": {
+            "pt-BR": "Deixar Trovisco rebocar você"
+          },
+          "conditions": [
+            {
+              "variable": "trovisco",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_ponte_perfeita",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Recuperar o fôlego e seguir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_gaivotas",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Amarrar o tubo com barbante e seguir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_engatinha",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Massagear a câimbra e seguir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_reboque",
+          "to": "c2_termas",
+          "label": {
+            "pt-BR": "Agradecer ao aeronauta"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_termas",
+          "to": "c2_banho",
+          "label": {
+            "pt-BR": "Mergulhar nas termas e descansar"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_termas",
+          "to": "c2_meio_dia",
+          "label": {
+            "pt-BR": "Comer ameixas-de-vapor pelo caminho"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "vida",
+              "operation": "add",
+              "formula": "2"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_termas",
+          "to": "c2_meio_dia",
+          "label": {
+            "pt-BR": "Seguir sem perder tempo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c2_banho",
+          "to": "c2_meio_dia",
+          "label": {
+            "pt-BR": "Calçar as botas e correr"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        }
+      ]
+    },
+    {
+      "key": "cap3",
+      "title": {
+        "pt-BR": "O guardião de musgo"
+      },
+      "start": "c3_portao",
+      "scenes": [
+        {
+          "key": "c3_portao",
+          "label": "O Portão das Perguntas",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A montanha de barba de musgo leva um tempo enorme para abrir o segundo olho. Quando abre, pedrinhas rolam do rosto dela como lágrimas secas. A voz vem de muito fundo, como se subisse por um poço."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Eu... sou... Quiçá. Guardo... este portão... desde que... as ilhas... aprenderam a andar."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Quem quer passar... responde... três perguntas. Quem acerta as três... passa por cima. Quem erra... passa por baixo. Por baixo... é mais... comprido."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele faz uma pausa tão longa que um passarinho pousa no nariz dele, pensa em fazer ninho, desiste e vai embora.\n\nHá outro caminho, você sabe: descer até o Mar de Nuvens, onde pedras chatas flutuam rente à neblina como as pedras de um riacho, e ir pulando de uma em uma até o outro lado. Dizem que é rápido. Dizem também que o vento de lá, o Bocejo Grande, faz as pessoas dormirem de pé. E que quem dorme no Mar de Nuvens acorda em lugar nenhum."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_enigma1",
+          "label": "Primeiro enigma",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Quiçá respira fundo. O ar que sai dele cheira a terra molhada e a mil anos."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Primeira... pergunta. Sou de pedra... e não afundo. Ando... sem ter pés. Todo ano... mudo de endereço... e nunca levo... a mudança. Quem... sou eu?"
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você olha em volta procurando ajuda no cenário: pedra, vento, nuvem, e as ilhas boiando devagar no céu da tarde, cada uma no seu lugar novo, nenhuma no lugar do ano passado. Ao seu lado, uma formiga carrega uma migalha do tamanho dela, sem pressa nenhuma. Quiçá espera. Espera como só uma montanha sabe esperar."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_enigma2",
+          "label": "Segundo enigma",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O musgo da barba de Quiçá se mexe, e você não sabe se foi o vento ou um sorriso. Uma pedrinha rola do ombro dele, quica três vezes e some no vazio."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Certo. Pouca gente... acerta a primeira. Segunda... pergunta. Quanto mais... me estendem... mais curto... fica o caminho. Tenho mil nós... e nenhum... de marinheiro. Quem... sou eu?"
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Atrás de você, o vento passa pelas cordas de alguma ponte distante e tira dela um gemido comprido. Você pensa nos seus joelhos ralados, nas tábuas que estalam, no cesto e na roldana, e tenta não rir de nervoso na cara de um guardião de mil anos."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_enigma3",
+          "label": "Terceiro enigma",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Desta vez Quiçá abre os dois olhos ao mesmo tempo, e o chão inteiro estremece de leve, como se a montanha tivesse se inclinado para a frente para ver você melhor."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Certo... de novo. Faz tempo. Terceira... e última. Tenho rios... sem água. Cidades... sem gente. Montanhas... que cabem no bolso. Quem me segue... não se perde. Quem me inventa... às vezes... sim. Quem... sou eu?"
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O tubo de couro pesa nas suas costas de repente, como se quisesse chamar a sua atenção. *As respostas dele estão sempre no caminho*, disse alguém, um dia. Ou talvez seja só a sua cabeça, cansada, ouvindo coisas."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_decifrada",
+          "label": "O caminho de cima",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Quiçá fecha os olhos. Por um momento você acha que ele dormiu. Então a montanha inteira treme, e as correntes de ferro entre as duas ilhas começam a se mexer, rangendo, enrolando-se sozinhas, puxando o portão para cima — não para os lados, para cima —, até que se abre entre as ilhas uma escada de pedra que sobe direto para o leste, por cima das nuvens."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Três... de três. Faz... quarenta anos. A última... foi uma moça... de olhos cinzentos... que media distâncias... de cabeça."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você pisca. Olhos cinzentos. Distâncias de cabeça."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "quica",
+              "text": {
+                "pt-BR": "Ela também... perguntou... da nuvem parada. Digo a você... o que disse a ela. Siga... a espiral. Onde a nuvem... não anda... alguém tece... o vento. E leve isto."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Da barba de musgo ele tira uma pedrinha branca e lisa, morna como um ovo, com uma espiral desenhada. Quando você a segura, uma alegria esquisita sobe pelos seus dedos: a certeza absurda de que hoje, decididamente, é o seu dia de sorte."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "achievement",
+              "achievementId": "decifradora"
+            },
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            },
+            {
+              "kind": "restore",
+              "target": "sorte"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_corredor",
+          "label": "Corredor dos Ecos",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Quiçá não diz nada. Só fecha os olhos, devagar, com a tristeza educada de um professor que já viu muita gente errar a mesma coisa.\n\nO chão se inclina. Você escorrega por uma rampa de pedra lisa e cai sentada na boca de um túnel que atravessa as duas ilhas por dentro. É o caminho de baixo: escuro, úmido e cheio de ecos. Cada passo volta dez vezes, cada respiração vira um coro, e quando você diz *ai* por causa do tombo, o túnel repete *ai, ai, ai, ai* até você ficar com vergonha.\n\nNo teto, pedras soltas pendem presas por raízes finas. Algumas já caíram; o chão está cheio delas. Lá no fundo, muito longe, brilha um pontinho de luz: a saída.\n\nCorrer faria os ecos sacudirem o teto. Andar devagar levaria um tempo que você não tem."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_desabamento",
+          "label": "Chuva de pedras",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Os ecos dos seus passos crescem, crescem, até virar um trovão dentro da pedra. Lá em cima, uma raiz estala. Depois outra.\n\nChove pedra.\n\nVocê protege a cabeça com os braços e o tubo com o corpo e corre às cegas, enquanto pedras do tamanho de pães batem no chão à sua volta, nos seus ombros, nas suas costas. Uma acerta seu tornozelo. Outra, a testa — de raspão, mas o bastante para você ver estrelinhas.\n\nQuando enfim tropeça para fora do túnel, para a luz amarela da tarde, fica um minuto inteiro deitada na grama, contando os dedos. Dez. Ótimo. O mapa? Inteiro, dentro do tubo, sem um amassado.\n\nAtrás de você, o túnel continua ecoando o desmoronamento por muito tempo, cada vez mais baixinho, como alguém resmungando antes de dormir."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_mar",
+          "label": "O Mar de Nuvens",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O Mar de Nuvens é exatamente o que o nome promete: um mar branco e lento, que se estende até onde a vista alcança, e sobre ele, rente à superfície, pedras achatadas do tamanho de mesas formando um caminho torto para o leste.\n\nVocê pula para a primeira. Ela afunda um pouco e volta, macia como uma boia. A segunda, a terceira. Não é tão difícil.\n\nEntão o Bocejo Grande chega.\n\nÉ um vento morno e lento, que cheira a travesseiro e a cobertor recém-lavado. Ele passa por você e suas pálpebras ficam pesadas como portas. Os braços amolecem. A próxima pedra parece longe, e o branco lá embaixo parece tão macio, tão convidativo... Seria só um cochilo. Um minutinho.\n\nVocê belisca o próprio braço com força. Aqui, cair não é se machucar: é sumir.\n\nLá longe, à direita, entre dois fiapos de névoa, uma luzinha amarela pisca e some e pisca de novo. Quadrada demais para ser estrela. Baixa demais para ser lua."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {
+              "vida": "fim_nuvens"
+            },
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_neblina",
+          "label": "Dentro da neblina",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você acorda de joelhos numa pedra que não lembra de ter alcançado, encharcada até os ossos, tremendo de frio. Não sabe se dormiu um minuto ou uma hora. O Bocejo Grande passou e deixou para trás uma neblina tão espessa que você não enxerga as próprias botas.\n\nDo lado esquerdo, muito longe, você ouve sinos — os sinos das cabras do pastoreio da borda leste, talvez. Do lado direito, através da névoa, brilha uma luz amarela, quente, quadrada.\n\nLuz de verdade não é quadrada. A não ser que seja janela.\n\nO tubo continua nas suas costas. Você o aperta com uma mão, só para ter certeza, e com a outra tira a água dos olhos. Seus dentes batem tanto que parecem um tamborzinho de festa, e cada pedaço do corpo que encostou na pedra molhada está gelado até o osso.\n\nOs sinos são o caminho de casa. A luz é outra coisa. Você não sabe qual das duas está mais perto."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "vida",
+              "operation": "add",
+              "formula": "-1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {
+              "vida": "fim_nuvens"
+            },
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_luz",
+          "label": "Janelas na nuvem",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A luz vai ficando maior e mais nítida, até que a neblina se rasga como uma cortina e você vê.\n\nNão é uma janela: são dezenas. Pequenas, redondas, acesas, espalhadas por uma parede branca e fofa que sobe até sumir no céu. A nuvem parada. Você está bem embaixo dela. E da janela mais baixa pende uma escada de corda, fina como fio de teia, que balança a um braço de distância da beirada da sua pedra.\n\nLá de dentro vem um som de teares — *tec, tec, tec* —, um cheiro de pão quente e uma risada.\n\nVocê estende a mão. A escada está quase ao seu alcance. Quase. Embaixo dela, o branco do Mar de Nuvens espera, macio e sem fundo."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {
+              "vida": "fim_nuvens"
+            },
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_escorrega",
+          "label": "Por um fio",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Seus dedos tocam a corda — e escorregam. A pedra sob seus pés gira, e de repente você está caindo de lado, as mãos arranhando a borda, as pernas já no branco.\n\nVocê se segura numa saliência com as unhas. O tubo bate na pedra com um *toc* que gela o seu sangue. Devagar, muito devagar, você puxa o corpo de volta, centímetro por centímetro, até estar de novo em cima da pedra, ofegante, com as palmas em carne viva.\n\nQuando olha para cima, a escada está sendo recolhida, sem pressa, para dentro da janela. A luz se apaga. A nuvem volta a ser só uma nuvem.\n\nMas você viu. Sabe que viu. E sabe onde fica.\n\nCom os braços ainda tremendo, você segue pelas pedras rumo ao leste, até que a neblina finalmente se abre."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_espia",
+          "label": "Os tecelões do vento",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Seus dedos se fecham na corda. Ela é macia como lã e firme como aço. Você sobe três degraus — só três — e encosta o rosto no vidro redondo da janela.\n\nLá dentro há uma sala comprida, iluminada por lampiões, cheia de teares enormes. Diante deles trabalham pessoas — pessoas de verdade, de avental e lenço na cabeça — tecendo fios que não são de lã nem de algodão. São fios de vento. Você sabe porque os vê se mexer, transparentes, assobiando baixinho, e cada fio atravessa a parede da nuvem e vai, esticado, até uma das ilhas do vale.\n\nUma mulher de cabelos brancos e avental azul ergue os olhos do tear e olha para você. Não parece surpresa. Sorri, leva um dedo aos lábios e, com a outra mão, aponta para o leste: *agora não; primeiro, a festa*.\n\nA escada começa a descer sozinha, devolvendo você, com toda a delicadeza, à pedra lá embaixo."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_trovisco_janela",
+          "label": "Um sapo na janela",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Trovisco estufa o papo até ficar redondo como a lua, sobe devagar ao longo da escada de corda e encosta os óculos de aviador no vidro da janela mais baixa. Fica lá um tempão, girando de leve, iluminado de amarelo. Você, embaixo, rói as unhas até o cotovelo.\n\nQuando ele desce, solta o ar de uma vez e cai sentado na pedra, sem fôlego e sem pose nenhuma."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "Teares. Dezenas de teares! E gente tecendo... vento. Fios de vento, senhorita, cada um esticado até uma ilha do vale. Minha avó não estava caducando. A canção era verdade!"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "trovisco",
+              "text": {
+                "pt-BR": "E tinha uma senhora de avental azul. Ela me viu. Piscou para mim, imagine, e apontou para o leste. Depois pôs o dedo nos lábios, assim. Acho que quer dizer: primeiro a festa, depois a conversa."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A escada de corda sobe devagar e some dentro da janela. A luz se apaga, e a nuvem volta a ser só uma nuvem. Você anota tudo no caderno, com a letra tremida de quem acabou de ver o mundo mudar de tamanho."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c3_borda_vista",
+          "label": "A borda leste à vista",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O último trecho do caminho termina numa ilha comprida e plana, encostada na borda leste do vale como um barco num cais. Daqui, finalmente, a Vila Moenda está perto: um amontoado de telhados vermelhos no alto do paredão dourado, com bandeirolas penduradas de casa em casa e fumaça de forno saindo de todas as chaminés.\n\nDá para ouvir a música. Uma sanfona, um tambor, alguém desafinando com entusiasmo.\n\nO sol está baixo. Baixo demais? Você não sabe dizer. A luz já ficou daquela cor de mel que vem antes do fim da tarde, e as sombras das ilhas se esticam sobre o mar de nuvens como dedos compridos.\n\nNa praça, lá em cima, há postes enfileirados com lanternas de papel ainda apagadas. Quando o sol tocar as montanhas, alguém vai acender a primeira.\n\nVocê aperta as alças do tubo, respira fundo e começa a última subida."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "fim_nuvens",
+          "label": "Final: perdida nas nuvens",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O branco é macio. Essa é a primeira coisa que você nota: cair numa nuvem não é como cair na água, nem como cair no chão. É como cair num sonho — devagar, sem fundo, sem barulho, com o mundo inteiro ficando cada vez mais longe e mais quieto.\n\nVocê abraça o tubo do mapa. É a única coisa que consegue fazer.\n\nQuando a queda para, você está deitada numa pedrinha do tamanho de uma cama, boiando em algum lugar no meio do Mar de Nuvens. Não há ilhas à vista. Não há pontes. Só o branco por todos os lados e, lá em cima, muito longe, um céu que vai ficando laranja, depois roxo, depois escuro.\n\nVocê vê as lanternas da festa se acenderem. Daqui, parecem estrelas caídas na borda do mundo."
+              }
+            },
+            {
+              "type": "divider",
+              "style": "line"
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A pedrinha leva três dias para encalhar, e quando encalha é numa ilha de pastores do sul, a quilômetros da Vila Moenda, onde ninguém nunca ouviu falar de mapa nenhum. Eles lhe dão sopa, cobertor e uma carona de carroça até em casa. O mapa chega à Vila Moenda uma semana depois da festa, muito bem conservado e perfeitamente inútil: as carroças já tinham partido, guiadas pela memória de um carroceiro velho e por muita sorte.\n\nA Mestra Odila não briga. Só escuta a história inteira e, no final, pergunta, com uma curiosidade que não combina nada com a bronca que você esperava:"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "E lá no meio das nuvens... você não viu nenhuma luz?"
+              }
+            }
+          ],
+          "isEnding": true,
+          "endingTitle": {
+            "pt-BR": "Perdida nas nuvens"
+          },
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        }
+      ],
+      "choices": [
+        {
+          "from": "c3_portao",
+          "to": "c3_enigma1",
+          "label": {
+            "pt-BR": "Aceitar o desafio dos enigmas"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_portao",
+          "to": "c3_mar",
+          "label": {
+            "pt-BR": "Descer até o Mar de Nuvens"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma1",
+          "to": "c3_corredor",
+          "label": {
+            "pt-BR": "\"Uma tartaruga muito velha.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma1",
+          "to": "c3_enigma2",
+          "label": {
+            "pt-BR": "\"Uma ilha andarilha.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma1",
+          "to": "c3_corredor",
+          "label": {
+            "pt-BR": "\"Uma nuvem de chumbo.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma2",
+          "to": "c3_corredor",
+          "label": {
+            "pt-BR": "\"Um novelo de lã.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma2",
+          "to": "c3_enigma3",
+          "label": {
+            "pt-BR": "\"Uma ponte de corda.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma2",
+          "to": "c3_corredor",
+          "label": {
+            "pt-BR": "\"A paciência da Mestra Odila.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma3",
+          "to": "c3_corredor",
+          "label": {
+            "pt-BR": "\"Um sonho.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma3",
+          "to": "c3_corredor",
+          "label": {
+            "pt-BR": "\"Um livro de receitas.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_enigma3",
+          "to": "c3_decifrada",
+          "label": {
+            "pt-BR": "\"Um mapa.\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_decifrada",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Subir a escada por cima das nuvens"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "-1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_corredor",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Correr até a luz"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "9",
+              "label": {
+                "pt-BR": "Agilidade"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c3_desabamento",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-2d4"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c3_corredor",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Andar colada à parede, sem barulho"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_desabamento",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Levantar, mancando, e seguir"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_mar",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Pular de pedra em pedra antes do sono"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20 + sorte",
+              "dc": "11",
+              "label": {
+                "pt-BR": "Ficar acordada"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c3_neblina",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6"
+                  },
+                  {
+                    "kind": "formula",
+                    "target": "atraso",
+                    "operation": "add",
+                    "formula": "1"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": {
+                "targetSceneId": "fim_nuvens",
+                "effects": [
+                  {
+                    "kind": "achievement",
+                    "achievementId": "tombo_lendario"
+                  }
+                ]
+              },
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c3_mar",
+          "to": "c3_enigma1",
+          "label": {
+            "pt-BR": "Voltar e encarar os enigmas"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_mar",
+          "to": "c3_luz",
+          "label": {
+            "pt-BR": "Desviar na direção da luzinha amarela"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_mar",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Pedir a Trovisco que coaxe a cada passo"
+          },
+          "conditions": [
+            {
+              "variable": "trovisco",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_neblina",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Seguir o som dos sinos"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_neblina",
+          "to": "c3_luz",
+          "label": {
+            "pt-BR": "Ir na direção da luz quadrada"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_neblina",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Pedir a Trovisco que suba e olhe"
+          },
+          "conditions": [
+            {
+              "variable": "trovisco",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "-1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_luz",
+          "to": "c3_espia",
+          "label": {
+            "pt-BR": "Esticar o braço e agarrar a escada"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20",
+              "dc": "10",
+              "label": {
+                "pt-BR": "Alcance"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "fim_nuvens",
+                "effects": []
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": [
+                {
+                  "min": -50,
+                  "max": 4,
+                  "targetSceneId": "fim_nuvens",
+                  "effects": []
+                },
+                {
+                  "min": 5,
+                  "max": 12,
+                  "targetSceneId": "c3_escorrega",
+                  "effects": [
+                    {
+                      "kind": "formula",
+                      "target": "vida",
+                      "operation": "add",
+                      "formula": "-1d6"
+                    }
+                  ]
+                },
+                {
+                  "min": 13,
+                  "max": 50,
+                  "targetSceneId": "c3_espia",
+                  "effects": [
+                    {
+                      "kind": "formula",
+                      "target": "pistas",
+                      "operation": "add",
+                      "formula": "1"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "from": "c3_luz",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Memorizar o lugar e voltar à trilha"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_luz",
+          "to": "c3_trovisco_janela",
+          "label": {
+            "pt-BR": "Pedir a Trovisco que espie pela janela"
+          },
+          "conditions": [
+            {
+              "variable": "trovisco",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "pistas",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_escorrega",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Seguir para a borda leste"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_espia",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Descer e seguir para o leste"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c3_trovisco_janela",
+          "to": "c3_borda_vista",
+          "label": {
+            "pt-BR": "Seguir para o leste com o segredo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        }
+      ]
+    },
+    {
+      "key": "cap4",
+      "title": {
+        "pt-BR": "Antes das lanternas"
+      },
+      "start": "c4_borda",
+      "scenes": [
+        {
+          "key": "c4_borda",
+          "label": "O paredão dourado",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Entre a ilha e a vila há um paredão de pedra dourada, alto como dez torres. Há dois jeitos de vencê-lo, e você conhece os dois de ouvir falar.\n\nA Escadaria dos Mil Degraus serpenteia pela face do paredão. Ninguém nunca contou se são mesmo mil: todo mundo desiste de contar no trezentos e pouco. É segura. É lenta.\n\nE há o elevador dos moleiros: uma plataforma de tábuas presa a uma corda que passa por uma roldana lá no alto, com sacos de farinha servindo de contrapeso. Basta soltar a trava e torcer para os sacos pesarem mais do que você. Os moleiros usam todo dia. Os moleiros também conhecem o humor da trava.\n\nLá no alto, um guarda-chuva listrado plana em círculos preguiçosos, como um urubu muito bem-vestido. E lá atrás, no meio do vale, a nuvem parada flutua mais perto do que nunca, com um rastro de pedrinhas brancas a seus pés. Parece que está esperando alguém."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c4_escadaria",
+          "label": "Mil degraus (ou quase)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você sobe. Degrau, degrau, degrau. No cinquenta, as pernas começam a reclamar. No cento e vinte, começam a xingar. No duzentos, você para de contar degraus e passa a contar respirações, e no trezentos e pouco entende por que todo mundo desiste.\n\nNo meio do caminho há um banco de pedra com uma velhinha sentada, descascando milho. Ela olha você subir, ofegante e cheia de arranhões, com o tubo de couro nas costas.\n\n— É o mapa? — pergunta.\n\nVocê só consegue fazer que sim com a cabeça.\n\n— Então anda, menina! Que esse milho é para a festa, e a festa não começa sem mapa!\n\nEla lhe estende uma espiga cozida, ainda quente. Você come subindo, e é a melhor espiga de milho da história do mundo."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "vida",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c4_elevador_ruim",
+          "label": "Contrapeso",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você solta a trava. Por um segundo glorioso a plataforma sobe — rápido, muito rápido, o paredão passando por você como uma cortina dourada. Então, no meio do caminho, a corda dá um tranco. A plataforma para. Balança. E começa a descer.\n\nLá em cima, alguém grita: *quem mexeu nos sacos?!*\n\nVocê despenca alguns metros, a plataforma bate contra a pedra, você bate contra a plataforma, e por fim tudo para num equilíbrio precário, com você agarrada à corda e as pernas no ar.\n\nDois moleiros de avental, brancos de farinha da cabeça aos pés, puxam a corda lá de cima, resmungando. Quando enfim pisa no alto do paredão, você está roxa de pancadas, empoeirada de farinha e, segundo um dos moleiros, *parecendo um pão que deu errado*."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c4_carona",
+          "label": "O guarda-chuva listrado",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você acena. O guarda-chuva listrado para de circular, hesita e desce num rodopio elegante até pousar ao seu lado. Teodoro Rasura ajeita o bigode, pigarreia e evita olhar nos seus olhos."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Palavra de Rasura vale pouco, eu sei. Mas vale alguma coisa. Segure aqui, na alça da esquerda. E não conte a ninguém que eu fiz isso de graça: arruinaria minha reputação."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ele espera a rajada certa — a que sobe pelo paredão no fim da tarde, morna e forte — e salta. O guarda-chuva se enche com um *bump* e vocês sobem em espiral, rente à pedra dourada, tão depressa que seu estômago fica lá embaixo, na ilha.\n\nLá do alto você vê a praça, as lanternas apagadas, a multidão, o palco de madeira. Rasura deixa você na entrada da rua principal com uma reverência meio sem jeito."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "rasura",
+              "text": {
+                "pt-BR": "Vá. E diga à Odila que o Atlas dos Atalhos vai sair de circulação. Por uns tempos."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c4_rua",
+          "label": "A última corrida",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A Rua da Moenda está tomada. Barracas de pamonha, de doce de abóbora, de pinhão; crianças correndo com cata-ventos; um cachorro vestido de espantalho; uma banda que toca três músicas ao mesmo tempo. E gente, gente, gente — gente demais entre você e a praça lá no fim da rua, onde o palco espera e a Prefeita Ercília, de chapéu de palha e faixa verde, já olha para o horizonte.\n\nO sol está encostando nas montanhas. Um rapaz com uma escada no ombro caminha para o primeiro poste de lanterna, com uma vela acesa na mão.\n\nVocê ajeita o tubo nas costas. Seus joelhos estão ralados, suas mãos ardem, seu cabelo tem capim, farinha ou figo — talvez os três. Não importa. Falta só uma rua.\n\nVocê corre."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c4_orvalho",
+          "label": "A Cidade do Orvalho",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "As pedrinhas brancas aguentam o seu peso como se tivessem sido feitas para isso. Você segue a espiral — uma volta, duas, três —, e a cada volta a nuvem parada fica mais perto, mais alta, mais branca, até que você atravessa a parede dela como quem atravessa um lençol no varal.\n\nDo lado de dentro, não há nuvem nenhuma.\n\nHá uma cidade. Ruas de pedra branca, casas redondas de janelas redondas, pontes de corda tão finas que parecem desenhadas a lápis. Jardins pendurados. Fontes que jorram para cima. E em toda parte, teares — nas varandas, nas praças, nos telhados —, e em cada tear alguém tece fios transparentes que assobiam e saem pela parede da nuvem, esticados, rumo às ilhas do vale.\n\nUma mulher de cabelos brancos e avental azul vem ao seu encontro. Olha o tubo nas suas costas, depois o seu rosto, e sorri como quem reconhece alguém."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "garoa",
+              "text": {
+                "pt-BR": "Você tem os olhos de quem mede distâncias de cabeça. Conhecemos uma moça assim, faz quarenta anos. Ela guardou o nosso segredo. Você também vai guardar?"
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "c4_tecelas",
+          "label": "A dança das ilhas",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A mulher de avental azul se chama Garoa e é a mestra-tecelã de Orvalho. Enquanto caminha com você pelas ruas brancas, ela explica — devagar, como se explica a uma criança, ou a uma cartógrafa — que as ilhas do vale não andam sozinhas. Nunca andaram.\n\nSão puxadas. Cada fio de vento tecido em Orvalho segura uma ilha, e todo ano, no fim da primavera, as tecelãs mudam o desenho do tear, e as ilhas mudam de lugar devagar, numa dança que dura o inverno inteiro. Assim a terra descansa, as raízes alcançam chuvas novas, os ninhos ficam seguros."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "E os mapas? A Mestra Odila passa o inverno inteiro medindo..."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "garoa",
+              "text": {
+                "pt-BR": "E acerta sempre, porque sabe ler a dança. Foi aqui que ela aprendeu. Tome: o desenho do tear do ano que vem. Não é para mostrar a ninguém. É para conferir."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ela lhe entrega uma folha de papel fina como asa de libélula, coberta de espirais. Lá embaixo, do lado de fora da nuvem, os sinos da Vila Moenda começam a tocar."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "garoa",
+              "text": {
+                "pt-BR": "Ah, a sua festa. Não se preocupe. O vento é nosso."
+              }
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "fim_triunfo",
+          "label": "Final: a entrega triunfal",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você sobe os degraus do palco no exato instante em que o rapaz da escada encosta a vela na primeira lanterna.\n\nA praça inteira se vira. Uma garota descabelada, ralada, coberta de poeira do vale, com um tubo de couro nas costas e um sorriso que não cabe no rosto. Você rompe o lacre de cera vermelha da Mestra Odila, desenrola o mapa e o entrega nas mãos da Prefeita Ercília.\n\nEla o ergue contra a luz da primeira lanterna para que todos vejam. As ilhas em tinta marrom. As pontes em traço fino. As setas do vento em azul. Os carroceiros da primeira fila se debruçam, apontam, discutem, e um deles — um velho de chapéu de couro — tira o chapéu e faz uma reverência para você.\n\n— Senhoras e senhores — anuncia a Prefeita —, o mapa deste ano chegou! As carroças da colheita partem amanhã, ao raiar do sol!"
+              }
+            },
+            {
+              "type": "divider",
+              "style": "dots"
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Então todas as lanternas se acendem de uma vez — ou parece que se acendem, de tanto que a praça grita. Alguém enfia uma pamonha na sua mão. Alguém põe uma coroa de espigas na sua cabeça. A banda, por milagre, começa a tocar a mesma música.\n\nMais tarde, sentada na beirada do palco com os pés balançando, você olha para trás, para o vale escuro, onde as ilhas dormem flutuando sob as estrelas. Lá longe, uma nuvem redonda e parada brilha muito de leve, como se tivesse janelas.\n\nTalvez no ano que vem você descubra o que é. Por hoje, chega. Por hoje, você é a cartógrafa que trouxe o mapa."
+              }
+            }
+          ],
+          "isEnding": true,
+          "endingTitle": {
+            "pt-BR": "A entrega triunfal"
+          },
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "fim_tarde",
+          "label": "Final: chegada tarde",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Quando você chega ao pé do palco, a última lanterna da praça acabou de ser acesa.\n\nA música para. A multidão abre caminho devagar, olhando para você — descabelada, ofegante, com o tubo de couro nas costas — com aquela pena educada que é pior do que vaia. A Prefeita Ercília desce os degraus, pega o mapa das suas mãos e o desenrola ali mesmo, sob a luz amarela das lanternas.\n\n— Está perfeito — diz ela, e você sabe que é verdade. — Mas a primeira leva de carroças já saiu com o mapa do ano passado. Partiram há uma hora, para aproveitar a lua.\n\nSeu estômago afunda até o fundo do vale."
+              }
+            },
+            {
+              "type": "divider",
+              "style": "dots"
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O que vem depois não é festa: é correria. Cavaleiros saem a galope com cópias às pressas do seu mapa, e você passa a noite na prefeitura, à luz de vela, copiando ilha por ilha, ponte por ponte, até os dedos ficarem pretos de tinta. De madrugada chega a notícia: alcançaram as carroças a tempo, todas, no último cruzamento antes da Ponte das Lavadeiras — aquela que agora dá no vazio.\n\nNinguém se feriu. Algumas abóboras rolaram, mas abóboras sempre rolam.\n\nQuando você volta ao observatório, a Mestra Odila escuta tudo em silêncio. Depois aponta o banquinho ao lado dela."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Chegar tarde com o mapa certo é melhor do que chegar cedo com o errado. Mas no ano que vem você sai antes do galo."
+              }
+            }
+          ],
+          "isEnding": true,
+          "endingTitle": {
+            "pt-BR": "As lanternas já acesas"
+          },
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "fim_derrota",
+          "label": "Final: vida zerada",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Não é uma queda, nem um golpe, nem um grande momento dramático. É só que, num certo passo, suas pernas decidem que já andaram o bastante por hoje. Os joelhos dobram. O tubo de couro escorrega das suas costas. O chão sobe para encontrar o seu rosto, e o céu do vale gira devagar acima de você: azul, depois branco, depois nada.\n\nVocê acorda dois dias depois, numa cama que cheira a alfazema, na casa de uma família de pastores que encontrou você desmaiada e arranhada, abraçada ao tubo como se fosse um ursinho. O mapa, eles contam, foi levado à Vila Moenda pelo filho mais velho, montado num burro, e chegou à praça na manhã seguinte à festa. As carroças esperaram. A colheita atrasou um dia. Não houve desastre — só uma festa sem mapa e uma prefeita de muito mau humor."
+              }
+            },
+            {
+              "type": "divider",
+              "style": "line"
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A Mestra Odila chega mancando, de bengala, na tarde do terceiro dia. Senta na beirada da sua cama e examina os curativos, um por um."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Cartógrafa que se quebra no caminho não desenha o mapa do ano que vem. O vale espera. As ilhas esperam. Até a festa espera, resmungando. Você é que não tem peça de reposição."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ela deixa um pão de mel embrulhado em papel de mapa na mesinha de cabeceira e vai embora, batendo a bengala e reclamando de abóboras."
+              }
+            }
+          ],
+          "isEnding": true,
+          "endingTitle": {
+            "pt-BR": "O mapa chega sem você"
+          },
+          "effects": [],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        },
+        {
+          "key": "fim_secreto",
+          "label": "Final secreto: Orvalho",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você não sabe direito como sai de Orvalho. Lembra-se de Garoa sorrindo, de um fio de vento enrolado no seu pulso, de um puxão suave — e, no instante seguinte, está de pé no meio da praça da Vila Moenda, com o tubo nas costas, no exato segundo em que o sol encosta nas montanhas.\n\nNinguém viu você chegar. Todos juram, depois, que você estava ali o tempo todo.\n\nA Prefeita Ercília desenrola o mapa no palco e a praça inteira prende a respiração. Ilhas em tinta marrom, pontes em traço fino, setas do vento em azul. As carroças vão passar. A colheita vai chegar inteira. Quando a primeira lanterna se acende, a multidão grita o seu nome — e você sorri, acena e não diz uma palavra sobre fios de vento, nem sobre teares, nem sobre uma cidade de janelas redondas."
+              }
+            },
+            {
+              "type": "divider",
+              "style": "line"
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Três dias depois, de volta ao observatório, você encontra a Mestra Odila no banquinho, com o tornozelo ainda apoiado na abóbora. Sem dizer nada, tira do bolso a folha fina como asa de libélula e a pousa no colo dela.\n\nA Mestra olha a folha por muito tempo. Depois olha para você. Os olhos pequenos e cinzentos brilham de um jeito que você nunca viu."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "A Garoa ainda usa aquele avental azul?"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "nina",
+              "text": {
+                "pt-BR": "Usa."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "odila",
+              "text": {
+                "pt-BR": "Então feche a gaveta, menina, e pegue o lápis. Temos um ano inteiro de dança para medir."
+              }
+            }
+          ],
+          "isEnding": true,
+          "endingTitle": {
+            "pt-BR": "A cidade que não estava no mapa"
+          },
+          "effects": [
+            {
+              "kind": "achievement",
+              "achievementId": "cidade_orvalho"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {},
+            "noRegen": false,
+            "encounter": null,
+            "shop": null
+          }
+        }
+      ],
+      "choices": [
+        {
+          "from": "c4_borda",
+          "to": "c4_escadaria",
+          "label": {
+            "pt-BR": "Subir a Escadaria dos Mil Degraus"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_borda",
+          "to": "c4_rua",
+          "label": {
+            "pt-BR": "Soltar a trava do elevador dos moleiros"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "1d20 + sorte",
+              "dc": "10",
+              "label": {
+                "pt-BR": "Contrapeso"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "c4_elevador_ruim",
+                "effects": [
+                  {
+                    "kind": "formula",
+                    "target": "vida",
+                    "operation": "add",
+                    "formula": "-1d6"
+                  }
+                ]
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": []
+            }
+          }
+        },
+        {
+          "from": "c4_borda",
+          "to": "c4_carona",
+          "label": {
+            "pt-BR": "Acenar para o guarda-chuva listrado"
+          },
+          "conditions": [
+            {
+              "variable": "rasura_divida",
+              "operator": "eq",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "-1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_borda",
+          "to": "c4_orvalho",
+          "label": {
+            "pt-BR": "Seguir a espiral até a nuvem parada"
+          },
+          "conditions": [
+            {
+              "kind": "formula",
+              "formula": "pistas >= 3"
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_escadaria",
+          "to": "c4_rua",
+          "label": {
+            "pt-BR": "Vencer os últimos degraus"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_elevador_ruim",
+          "to": "c4_rua",
+          "label": {
+            "pt-BR": "Sacudir a farinha e correr"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_carona",
+          "to": "c4_rua",
+          "label": {
+            "pt-BR": "Correr para a praça"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_rua",
+          "to": "fim_triunfo",
+          "label": {
+            "pt-BR": "Correr até o palco, desviando de tudo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": {
+              "roll": "2d6 + sorte - atraso",
+              "dc": "10",
+              "label": {
+                "pt-BR": "Corrida"
+              },
+              "successEffects": [],
+              "failure": {
+                "targetSceneId": "fim_tarde",
+                "effects": []
+              },
+              "critical": null,
+              "fumble": null,
+              "bands": [
+                {
+                  "min": -50,
+                  "max": 5,
+                  "targetSceneId": "fim_tarde",
+                  "effects": []
+                },
+                {
+                  "min": 6,
+                  "max": 50,
+                  "targetSceneId": "fim_triunfo",
+                  "effects": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "from": "c4_rua",
+          "to": "fim_triunfo",
+          "label": {
+            "pt-BR": "Gritar: \"Abram alas para o mapa!\""
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [
+              {
+                "resource": "sorte",
+                "amount": "2"
+              }
+            ],
+            "whenUnavailable": "disable",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_orvalho",
+          "to": "c4_tecelas",
+          "label": {
+            "pt-BR": "Prometer guardar o segredo"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_orvalho",
+          "to": "c4_rua",
+          "label": {
+            "pt-BR": "Dizer que precisa correr para a festa"
+          },
+          "conditions": [],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "atraso",
+              "operation": "add",
+              "formula": "1"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_tecelas",
+          "to": "fim_secreto",
+          "label": {
+            "pt-BR": "Aceitar o desenho e o vento"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        }
+      ]
+    }
+  ]
+}

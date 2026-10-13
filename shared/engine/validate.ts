@@ -36,7 +36,7 @@ export function formulaChecker(input: Pick<GameValidationInput, "system" | "vari
   return (formula: string, extraNames: string[] = [], allowEmpty = false): string | null => {
     if (!formula.trim()) return allowEmpty ? null : "fórmula vazia";
     const parsed = checkFormula(formula);
-    if (!parsed.ok) return parsed.message;
+    if (!parsed.ok) return parsed.message.replace(/\.$/, "");
     const refs = formulaReferences(parsed.node);
     for (const name of refs.names) {
       if (names.has(name) || extraNames.includes(name)) continue;
@@ -337,7 +337,7 @@ export function validateChoiceMechanics(mechanics: ChoiceMechanics, input: GameV
       const dc = check(test.dc);
       if (dc) issues.push({ severity: "error", code: "invalid_formula", message: `${where}, dificuldade: ${dc}.` });
     }
-    for (const effect of [...test.successEffects, ...test.failure.effects, ...(test.critical?.effects ?? []), ...(test.fumble?.effects ?? [])]) {
+    for (const effect of [...test.successEffects, ...test.failure.effects, ...(test.critical?.effects ?? []), ...(test.fumble?.effects ?? []), ...test.bands.flatMap((band) => band.effects)]) {
       issues.push(...validateEffect(effect, input, where));
     }
     for (const target of extraTargets(mechanics)) {
