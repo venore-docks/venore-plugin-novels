@@ -146,7 +146,8 @@ export function combatRound(ctx: GameContext, draft: GameState, input: CombatInp
     if (error) return error;
     log(draft, { kind: "equip", actor: YOU, target: null, amount: null, action: item.name, roll: null });
   } else if (input.action === "flee") {
-    if (!ctx.system.combat.flee.enabled) return "Fugir não está disponível.";
+    // Sem cena de fuga no encontro, fugir fica desligado (o leitor nem mostra o botão).
+    if (!ctx.system.combat.flee.enabled || !ctx.scenes.get(draft.sceneId)?.mechanics.encounter?.fleeSceneId) return "Fugir não está disponível.";
     const weight = ctx.system.inventory.weight;
     if (ctx.on("inventory") && weight.enabled && weight.blockFlee && currentLoad(ctx, draft) > maxLoad(ctx, draft)) return "Carga pesada demais para fugir.";
     const rolls: DiceRoll[] = [];

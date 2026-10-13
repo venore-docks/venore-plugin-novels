@@ -464,6 +464,13 @@ describe("motor: progressão, itens e combate", () => {
     expect(state.seenCreatures).toEqual(["goblin"]);
   });
 
+  it("fugir só vale quando o encontro tem cena de fuga", () => {
+    const story = rpgStory();
+    const ctx = createContext(story);
+    const state = play(story, [{ t: "start" }, { t: "choose", choiceId: "lutar" }]);
+    expect(applyAction(ctx, state, { t: "combat", action: "flee" })).toEqual({ ok: false, reason: "Fugir não está disponível." });
+  });
+
   it("loja: compra com moeda, estoque acaba e venda devolve parte do valor", () => {
     const story = rpgStory();
     const ctx = createContext(story);
