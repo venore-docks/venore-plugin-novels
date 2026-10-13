@@ -58,6 +58,10 @@ function remap<T>(value: T, maps: RefMaps, missing: Missing, path: string): T {
       else if (key === "creatureId" && typeof field === "string") next[key] = lookup(maps.creatures, field, "criatura", at);
       else if (key === "castId" && typeof field === "string") next[key] = lookup(maps.cast, field, "personagem", at);
       else if (SCENE_FIELDS.has(key) && typeof field === "string" && field) next[key] = lookup(maps.scenes, field, "cena", at);
+      // Gatilho da cena: { recurso: cena } (o do recurso é { sceneId, effects }, tratado acima).
+      else if (key === "onZero" && isObject(field) && !("effects" in field) && !("sceneId" in field)) {
+        next[key] = Object.fromEntries(Object.entries(field).map(([resource, scene]) => [resource, typeof scene === "string" && scene ? lookup(maps.scenes, scene, "cena", `${at}.${resource}`) : null]));
+      }
       else next[key] = walk(field, at);
     }
     return next;

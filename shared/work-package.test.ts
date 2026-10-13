@@ -24,7 +24,7 @@ function sample(): WorkPackage {
         start: "beira",
         scenes: [
           { key: "beira", label: "Beira", text: t("O vento empurra a ponte."), blocks: [{ type: "speech", castId: "guia", text: t("Segure firme.") }, { type: "image", mediaId: "foto-de-outra-instalacao", alt: {}, aspect: "auto", bleed: true }] },
-          { key: "meio", label: "Meio", text: t("A madeira estala.") },
+          { key: "meio", label: "Meio", text: t("A madeira estala."), mechanics: { kind: "text", onZero: { vida: "queda" }, noRegen: false, encounter: null, shop: null } },
           { key: "queda", label: "Queda", text: t("Você cai."), isEnding: true, endingTitle: t("Queda") },
         ],
         choices: [
@@ -63,6 +63,7 @@ describe("pacote de obra", () => {
     const byLabel = new Map(first.graph.scenes.map((scene) => [scene.label, scene]));
     expect(work.gameSystem.resources[0].onZero?.sceneId).toBe(byLabel.get("Queda")!.id);
     expect(first.graph.choices[0].mechanics.test?.failure.targetSceneId).toBe(byLabel.get("Queda")!.id);
+    expect(byLabel.get("Meio")!.mechanics.onZero).toEqual({ vida: byLabel.get("Queda")!.id });
     expect(first.graph.choices[1].conditions).toEqual([{ kind: "item", itemId: items[0].id, min: 1 }]);
     const blocks = byLabel.get("Beira")!.blocks;
     expect(blocks.map((block) => block.type)).toEqual(["text", "speech", "image"]);
@@ -81,6 +82,7 @@ describe("pacote de obra", () => {
     expect(exported.chapters[0].scenes.map((scene) => scene.key)).toEqual(["beira", "meio", "queda"]);
     expect(exported.cast?.[0].key).toBe("guia");
     expect(exported.system?.resources?.[0].onZero?.sceneId).toBe("queda");
+    expect(exported.chapters[0].scenes[1].mechanics?.onZero).toEqual({ vida: "queda" });
     const again = planWorkImport(JSON.parse(JSON.stringify(exported)), ids());
     if (!again.ok) throw new Error(again.errors.join("; "));
     expect(again.value.chapters.flatMap((chapter) => chapter.graph.choices).length).toBe(2);
