@@ -35,6 +35,27 @@
       "type": "number",
       "initial": 0,
       "display": "hidden"
+    },
+    {
+      "key": "ninho_limpo",
+      "label": "Ninho limpo",
+      "type": "boolean",
+      "initial": false,
+      "display": "hidden"
+    },
+    {
+      "key": "bau_tirado",
+      "label": "Baú tirado da carroça",
+      "type": "boolean",
+      "initial": false,
+      "display": "hidden"
+    },
+    {
+      "key": "com_grakka",
+      "label": "Desceu com Grakka",
+      "type": "boolean",
+      "initial": false,
+      "display": "hidden"
     }
   ],
   "system": {
@@ -64,7 +85,7 @@
           "pt-BR": "HP"
         },
         "color": "chart-2",
-        "max": "100 + vigor * (nivel + 1)",
+        "max": "120 + vigor * (nivel + 1)",
         "initial": "max",
         "regen": "5 + nivel",
         "regenInCombat": false,
@@ -686,7 +707,7 @@
             "distance": 15,
             "shielding": 12,
             "magic_level": 2,
-            "vigor": 10,
+            "vigor": 11,
             "espirito": 12
           },
           "items": [
@@ -727,8 +748,8 @@
             "axe": 10,
             "distance": 10,
             "shielding": 10,
-            "magic_level": 6,
-            "vigor": 5,
+            "magic_level": 7,
+            "vigor": 8,
             "espirito": 30
           },
           "items": [
@@ -765,8 +786,8 @@
             "axe": 10,
             "distance": 10,
             "shielding": 11,
-            "magic_level": 5,
-            "vigor": 7,
+            "magic_level": 6,
+            "vigor": 10,
             "espirito": 26
           },
           "items": [
@@ -1637,7 +1658,7 @@
         "pt-BR": "Cajado de raiz-de-pedra"
       },
       "description": {
-        "pt-BR": "Raiz que cresceu dentro de uma rocha e saiu do outro lado."
+        "pt-BR": "Raiz que cresceu dentro de uma rocha e saiu do outro lado. Dá um pouco da teimosia dela a quem a segura (+20 HP máximo)."
       },
       "imageMediaId": null,
       "type": "equipment",
@@ -1653,8 +1674,8 @@
           "amount": 5
         },
         {
-          "target": "mana.max",
-          "amount": 10
+          "target": "hp.max",
+          "amount": 20
         }
       ],
       "useEffects": [],
@@ -2976,11 +2997,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 22,
+        "ataque": 20,
         "defesa": 12,
         "nivel": 6
       },
-      "hp": 75,
+      "hp": 65,
       "behavior": "attack",
       "xp": 80,
       "loot": [
@@ -3051,11 +3072,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 19,
+        "ataque": 18,
         "defesa": 10,
         "nivel": 6
       },
-      "hp": 60,
+      "hp": 55,
       "behavior": "attack",
       "xp": 75,
       "loot": [
@@ -3091,11 +3112,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 24,
+        "ataque": 22,
         "defesa": 12,
         "nivel": 7
       },
-      "hp": 100,
+      "hp": 85,
       "behavior": "attack",
       "xp": 100,
       "loot": [
@@ -3131,11 +3152,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 22,
+        "ataque": 20,
         "defesa": 9,
         "nivel": 7
       },
-      "hp": 65,
+      "hp": 50,
       "behavior": "attack",
       "xp": 90,
       "loot": [
@@ -3171,11 +3192,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 27,
-        "defesa": 16,
+        "ataque": 25,
+        "defesa": 15,
         "nivel": 9
       },
-      "hp": 150,
+      "hp": 120,
       "behavior": "attack",
       "xp": 200,
       "loot": [
@@ -3215,7 +3236,7 @@
         "defesa": 16,
         "nivel": 12
       },
-      "hp": 240,
+      "hp": 150,
       "behavior": "attack",
       "xp": 1200,
       "loot": [
@@ -3355,6 +3376,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Novatos passam com clavas no ombro, discutindo quanto vale uma cauda de rato. Um menino vende peixe defumado. Um bardo canta, mal, sobre um minotauro que dorme debaixo do vale. A cidade cheira a alcatrão, pão e maré baixa, e por um instante você pensa que poderia viver aqui."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O bardo termina a canção com um acorde errado e estende o chapéu. A letra, até onde dá para entender, diz que o minotauro debaixo do vale “guarda um sonho que não é dele” e que “quem desce com ferro sobe com nada”. Ninguém joga moeda. Uma gaivota, com pena dele, larga meia sardinha no chapéu."
               }
             }
           ]
@@ -3594,6 +3621,12 @@
               "text": {
                 "pt-BR": "Elas saem da água ao mesmo tempo: duas ratazanas do tamanho de gatos de estalagem, olhos vermelhos à luz da tocha, dentes amarelos e uma confiança que nenhum rato deveria ter. Não fogem. Avançam, uma pela esquerda e outra pela direita, como se alguém tivesse ensinado.\n\nVocê firma os pés na pedra escorregadia. A tocha chia na umidade. Primeira luta em Rookmar — e ninguém lá em cima vai saber se você ganhar."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "A primeira ratazana salta. Você sente o peso dela no braço antes de sentir os dentes."
+              }
             }
           ],
           "mechanics": {
@@ -3643,12 +3676,22 @@
               "text": {
                 "pt-BR": "Depois das ratazanas, a galeria se abre numa câmara onde a pedra antiga termina — e começa um túnel novo. Novo mesmo: as paredes ainda têm marcas de picareta, o escoramento é de pinho cheiroso e no chão há grãos de cevada espalhados como migalhas num conto de fadas. O túnel sobe em linha reta na direção do armazém da guilda.\n\nEncostados na parede, seis caixotes com o lacre verde da Guilda dos Mercadores: a balança de dois pratos. Um deles está roído no canto, e o que escorre dali não é grão. É óleo de lâmina.\n\nMais adiante, no escuro, alguma coisa grande se mexe sobre uma montanha de sacos rasgados. O chiado ali é mais grosso, mais lento, quase um ronco."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você fica um instante parad{genero|feminino:a|masculino:o|e} ali, juntando as peças com dedos dormentes de frio. Ratos gordos. Grão desviado. Um túnel que ninguém deveria ter cavado. Tomé tinha razão de farejar."
+              }
             }
           ],
           "effects": [
             {
               "kind": "achievement",
               "achievementId": "primeiro_sangue"
+            },
+            {
+              "kind": "xp",
+              "amount": "30"
             }
           ]
         },
@@ -3691,6 +3734,10 @@
             {
               "kind": "unlock",
               "entryId": "guilda"
+            },
+            {
+              "kind": "xp",
+              "amount": "30"
             }
           ]
         },
@@ -3702,6 +3749,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "O ninho é uma colina de sacos rasgados, ossos de peixe e cevada fermentada. No alto, como uma rainha num trono de lixo, está a Ratazana-mãe: do tamanho de um porco, cinzenta, com tufos brancos na cabeça que parecem coroa. Uma aranha-de-porão desce do teto num fio, pernas abertas, entre você e ela.\n\nA Ratazana-mãe solta um guincho que faz a sua tocha tremer. De todas as frestas, olhinhos vermelhos assistem."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O cheiro é tão forte que tem textura. Você respira pela boca, firma a arma e escolhe por onde começar. A rainha não se mexe ainda; ela deixa que a aranha faça o serviço sujo, como toda rainha que se preza."
               }
             }
           ],
@@ -3767,6 +3820,11 @@
               "achievementId": "rei_dos_ratos"
             },
             {
+              "variable": "ninho_limpo",
+              "operation": "set",
+              "value": true
+            },
+            {
               "kind": "item",
               "operation": "give",
               "itemId": "gold_coin",
@@ -3806,6 +3864,12 @@
               "castId": "tome",
               "text": {
                 "pt-BR": "Seu passe. Sai pelo portão norte, vai até as colinas e vê com os próprios olhos o que está matando as caravanas. Eu não posso sair: se largar o porto, a guilda põe um dos deles no meu lugar antes do almoço. E a carta... a carta é perigosa para quem carrega. Decide você."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ao longe, no alto da ladeira, as janelas do armazém da guilda refletem o sol da tarde. Tomé olha para elas do jeito que um velho cão de guarda olha para uma raposa que ele ainda não pode morder."
               }
             }
           ],
@@ -3848,6 +3912,12 @@
               "text": {
                 "pt-BR": "Você sobe a escada de ferro com o coração na garganta e cai de costas no calçamento da praça, {genero|feminino:ensopada|masculino:ensopado|ensopade}, sangrando, com a tocha apagada. Um pescador para, olha, cospe e segue caminho; em Rookmar, novato fugindo do esgoto é paisagem.\n\nLá embaixo, os chiados se afastam. Você fica um tempo deitado, olhando o farol girar contra o céu de chumbo, contando os dedos para ver se estão todos. Estão.\n\nDo cais vem o grito da Capitã Brisa chamando passageiros para a volta. A Gaivota Teimosa zarpa ao meio-dia. Seria tão fácil."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Ou seria, se a carta, o túnel e o ronco lá embaixo não ficassem martelando na sua cabeça como o martelo de Odila."
+              }
             }
           ]
         },
@@ -3872,6 +3942,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Ela não cobra a passagem. Diz que é tradição: quem volta de Rookmar no primeiro dia volta de graça, porque a ilha já cobrou o suficiente.\n\nA Gaivota Teimosa sai do porto com o vento a favor. Você fica na popa vendo o farol diminuir, depois virar um ponto, depois virar lembrança. Nos anos seguintes vai contar a história de muitos jeitos — ratazanas do tamanho de cães, depois de bois, depois de cavalos. Nunca vai contar das lanças nos caixotes, porque a parte mais estranha de tudo é que você nunca soube o que elas significavam.\n\nMeses depois, num porto do continente, alguém comenta que houve uma guerra numa ilha de pescadores lá para o sul. Uma guerra pequena, dessas que ninguém nota. Você paga mais uma rodada e muda de assunto.\n\nAlgumas histórias a gente vive. Outras, a gente só passa perto."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Às vezes, em noites de vento sul, você sonha com um farol girando e com um mugido grave que sobe do chão. Acorda com a sensação de ter esquecido alguma coisa importante numa ilha que não existe mais no seu mapa."
               }
             }
           ],
@@ -4558,20 +4634,6 @@
           }
         },
         {
-          "from": "c1_esgoto_entrada",
-          "to": "c1_praca",
-          "label": {
-            "pt-BR": "Voltar para a luz"
-          },
-          "conditions": [],
-          "effects": [],
-          "mechanics": {
-            "cost": [],
-            "whenUnavailable": "hide",
-            "test": null
-          }
-        },
-        {
           "from": "c1_esgoto_tunel",
           "to": "c1_ninho",
           "label": {
@@ -4600,20 +4662,6 @@
           }
         },
         {
-          "from": "c1_esgoto_tunel",
-          "to": "c1_praca",
-          "label": {
-            "pt-BR": "Voltar à praça com o que já sabe"
-          },
-          "conditions": [],
-          "effects": [],
-          "mechanics": {
-            "cost": [],
-            "whenUnavailable": "hide",
-            "test": null
-          }
-        },
-        {
           "from": "c1_caixotes",
           "to": "c1_ninho",
           "label": {
@@ -4621,8 +4669,9 @@
           },
           "conditions": [
             {
-              "kind": "formula",
-              "formula": "não conquista(\"rei_dos_ratos\")"
+              "variable": "ninho_limpo",
+              "operator": "eq",
+              "value": false
             }
           ],
           "effects": [],
@@ -4926,6 +4975,25 @@
         },
         {
           "from": "c1_portao",
+          "to": "c1_estrada",
+          "label": {
+            "pt-BR": "Esperar a troca da guarda e sair com uma carroça de feno"
+          },
+          "conditions": [
+            {
+              "kind": "formula",
+              "formula": "nivel >= 2"
+            }
+          ],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "disable",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_portao",
           "to": "c1_praca",
           "label": {
             "pt-BR": "Voltar à praça"
@@ -4983,6 +5051,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Eles estavam sentados tão quietos que você os confundiu com pedras — até as pedras se levantarem. Dois trolls-das-pedras, cinzentos, de braços compridos até o chão, um deles mastigando o que parece ser uma bota com o dono ainda dentro.\n\nO maior aponta para você e diz alguma coisa que pode ser “jantar” e pode ser “visita”. Na língua dos trolls, as duas palavras são a mesma."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O menor, que é só um pouco menor que uma carroça, larga a bota e limpa a boca no braço. O maior estala os dedos — cada um do tamanho de um nabo — e vem descendo a encosta em passadas de três metros. Não há onde se esconder: só urze, pedra e vento. E a sua arma, que de repente parece bem pequena."
               }
             }
           ],
@@ -5086,6 +5160,12 @@
               "text": {
                 "pt-BR": "Você mal encosta no baú quando a lama da ravina se levanta. Dois trolls-do-brejo, verdes e reluzentes de limo, estavam deitados no córrego esperando exatamente isto: alguém burro o bastante para mexer no baú. Um deles sorri, e você conta os dentes; há mais dentes do que boca.\n\nO cheiro chega um segundo depois, e quase derruba você antes da primeira pancada."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você recua até o córrego tocar os seus calcanhares. A lama puxa as botas a cada passo. Os trolls-do-brejo se movem nela como peixes, rindo um riso borbulhante, e um deles lambe os beiços com uma língua cinzenta e comprida. Pelo jeito, a última caravana não foi o último jantar."
+              }
             }
           ],
           "mechanics": {
@@ -5129,12 +5209,12 @@
               "text": {
                 "pt-BR": "Os trolls ficam no córrego, de bruços. O baú continua onde estava, indiferente, com as correntes enferrujadas e o lacre verde intacto. Você o arrasta para fora da carroça e descobre por que a guilda contratou uma caravana inteira para ele: deve pesar umas oitenta onças. Carregá-lo pelas colinas vai deixar a mochila pesada, os passos lentos e qualquer fuga impossível.\n\nDentro, alguma coisa rola e bate na madeira quando você o inclina. Papel enrolado, talvez. Ferramentas. Talvez ouro — mas ouro não chacoalha assim.\n\nAurélio Prata, você imagina, pagaria bem para não fazer perguntas sobre o que ele mesmo mandou buscar."
               }
-            }
-          ],
-          "effects": [
+            },
             {
-              "kind": "achievement",
-              "achievementId": "primeiro_sangue"
+              "type": "text",
+              "text": {
+                "pt-BR": "Você pensa na mochila, no peso que já carrega, nas colinas que ainda tem de subir. Pensa também em quanto Aurélio deve estar disposto a pagar por algo que manda buscar com uma caravana inteira — e em quanto alguém estaria disposto a pagar para saber o que tem dentro."
+              }
             }
           ]
         },
@@ -5159,6 +5239,13 @@
               "type": "text",
               "text": {
                 "pt-BR": "Os mercenários de gibão verde encostados na parede riem na hora certa, como quem foi pago para isso."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "aurelio",
+              "text": {
+                "pt-BR": "E não ligue para os boatos sobre orcs pacíficos plantando cevada. Orc pacífico é orc que ainda não viu uma lança. Tudo o que está nestas prateleiras é para você voltar vivo — e, naturalmente, para voltar comprando."
               }
             }
           ],
@@ -5347,6 +5434,12 @@
               "text": {
                 "pt-BR": "A trilha termina numa ponte de corda sobre um desfiladeiro, e a ponte termina no meio: as tábuas do lado de lá foram cortadas, não apodrecidas. Embaixo corre um rio cor de chá. Do outro lado começa o Vale do Junco, verde e dourado, com campos de cevada em degraus, cabras nos morros e uma aldeia de casas redondas de onde sobe fumaça de cozinha. Não parece um ninho de monstros. Parece um lugar onde alguém faz pão.\n\nAtrás das pedras do outro lado, porém, você conta quatro, cinco, seis cabeças. Orcs. Pele cor de musgo, tranças, lanças curtas — de ponta serrilhada.\n\nUma delas desce até a beira do penhasco, sozinha, sem pressa. É mais nova que as outras, tem uma presa quebrada pela metade e um arco atravessado nas costas. Olha para você como quem decide se vale a flecha."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O vento muda de direção e traz o cheiro do vale: pão no forno, esterco de cabra e, por baixo de tudo, outra coisa — um cheiro de pedra aberta, úmido e velho, como o de um poço que ninguém deveria ter destampado."
+              }
             }
           ],
           "effects": [
@@ -5364,6 +5457,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Você ataca primeiro, e o vale responde. Um batedor e um xamã de cabelo cheio de ossos saltam a fenda pela corda que restou, com a leveza de quem fez isso a vida inteira, e caem dos dois lados de você. O xamã sopra uma fumaça verde das mãos e sorri. A orc da presa quebrada não se mexe; só assiste, com o arco ainda nas costas, como quem quer ver de que você é feito antes de gastar uma flecha.\n\nAs lanças serrilhadas, de perto, são iguais às dos caixotes. Ou quase."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O xamã murmura alguma coisa, e a fumaça verde sobe em espiral entre vocês, cheirando a sálvia queimada e a raiva antiga."
               }
             }
           ],
@@ -5739,7 +5838,13 @@
           "label": {
             "pt-BR": "Soltar o baú das correntes"
           },
-          "conditions": [],
+          "conditions": [
+            {
+              "variable": "bau_tirado",
+              "operator": "eq",
+              "value": false
+            }
+          ],
           "effects": [],
           "mechanics": {
             "cost": [],
@@ -5798,6 +5903,11 @@
               "kind": "quest",
               "operation": "advance",
               "questId": "carga_perdida"
+            },
+            {
+              "variable": "bau_tirado",
+              "operation": "set",
+              "value": true
             }
           ],
           "mechanics": {
@@ -5835,6 +5945,11 @@
               "variable": "favor_guilda",
               "operation": "add",
               "value": -1
+            },
+            {
+              "variable": "bau_tirado",
+              "operation": "set",
+              "value": true
             }
           ],
           "mechanics": {
@@ -6372,7 +6487,7 @@
               "kind": "formula",
               "target": "hp",
               "operation": "add",
-              "formula": "20"
+              "formula": "60"
             }
           ],
           "mechanics": {
@@ -6441,6 +6556,12 @@
               "text": {
                 "pt-BR": "Os orcs dizem que tem um monstro lá embaixo. Ótimo. Monstro é bom para os negócios: ninguém discute o preço de uma guerra contra monstros. Agora vá. A paliçada não vai se queimar sozinha."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você assina. A pena arranha o pergaminho com um som que, você sabe, vai lembrar por muito tempo. O escrivão sopra a tinta, enrola o contrato e entrega a você uma bolsa de moedas, um pão e uma poção de gosto amargo, que você bebe ali mesmo."
+              }
             }
           ],
           "effects": [
@@ -6471,6 +6592,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Os mercenários avançam com escadas e berros. A paliçada responde com pedras, flechas e um silêncio pior que os berros. Você sobe a primeira escada, porque assinou, porque está pago, porque agora é tarde, e cai do outro lado num pátio de terra batida onde dois orcs já esperam.\n\nUm deles é jovem, de lança curta. O outro é velho, enorme, de couraça preta, com uma cicatriz que começa na testa e termina no peito. Ele olha para o seu gibão verde e balança a cabeça, devagar, como quem lamenta."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Lá fora, alguém grita o nome da guilda. Aqui dentro, ninguém grita nada. O orc velho ergue a lâmina larga e espera que você venha."
               }
             }
           ],
@@ -6603,6 +6730,12 @@
               "text": {
                 "pt-BR": "Eles chegam ao meio-dia, como Ushra disse. As escadas batem na paliçada, as tochas voam por cima, e os mercenários de gibão verde sobem gritando o nome da guilda como se fosse um santo. Você está no adarve com Grakka à esquerda e um orc velho de couraça preta à direita.\n\nDois mercenários pulam para dentro ao mesmo tempo, bem na sua frente. Um deles reconhece você do entreposto. Ele parece genuinamente ofendido."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "— Você! Do entreposto! — grita ele, apontando a espada. — Comprou poção fiado e agora está do lado dos orcs? — Grakka acerta uma flecha no escudo dele, e a discussão acaba ali."
+              }
             }
           ],
           "mechanics": {
@@ -6678,6 +6811,11 @@
               "kind": "quest",
               "operation": "start",
               "questId": "labirinto"
+            },
+            {
+              "variable": "com_grakka",
+              "operation": "set",
+              "value": true
             }
           ]
         },
@@ -6701,6 +6839,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Um dos dados rola para longe quando os guardas se levantam. O primeiro puxa a espada; o segundo assobia, e de trás de um carrinho de minério se levanta um troll-das-pedras de coleira de ferro, que a guilda, pelo jeito, usava para puxar carga.\n\n— O capataz disse ninguém — avisa o mercenário, quase pedindo desculpas. — Ninguém é ninguém."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O troll de coleira não parece entender bem de que lado está, mas entende o assobio, e isso basta. Ele avança arrastando a corrente, que risca faíscas nas pedras. O mercenário vem por trás dele, usando o troll como escudo, com a espada baixa e os olhos pedindo desculpas."
               }
             }
           ],
@@ -6748,6 +6892,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "A barraca do capataz cheira a vela e a medo. Há uma mesa dobrável, uma cama de campanha e uma caixa de ferro aberta, vazia, que alguém esvaziou às pressas. Mas quem fugiu não levou o que importava, porque não sabia que importava: o livro-caixa.\n\nVocê lê à luz da vela. Pagamentos a ferreiros do cais por “lanças, modelo orc, cem”. Pagamentos a um pedreiro por “cunhas de ferro para o disco”. Uma anotação na margem, na letra elegante de Aurélio: “Com o selo aberto, o conselho aprova a guerra. Com os orcs fora, a prata é nossa. O que estiver lá embaixo, vendemos.”\n\nDebaixo do livro, uma folha enorme, dobrada em oito: um mapa dos corredores, traçado a carvão, com uma fenda lateral marcada em vermelho perto da entrada."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você dobra o livro-caixa e o enfia na mochila, junto com o mapa. Pela primeira vez, a verdade pesa algo que você consegue carregar."
               }
             }
           ],
@@ -6802,6 +6952,12 @@
               "text": {
                 "pt-BR": "A escada desce trinta degraus e para numa antecâmara de pedra lisa, mais lisa do que qualquer pedra cortada por mão humana ou orc. As paredes são cobertas de espirais. Um vento morno sopra de dentro, cheirando a pelo, a ferrugem e a coisa velha.\n\nDiante da passagem principal, de pé, imóveis como estátuas, estão os sentinelas: minotauros de pelo escuro, com argolas de bronze nos chifres e machados apoiados no chão. Eles não precisam se mexer para dizer que ninguém passa. O tamanho diz.\n\nAlém deles, os corredores começam, se dividem e se dobram sobre si mesmos até o olho desistir. Em algum lugar lá dentro, longe, algo bate em pedra num ritmo lento — como um coração, ou como um machado."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você tira a mochila das costas e confere o que tem, item por item, como os veteranos do cais faziam antes de embarcar. Poções, peso, fôlego. O que estiver sobrando agora vai fazer falta lá embaixo, ou vai fazer peso. Depois aperta as correias e volta a erguer a tocha."
+              }
             }
           ],
           "effects": [
@@ -6824,6 +6980,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "O sentinela da esquerda bufa, e o bafo quente embaça o ar entre vocês. Depois ergue o machado, devagar, como quem acorda de um sono de cem anos e está mal-humorado com isso.\n\nO chão da antecâmara é liso demais para firmar o pé. O teto é baixo demais para ele. Você vai ter que usar as duas coisas."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O da direita não se mexe. Fica olhando, apoiado no machado, como quem assiste a uma briga de rua sem nenhuma intenção de separar. Talvez seja confiança. Talvez seja regra: um de cada vez. Você não pretende descobrir qual das duas."
               }
             }
           ],
@@ -6871,6 +7033,12 @@
               "text": {
                 "pt-BR": "Você passa pela antecâmara e entra nos corredores. O ar muda: fica mais quente, mais grosso, com gosto de pedra. A luz da tocha não vai longe; ela parece ter medo de se afastar de você.\n\nAs paredes têm marcas de chifre na altura da sua cabeça, riscos fundos e paralelos, milhares deles, como contagem de dias de um prisioneiro. No chão, entre a poeira, há pegadas de casco e, mais antigas, quase apagadas, pegadas pequenas, descalças, humanas. Elas entram. Você procura as que saem e não encontra.\n\nLá de cima, da boca do labirinto, vem o último fiapo de vento do vale. Depois, nem isso."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você respira fundo, ajeita a mochila, come o último pedaço de pão de cevada e desce o degrau seguinte. O labirinto aceita você do jeito que a água aceita uma pedra: sem barulho nenhum."
+              }
             }
           ],
           "effects": [
@@ -6878,6 +7046,12 @@
               "kind": "quest",
               "operation": "advance",
               "questId": "labirinto"
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "60"
             }
           ]
         }
@@ -7262,7 +7436,13 @@
               "kind": "formula",
               "target": "hp",
               "operation": "add",
-              "formula": "30"
+              "formula": "80"
+            },
+            {
+              "kind": "formula",
+              "target": "mana",
+              "operation": "add",
+              "formula": "40"
             }
           ],
           "mechanics": {
@@ -7318,8 +7498,9 @@
           },
           "conditions": [
             {
-              "kind": "formula",
-              "formula": "favor_orc >= 3"
+              "variable": "com_grakka",
+              "operator": "eq",
+              "value": true
             }
           ],
           "effects": [
@@ -7358,6 +7539,12 @@
             {
               "kind": "unlock",
               "entryId": "kurgath"
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "30"
             }
           ],
           "mechanics": {
@@ -7374,7 +7561,13 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "As pegadas levam a um salão redondo forrado de ossos — de cabra, de boi, de coisas que você prefere não identificar. Os dois mercenários levados na noite anterior estão aqui, ou o que sobrou deles. E os seus captores também: um minotauro de machado, mastigando, e outro com um arco de chifre, empoleirado numa saliência da parede.\n\nO arqueiro solta a primeira flecha antes que você termine de entrar. Ela crava no batente, a um palmo da sua orelha, e fica vibrando."
+                "pt-BR": "As pegadas levam a um salão redondo forrado de ossos — de cabra, de boi, de coisas que você prefere não identificar. Os dois mercenários levados na noite anterior estão aqui, ou o que sobrou deles. E os seus captores também: dois minotauros de arco de chifre, um mastigando no chão, outro empoleirado numa saliência da parede.\n\nO arqueiro solta a primeira flecha antes que você termine de entrar. Ela crava no batente, a um palmo da sua orelha, e fica vibrando."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "O que está no chão larga o osso que roía, pega o arco ao lado e se levanta sem pressa, com uma flecha já entre os dedos. Os dois trocam um bufo que pode ser riso. Você tem a sensação desconfortável de ter entrado no meio de um jogo que eles conhecem melhor do que você."
               }
             }
           ],
@@ -7386,11 +7579,7 @@
               "creatures": [
                 {
                   "creatureId": "minotauro_arqueiro",
-                  "count": 1
-                },
-                {
-                  "creatureId": "minotauro",
-                  "count": 1
+                  "count": 2
                 }
               ],
               "mode": "rounds",
@@ -7486,7 +7675,13 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "Todos os caminhos do labirinto, cedo ou tarde, chegam aqui: uma encruzilhada de sete corredores em volta de um poço seco, com crânios de minotauro presos nas paredes como troféus, cada um com chifres maiores que o anterior. Na frente, a única porta do labirinto inteiro: bronze verde, duas vezes a sua altura, com uma espiral em relevo.\n\nDiante dela, sentado num bloco de pedra, há um minotauro com armadura de bronze sobre o pelo grisalho e um machado do tamanho de uma porta. Ele não ataca. Olha para você, depois para a porta, depois para você de novo, e solta uma baforada longa pelo nariz, como um velho porteiro cansado de novatos.\n\nAtrás da porta, o ritmo lento de antes: tum. Tum. Tum. Mais perto agora."
+                "pt-BR": "Todos os caminhos do labirinto, cedo ou tarde, chegam aqui: uma encruzilhada de sete corredores em volta de um poço seco, com crânios de minotauro presos nas paredes como troféus, cada um com chifres maiores que o anterior. Na frente, a única porta do labirinto inteiro: bronze verde, duas vezes a sua altura, com uma espiral em relevo. Atrás dela, o ritmo lento de antes: tum. Tum. Tum. Mais perto agora.\n\nDiante da porta, sentado num bloco de pedra, há um minotauro com armadura de bronze sobre o pelo grisalho e um machado do tamanho de uma porta. Ele olha para você, depois para a porta, depois para você de novo, e solta uma baforada longa pelo nariz, como um velho porteiro cansado de novatos."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Então se levanta, e se levanta, e continua se levantando. De pé, os chifres raspam o teto. Ele apoia o machado no ombro, estala o pescoço de um lado e do outro e dá um único passo à frente, que faz o poço seco tremer. Você tem a impressão absurda de que ele está um pouco aliviado. Faz muito tempo que ninguém chega até aqui."
               }
             }
           ],
@@ -7498,26 +7693,10 @@
             }
           ],
           "mechanics": {
-            "kind": "text",
+            "kind": "encounter",
             "onZero": {
               "hp": "c4_fim_morte"
-            }
-          }
-        },
-        {
-          "key": "c4_guarda",
-          "label": "O guarda da porta",
-          "blocks": [
-            {
-              "type": "text",
-              "text": {
-                "pt-BR": "O minotauro de guarda se levanta, e se levanta, e continua se levantando. De pé, os chifres dele raspam o teto. Ele apoia o machado no ombro, estala o pescoço de um lado e do outro, e dá um único passo à frente, que faz o poço seco tremer.\n\nVocê tem a impressão absurda de que ele está um pouco aliviado. Faz muito tempo que ninguém chega até aqui."
-              }
-            }
-          ],
-          "mechanics": {
-            "kind": "encounter",
-            "onZero": {},
+            },
             "noRegen": false,
             "encounter": {
               "creatures": [
@@ -7562,6 +7741,12 @@
               "text": {
                 "pt-BR": "O guarda morre sentado, com o machado atravessado nos joelhos, como um velho que adormeceu esperando visita. Você fica um tempo parad{genero|feminino:a|masculino:o|e} na frente dele, ofegando, com o braço tremendo de cansaço e a tocha quase no fim.\n\nNo pescoço dele, num cordão de couro, há uma chave de bronze do tamanho de uma colher. Você não precisa dela: a porta não tem fechadura. A chave, entende você, era só para ele saber que era o guarda.\n\nVocê a deixa onde está. Empurra a porta com o ombro. O bronze geme, cede, e o ar que sai lá de dentro é quente como respiração."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Encostado no bloco de pedra, há um odre de couro. A água dentro é fria e tem o mesmo gosto limpo da fonte da gruta. Você bebe tudo, e a dor recua para um canto distante do corpo, de onde fica só observando."
+              }
             }
           ],
           "effects": [
@@ -7576,6 +7761,12 @@
             {
               "kind": "formula",
               "target": "hp",
+              "operation": "add",
+              "formula": "100"
+            },
+            {
+              "kind": "formula",
+              "target": "mana",
               "operation": "add",
               "formula": "60"
             }
@@ -7608,6 +7799,43 @@
             {
               "kind": "lose_random_item",
               "quantity": "1"
+            }
+          ],
+          "mechanics": {
+            "kind": "text",
+            "onZero": {
+              "hp": "c4_fim_morte"
+            }
+          }
+        },
+        {
+          "key": "c4_eco",
+          "label": "O eco da risada",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você se joga numa galeria lateral e corre agachad{genero|feminino:a|masculino:o|e} até as pernas queimarem. A risada de Kurgath vem atrás, sem pressa, ricocheteando nas paredes, e não fica mais fraca com a distância — o labirinto inteiro é a garganta dele.\n\n— Corre — diz a voz, de todos os lados. — Corre, pequeno. Eu conheço cada pedra. Você volta. Todos voltam.\n\nVocê para numa curva, encosta a testa na pedra fria e respira até o coração desacelerar. Ele tem razão: não há saída que não passe por ele. Mas agora você conhece o ritmo do machado verde, o meio segundo que ele leva para erguê-lo, o lado em que o olho leitoso enxerga pior."
+              }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "piso(hp.max * 0.7)"
+            },
+            {
+              "kind": "formula",
+              "target": "mana",
+              "operation": "add",
+              "formula": "piso(mana.max / 2)"
+            },
+            {
+              "kind": "status",
+              "operation": "apply",
+              "effectId": "furia"
             }
           ],
           "mechanics": {
@@ -7661,6 +7889,12 @@
               "text": {
                 "pt-BR": "Kurgath desce do estrado em dois passos e o chão inteiro da caverna responde. O machado verde corta o ar com um assobio grave. Ele é lento — mas o labirinto inteiro parece se inclinar a favor dele, as sombras se dobram para o lado em que ele está, o eco dos seus próprios passos chega atrasado, confundindo.\n\nNão há para onde correr que ele não conheça. Há só o próximo golpe, e o seguinte."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você mede a distância, o peso da arma, o que sobrou de fôlego. Kurgath respira devagar, como quem tem todo o tempo do mundo — e tem. Os olhos leitosos não se fixam em você, mas o machado verde sim. Ele espera o seu primeiro movimento, exatamente como esperou o de todos os outros, durante mil anos, naquela mesma sala."
+              }
             }
           ],
           "mechanics": {
@@ -7677,7 +7911,7 @@
               "mode": "rounds",
               "victorySceneId": "c4_silencio",
               "defeatSceneId": "c4_fim_morte",
-              "fleeSceneId": "c4_perdido",
+              "fleeSceneId": "c4_eco",
               "single": {
                 "roll": "1d20",
                 "dc": "10",
@@ -7722,6 +7956,12 @@
               "text": {
                 "pt-BR": "Kurgath cai de joelhos, depois de lado, devagar, como uma torre que demorou séculos para decidir cair. O machado verde rola e bate no estrado de ossos. E então acontece a coisa mais estranha: o labirinto suspira. Você sente no peito, nos pés, no ar — um alívio de pedra, um soltar de ombros do tamanho de uma montanha.\n\nPelos corredores, ao longe, os mugidos dos minotauros que restam mudam de tom. Não é raiva. Parece choro. Depois, passos pesados indo embora, para baixo, para mais fundo, para longe da luz que eles nunca deviam ter visto.\n\nVocê arranca um dos chifres anelados de Kurgath, porque ninguém em Rookmar vai acreditar sem ele. Pesa como uma criança. Lá em cima, alguém espera por ele: um mercador de colete verde, uma orc de presa quebrada, um guarda velho de joelho ruim.\n\nO que você leva para fora daqui vai decidir o que o vale vai ser."
               }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Antes de sair, você olha uma última vez para o estrado. Os ossos, empilhados com tanto cuidado, eram de todos os que vieram antes. Kurgath não os comeu. Guardou. Como quem guarda nomes."
+              }
             }
           ],
           "effects": [
@@ -7749,7 +7989,7 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "Aurélio recebe o chifre de Kurgath na escadaria do conselho, diante de meia cidade, e o ergue sobre a cabeça como se tivesse matado o monstro com as próprias mãos. A guerra é declarada vencida antes de ter sido declarada. O conselho aprova uma “concessão de reconstrução” do Vale do Junco para a guilda. Os orcs, dizem os papéis, “foram realocados”. Ninguém pergunta para onde.\n\nVocê recebe o pagamento em dobro, como prometido — e mais uma parte, para comprar o seu silêncio sobre o livro-caixa que você nunca chegou a ler, ou leu e decidiu esquecer. São tantas moedas que você precisa contratar um carregador. Ouro, afinal, pesa."
+                "pt-BR": "Aurélio recebe o chifre de Kurgath na escadaria do conselho, diante de meia cidade, e o ergue sobre a cabeça como se tivesse matado o monstro com as próprias mãos. A guerra é declarada vencida antes de ter sido declarada. O conselho aprova uma “concessão de reconstrução” do Vale do Junco para a guilda. Os orcs, dizem os papéis, “foram realocados”. Ninguém pergunta para onde.\n\nVocê recebe o pagamento — em dobro, se alguém perguntar, e ninguém pergunta — e mais uma parte para comprar o seu silêncio sobre as lanças, os caixotes e as cunhas de ferro que quebraram o selo. São tantas moedas que você precisa contratar um carregador. Ouro, afinal, pesa."
               }
             },
             {
@@ -7763,6 +8003,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Você compra uma casa no alto da ladeira, perto do farol, com janela para o mar. Mestra Odila te vende a melhor espada da forja e cobra o dobro sem piscar. Sálvia não te cheira mais quando você entra; só olha.\n\nÀ noite, às vezes, você abre a janela e o vento traz das colinas um cheiro de cevada queimada. É só impressão. Tem que ser."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "E quando um novato com cheiro de porão de navio para na sua porta perguntando como foi descer ao labirinto, você conta a versão que a guilda gosta, com monstros e glória e ouro. Ele sai com os olhos brilhando, direto para o entreposto, para assinar alguma coisa."
               }
             }
           ],
@@ -7803,7 +8049,7 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "Com o livro-caixa e as lanças com nó de marinheiro, o clã desce até Rookmar sob a sua escolta, e pela primeira vez em cem anos uma orc fala diante do conselho. Aurélio foge no primeiro barco, com a bolsa mais leve do que gostaria. A mina é fechada. A cevada volta a crescer nos degraus queimados.\n\nVocê passa o inverno no vale, aprendendo a fazer pão de cevada e a errar flechas na frente de crianças que riem. Na primavera, os novatos de Rookmar começam a contar uma história sobre alguém que desceu ao labirinto com os orcs. Em cada versão, você é mais alt{genero|feminino:a|masculino:o|e}."
+                "pt-BR": "Com as lanças de nó de marinheiro e o chifre de Kurgath como prova, o clã desce até Rookmar sob a sua escolta, e pela primeira vez em cem anos uma orc fala diante do conselho. Aurélio foge no primeiro barco, com a bolsa mais leve do que gostaria. A mina é fechada. A cevada volta a crescer nos degraus queimados.\n\nVocê passa o inverno no vale, aprendendo a fazer pão de cevada e a errar flechas na frente de crianças que riem. Na primavera, os novatos de Rookmar começam a contar uma história sobre alguém que desceu ao labirinto com os orcs. Em cada versão, você é mais alt{genero|feminino:a|masculino:o|e}."
               }
             }
           ],
@@ -7825,7 +8071,7 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "O conselho de Rookmar se reúne às pressas no salão do farol, com velas demais e cadeiras de menos. Você entra com lama até os joelhos, o chifre de Kurgath nas costas e Tomé Valente ao seu lado, mancando, de armadura recém-engraxada, com a cara de quem esperou trinta anos por este dia.\n\nVocê conta tudo. As lanças com nó de marinheiro. O túnel debaixo do armazém. As cunhas de ferro no disco de pedra. O minotauro que guardava o que estava embaixo, e por quê. Quando termina, ninguém fala. Depois todo mundo fala ao mesmo tempo."
+                "pt-BR": "O conselho de Rookmar se reúne às pressas no salão do farol, com velas demais e cadeiras de menos. Você entra com lama até os joelhos, o chifre de Kurgath nas costas e Tomé Valente ao seu lado, mancando, de armadura recém-engraxada, com a cara de quem esperou trinta anos por este dia.\n\nVocê conta tudo. As lanças com nó de marinheiro. O túnel debaixo do armazém. As cunhas de ferro que quebraram o selo do vale. O minotauro que guardava o que estava embaixo, e por quê. Quando termina, ninguém fala. Depois todo mundo fala ao mesmo tempo."
               }
             },
             {
@@ -7899,6 +8145,12 @@
               "type": "text",
               "text": {
                 "pt-BR": "Você cai nos corredores, e os corredores não se importam. A tocha rola, apaga, e no escuro súbito você ouve, muito perto, a respiração quente de algo grande que se inclina para olhar.\n\nLá em cima, o vale espera um dia, dois, uma semana. Aurélio manda outro mercenário. Grakka desce com três batedores e volta com dois. Tomé pendura mais uma mochila no prego atrás da guarita, e desta vez conta, porque esta ele conhecia.\n\nNo labirinto, as paredes têm marcas de chifre na altura da cabeça, riscos fundos e paralelos, milhares deles. Agora há também, num canto do salão dos ossos, um risco mais fino, mais baixo, feito com a ponta de uma arma por alguém que tentou deixar um sinal antes do fim.\n\nOs próximos que descerem vão encontrá-lo. Talvez entendam o recado. Talvez tragam um fio, e não só ferro."
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Em Rookmar, a sacerdotisa velha grava mais um nome num degrau da escadaria. Ela não sabe se é nome de afogado. Grava assim mesmo. O labirinto também é um tipo de mar."
               }
             }
           ],
@@ -8019,45 +8271,11 @@
         },
         {
           "from": "c4_novelo",
-          "to": "c4_encruzilhada",
-          "label": {
-            "pt-BR": "Seguir o fio de prata"
-          },
-          "conditions": [],
-          "effects": [],
-          "mechanics": {
-            "cost": [],
-            "whenUnavailable": "hide",
-            "test": null
-          }
-        },
-        {
-          "from": "c4_encruzilhada",
-          "to": "c4_guarda",
-          "label": {
-            "pt-BR": "Desafiar o guarda da porta"
-          },
-          "conditions": [],
-          "effects": [],
-          "mechanics": {
-            "cost": [],
-            "whenUnavailable": "hide",
-            "test": null
-          }
-        },
-        {
-          "from": "c4_encruzilhada",
           "to": "c4_trono",
           "label": {
-            "pt-BR": "Passar o fio de prata por baixo da porta"
+            "pt-BR": "Seguir o fio de prata por baixo da porta"
           },
-          "conditions": [
-            {
-              "kind": "item",
-              "itemId": "novelo_tecela",
-              "min": 1
-            }
-          ],
+          "conditions": [],
           "effects": [
             {
               "kind": "xp",
@@ -8071,32 +8289,13 @@
           }
         },
         {
-          "from": "c4_encruzilhada",
-          "to": "c4_guarda",
+          "from": "c4_perdido",
+          "to": "c4_corredores",
           "label": {
-            "pt-BR": "Beber uma poção e só então desafiar o guarda"
+            "pt-BR": "Seguir com a mão na parede"
           },
-          "conditions": [
-            {
-              "kind": "item",
-              "itemId": "pocao_vida",
-              "min": 1
-            }
-          ],
-          "effects": [
-            {
-              "kind": "item",
-              "operation": "take",
-              "itemId": "pocao_vida",
-              "quantity": "1"
-            },
-            {
-              "kind": "formula",
-              "target": "hp",
-              "operation": "add",
-              "formula": "60"
-            }
-          ],
+          "conditions": [],
+          "effects": [],
           "mechanics": {
             "cost": [],
             "whenUnavailable": "hide",
@@ -8104,10 +8303,38 @@
           }
         },
         {
-          "from": "c4_perdido",
-          "to": "c4_encruzilhada",
+          "from": "c4_eco",
+          "to": "c4_kurgath",
           "label": {
-            "pt-BR": "Seguir com a mão na parede"
+            "pt-BR": "Voltar correndo para a luta"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_eco",
+          "to": "c4_trono",
+          "label": {
+            "pt-BR": "Esgueirar-se de volta pela galeria do trono"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c4_eco",
+          "to": "c4_fim_morte",
+          "label": {
+            "pt-BR": "Fugir pelos corredores sem olhar para trás"
           },
           "conditions": [],
           "effects": [],
