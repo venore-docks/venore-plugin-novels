@@ -153,7 +153,8 @@ Eventos das frases de combate: `playerHit`, `playerMiss`, `enemyHit`, `enemyMiss
 
 `+ - * / % ^`, comparações (`= != > >= < <=`), `e`/`ou`/`não`, `min max arred piso teto abs
 limitar se`, dados `1d20`, `2d20k1`, `4d6k3`; da partida: `tem("item")`, `equipado("item")`,
-`cabe("item")`, `perfil("sexo")`, `missao("id") = "ativa"`, `etapa("id")`, `conquista("id")`,
+`cabe("item")`, `perfil("sexo")`, `missao("id")` (`"ativa"`, `"concluida"`, `"falhou"` ou
+`"nao_iniciada"`), `etapa("id")`, `conquista("id")` (conquista vale entre partidas),
 `efeito("id")`, `soma_modificadores("atributo")`, `equipado.area`, `equipado.area.atributo`; chaves
 de recurso (`hp`, `hp.max`), atributo (`forca`, `forca.base`), derivado, nível, XP, moeda.
 No combate: `dado`, `atacante.<chave>`, `defensor.<chave>`.

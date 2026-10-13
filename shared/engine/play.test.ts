@@ -3,8 +3,10 @@ import type { Creature, GameSystem, Item } from "../../contracts/game";
 import type { Story } from "../../contracts/types";
 import { buildStory, choice, scene } from "../story-fixture.test-support";
 import { createContext } from "./context";
+import { evaluateFormula } from "./formula";
 import { interpolate } from "./interpolate";
 import { applyAction, choiceViews, fromLegacy, newGame, nextStep, replay, toSaved, undo } from "./play";
+import { playerScope } from "./rules";
 import { buildSheet } from "./sheet";
 import { emptyChoiceMechanics, emptySceneMechanics, emptySystem } from "./system";
 import type { GameState, PlayAction } from "./types";
@@ -493,6 +495,9 @@ describe("motor: progressão, itens e combate", () => {
     expect(state.effects).toEqual([]);
     expect(state.quests.q1).toEqual({ state: "active", step: 0 });
     expect(state.achievements).toEqual(["a1"]);
+    const scope = playerScope(createContext(story), state);
+    expect(evaluateFormula('missao("q1") = "ativa" e missao("q2") = "nao_iniciada"', scope)).toBe(true);
+    expect(evaluateFormula('quest("q1") = "active"', scope)).toBe(true);
   });
 
   it("hardcore não volta nem rola de novo", () => {

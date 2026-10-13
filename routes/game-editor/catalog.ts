@@ -95,7 +95,7 @@ export const FUNCTION_HINTS: { name: string; hint: string }[] = [
   { name: "equipado", hint: 'equipado("chave_do_item")' },
   { name: "cabe", hint: 'cabe("chave_do_item")' },
   { name: "perfil", hint: 'perfil("sexo")' },
-  { name: "missao", hint: 'missao("id") = "ativa"' },
+  { name: "missao", hint: 'missao("id") = "ativa" (ou "concluida", "falhou", "nao_iniciada")' },
   { name: "etapa", hint: 'etapa("id_da_missão")' },
   { name: "conquista", hint: 'conquista("id")' },
   { name: "efeito", hint: 'efeito("id")' },

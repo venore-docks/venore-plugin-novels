@@ -189,10 +189,15 @@ export function playerScope(
         case "perfil":
         case "profile":
           return state.profile[key] ?? "";
-        case "missao":
+        // Estado da missão no idioma do nome da função: missao("x") = "ativa" | "concluida" |
+        // "falhou" | "nao_iniciada"; quest("x") = "active" | "done" | "failed" | "not_started".
+        case "missao": {
+          const quest = state.quests[key];
+          return quest ? { active: "ativa", done: "concluida", failed: "falhou" }[quest.state] : "nao_iniciada";
+        }
         case "quest": {
           const quest = state.quests[key];
-          return quest ? quest.state : "nao_iniciada";
+          return quest ? quest.state : "not_started";
         }
         case "etapa":
           return state.quests[key]?.step ?? 0;

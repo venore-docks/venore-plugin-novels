@@ -2486,7 +2486,7 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "Os ratos decidem por você. Dois deles, os maiores, avançam pela água em linha reta, sem pressa, enquanto os outros ficam para trás, assistindo, como um público que já viu esse espetáculo antes e sabe como ele termina.\n\nVocê firma os pés na lama. O primeiro salta de boca aberta, e você vê os dentes alaranjados de perto, e vê também, presos entre eles, fiapos de pano azul — o pano das camisas da companhia mineira.\n\nIsso, mais do que o medo, faz alguma coisa esquentar dentro de você."
+                "pt-BR": "Os ratos decidem por você. Dois deles, os maiores, avançam pela água em linha reta, sem pressa, enquanto os outros ficam para trás, assistindo, como um público que já viu esse espetáculo antes e sabe como ele termina.\n\nVocê firma os pés na lama. O primeiro salta de boca aberta, e você vê os dentes alaranjados de perto, e vê também, presos entre eles, fiapos de pano azul — o pano das camisas da companhia mineira.\n\nIsso, mais do que o medo, faz alguma coisa esquentar dentro de você.\n\nNo fundo da galeria, o rato mais velho do bando, de pelo branco e um olho só, solta um guincho curto, quase um assobio. Os outros se calam. Você tem a impressão desconfortável de que ele está contando quantos golpes você aguenta."
               }
             }
           ],
@@ -2787,6 +2787,35 @@
               "amount": "20"
             }
           ],
+          "mechanics": {
+            "kind": "text"
+          }
+        },
+        {
+          "key": "c1_mordida",
+          "label": "A mordida",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você levanta a voz e encosta a ponta da arma no focinho dele, e é exatamente a coisa errada a fazer. Pique se debate como peixe fora d'água, a corda arrebenta — ou talvez nunca tenha estado tão apertada assim — e ele crava os dentes na sua mão antes de sumir numa fresta da parede.\n\nDente de kobold é fino como agulha e sujo de luzita podre. A mordida quase não sangra, mas a mão começa a latejar e a esquentar, e o latejar sobe pelo braço como uma fila de formigas.\n\nDe dentro da parede, uma vozinha ofendida ecoa pela galeria:"
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "pique",
+              "text": {
+                "pt-BR": "Grande-gente é igual homem de capuz! Pique não ajuda! Pique nunca mais ajuda!"
+              }
+            },
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você enrola a mão num pano, xinga baixinho na língua do seu pai e segue em frente, sem guia nenhum além dos trilhos."
+              }
+            }
+          ],
+          "effects": [],
           "mechanics": {
             "kind": "text"
           }
@@ -3347,7 +3376,7 @@
               },
               "successEffects": [],
               "failure": {
-                "targetSceneId": "c1_elevador",
+                "targetSceneId": "c1_mordida",
                 "effects": [
                   {
                     "kind": "status",
@@ -3401,6 +3430,20 @@
           "to": "c1_elevador",
           "label": {
             "pt-BR": "Seguir até o elevador de carga"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_mordida",
+          "to": "c1_elevador",
+          "label": {
+            "pt-BR": "Enrolar a mão e seguir até o elevador"
           },
           "conditions": [],
           "effects": [],
@@ -4874,7 +4917,7 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "Veridiana ergue o badalo de osso, e os cultistas recomeçam a cantar ao mesmo tempo, mais alto, mais depressa. A melodia invertida enche o ar como água enchendo um poço, e você sente o peso dela nos ombros, nos joelhos, na vontade.\n\nEla não usa arma. Não precisa. Quando abre a boca, a voz sai em ondas, e cada onda é uma pancada; o bronze do Sino Fundo vibra junto com ela, e o abismo de luz responde.\n\nLá embaixo, a coisa imensa e branca abre devagar alguma coisa que pode ser um olho."
+                "pt-BR": "Veridiana ergue o badalo de osso, e os cultistas recomeçam a cantar ao mesmo tempo, mais alto, mais depressa. A melodia invertida enche o ar como água enchendo um poço, e você sente o peso dela nos ombros, nos joelhos, na vontade.\n\nEla não usa arma. Não precisa. Quando abre a boca, a voz sai em ondas, e cada onda é uma pancada; o bronze do Sino Fundo vibra junto com ela, e o abismo de luz responde.\n\nLá embaixo, a coisa imensa e branca abre devagar alguma coisa que pode ser um olho.\n\nVocê pensa em Anselmo, lá em cima, ouvindo o sino gemer sem poder descer. Pensa no bilhete do seu pai. Firma os pés na pedra que vibra e avança contra a voz, um passo de cada vez, como quem anda contra o vento."
               }
             }
           ],
