@@ -17,7 +17,9 @@
     "locales": [
       "pt-BR"
     ],
-    "tags": []
+    "tags": [
+      "texto-ia"
+    ]
   },
   "variables": [
     {

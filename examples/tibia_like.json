@@ -17,7 +17,9 @@
     "locales": [
       "pt-BR"
     ],
-    "tags": []
+    "tags": [
+      "texto-ia"
+    ]
   },
   "variables": [
     {
@@ -64,7 +66,7 @@
         "color": "chart-2",
         "max": "100 + vigor * (nivel + 1)",
         "initial": "max",
-        "regen": "3 + piso(nivel / 2)",
+        "regen": "5 + nivel",
         "regenInCombat": false,
         "onZero": {
           "sceneId": "c2_fim_morte",
@@ -245,7 +247,7 @@
         "name": {
           "pt-BR": "Força do ataque comum"
         },
-        "formula": "max(equipado.maos.ataque_espada * sword, equipado.maos.ataque_clava * club, equipado.maos.ataque_machado * axe, equipado.maos.ataque_distancia * distance, equipado.maos.poder_magico * (magic_level + 3) * 1.5, 2 * club)",
+        "formula": "max(equipado.maos.ataque_espada * sword, equipado.maos.ataque_clava * club, equipado.maos.ataque_machado * axe, equipado.maos.ataque_distancia * distance, equipado.maos.poder_magico * (magic_level + 4) * 3, 3 * club)",
         "show": true
       },
       {
@@ -474,7 +476,7 @@
           "name": {
             "pt-BR": "Ataque comum (treina shielding)"
           },
-          "damage": "atacante.golpe * 0.1 * dado + atacante.nivel * 2 * dado",
+          "damage": "atacante.golpe * 0.17 * dado + atacante.nivel * 3 * dado",
           "reduction": "defensor.defesa / (defensor.defesa + 40)",
           "hit": "",
           "cost": [],
@@ -486,7 +488,7 @@
           "name": {
             "pt-BR": "Golpe de espada"
           },
-          "damage": "atacante.sword * atacante.equipado.maos.ataque_espada * 0.12 * dado + atacante.nivel * 2 * dado",
+          "damage": "atacante.sword * atacante.equipado.maos.ataque_espada * 0.2 * dado + atacante.nivel * 3 * dado",
           "reduction": "defensor.defesa / (defensor.defesa + 40)",
           "hit": "",
           "cost": [],
@@ -503,7 +505,7 @@
           "name": {
             "pt-BR": "Golpe de clava"
           },
-          "damage": "atacante.club * atacante.equipado.maos.ataque_clava * 0.12 * dado + atacante.nivel * 2 * dado",
+          "damage": "atacante.club * atacante.equipado.maos.ataque_clava * 0.2 * dado + atacante.nivel * 3 * dado",
           "reduction": "defensor.defesa / (defensor.defesa + 40)",
           "hit": "",
           "cost": [],
@@ -520,7 +522,7 @@
           "name": {
             "pt-BR": "Golpe de machado"
           },
-          "damage": "atacante.axe * atacante.equipado.maos.ataque_machado * 0.12 * dado + atacante.nivel * 2 * dado",
+          "damage": "atacante.axe * atacante.equipado.maos.ataque_machado * 0.2 * dado + atacante.nivel * 3 * dado",
           "reduction": "defensor.defesa / (defensor.defesa + 40)",
           "hit": "",
           "cost": [],
@@ -537,7 +539,7 @@
           "name": {
             "pt-BR": "Disparo"
           },
-          "damage": "atacante.distance * atacante.equipado.maos.ataque_distancia * 0.12 * dado + atacante.nivel * 2 * dado",
+          "damage": "atacante.distance * atacante.equipado.maos.ataque_distancia * 0.2 * dado + atacante.nivel * 3 * dado",
           "reduction": "defensor.defesa / (defensor.defesa + 40)",
           "hit": "",
           "cost": [],
@@ -554,7 +556,7 @@
           "name": {
             "pt-BR": "Feitiço de energia"
           },
-          "damage": "(atacante.magic_level + 3) * (atacante.equipado.maos.poder_magico + 5) * 0.3 * dado + atacante.nivel * 2 * dado",
+          "damage": "(atacante.magic_level + 3) * (atacante.equipado.maos.poder_magico + 5) * 0.35 * dado + atacante.nivel * 3 * dado",
           "reduction": "defensor.defesa / (defensor.defesa + 40)",
           "hit": "",
           "cost": [
@@ -574,7 +576,7 @@
       },
       "defend": {
         "enabled": true,
-        "reductionBonus": 0.4
+        "reductionBonus": 0.6
       },
       "flee": {
         "enabled": true,
@@ -1588,7 +1590,7 @@
       "modifiers": [
         {
           "target": "ataque_distancia",
-          "amount": 19
+          "amount": 16
         }
       ],
       "useEffects": [],
@@ -2769,13 +2771,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 12,
+        "ataque": 9,
         "defesa": 2,
         "nivel": 1
       },
-      "hp": 28,
+      "hp": 20,
       "behavior": "attack",
-      "xp": 8,
+      "xp": 10,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -2804,13 +2806,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 14,
+        "ataque": 10,
         "defesa": 3,
         "nivel": 2
       },
-      "hp": 32,
+      "hp": 22,
       "behavior": "attack",
-      "xp": 12,
+      "xp": 14,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -2829,13 +2831,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 20,
+        "ataque": 13,
         "defesa": 4,
         "nivel": 3
       },
-      "hp": 60,
+      "hp": 45,
       "behavior": "heal_once",
-      "xp": 45,
+      "xp": 50,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -2864,13 +2866,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 19,
+        "ataque": 15,
         "defesa": 5,
         "nivel": 3
       },
-      "hp": 50,
+      "hp": 40,
       "behavior": "flee_low",
-      "xp": 30,
+      "xp": 35,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -2904,13 +2906,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 22,
+        "ataque": 16,
         "defesa": 6,
         "nivel": 4
       },
-      "hp": 60,
+      "hp": 45,
       "behavior": "attack",
-      "xp": 38,
+      "xp": 42,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -2939,13 +2941,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 23,
+        "ataque": 17,
         "defesa": 7,
         "nivel": 4
       },
-      "hp": 60,
+      "hp": 45,
       "behavior": "attack",
-      "xp": 40,
+      "xp": 45,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -2974,13 +2976,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 29,
+        "ataque": 22,
         "defesa": 12,
         "nivel": 6
       },
-      "hp": 90,
+      "hp": 75,
       "behavior": "attack",
-      "xp": 70,
+      "xp": 80,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -3014,11 +3016,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 25,
+        "ataque": 16,
         "defesa": 5,
         "nivel": 5
       },
-      "hp": 60,
+      "hp": 40,
       "behavior": "heal_once",
       "xp": 60,
       "loot": [
@@ -3049,13 +3051,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 27,
-        "defesa": 12,
+        "ataque": 19,
+        "defesa": 10,
         "nivel": 6
       },
-      "hp": 85,
+      "hp": 60,
       "behavior": "attack",
-      "xp": 65,
+      "xp": 75,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -3089,13 +3091,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 32,
+        "ataque": 24,
         "defesa": 12,
         "nivel": 7
       },
       "hp": 100,
       "behavior": "attack",
-      "xp": 90,
+      "xp": 100,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -3129,13 +3131,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 30,
+        "ataque": 22,
         "defesa": 9,
         "nivel": 7
       },
-      "hp": 80,
+      "hp": 65,
       "behavior": "attack",
-      "xp": 85,
+      "xp": 90,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -3169,13 +3171,13 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 36,
+        "ataque": 27,
         "defesa": 16,
         "nivel": 9
       },
       "hp": 150,
       "behavior": "attack",
-      "xp": 180,
+      "xp": 200,
       "loot": [
         {
           "itemId": "gold_coin",
@@ -3209,11 +3211,11 @@
       },
       "imageMediaId": null,
       "stats": {
-        "ataque": 42,
-        "defesa": 18,
+        "ataque": 30,
+        "defesa": 16,
         "nivel": 12
       },
-      "hp": 280,
+      "hp": 240,
       "behavior": "attack",
       "xp": 1200,
       "loot": [
@@ -3281,6 +3283,25 @@
             {
               "kind": "unlock",
               "entryId": "rookmar"
+            }
+          ]
+        },
+        {
+          "key": "c1_amurada",
+          "label": "Na amurada",
+          "blocks": [
+            {
+              "type": "text",
+              "text": {
+                "pt-BR": "Você deixa o caixote para depois e se debruça na amurada, porque ninguém chega a uma ilha nova duas vezes. De perto, Rookmar é mais suja e mais viva do que de longe: redes secando em varais, crianças pescando caranguejo com barbante, uma mulher batendo um polvo contra a pedra do cais com a regularidade de um relógio. Fumaça sai de cem chaminés. O farol, branco e rachado, tem uma gaivota pousada bem no alto, como um chapéu.\n\nAo norte, atrás dos telhados, as colinas sobem pardas e roxas. Mais longe ainda, quase apagada pela névoa, há uma linha verde — um vale, talvez — e sobre ela uma coluna fina de fumaça que não parece de chaminé."
+              }
+            },
+            {
+              "type": "speech",
+              "castId": "brisa",
+              "text": {
+                "pt-BR": "Bonita, né? Igual a tubarão: de longe. Anda, pega as suas coisas antes que algum poeta enjoado pegue por você."
+              }
             }
           ]
         },
@@ -3904,28 +3925,8 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "O portão norte é uma boca de pedra com dentes de ferro, e a sentinela que o guarda parece esculpida no mesmo bloco. Tem um bigode que cobre a boca inteira, o que é conveniente, porque ela não pretende usá-la para dizer sim.\n\n— Sem passe da guarda, ninguém sai — avisa, antes que você abra a sua. — Ordem do conselho. Tem troll nas colinas, orc no vale, e a guilda não quer novato morrendo onde ela não pode cobrar o enterro.\n\nEla olha para a sua bolsa de um jeito que diz que regras, em Rookmar, têm preço.\n\nMais à direita, onde o muro velho encontra o morro, as pedras estão soltas e há um pé de amora crescendo por cima. Alguém, algum dia, já pulou ali. Provavelmente alguém mais leve."
+                "pt-BR": "O portão norte é uma boca de pedra com dentes de ferro, e a sentinela que o guarda parece esculpida no mesmo bloco. Tem um bigode que cobre a boca inteira, o que é conveniente, porque ela não pretende usá-la para dizer sim.\n\n— Sem passe da guarda, ninguém sai — avisa, antes que você abra a sua. — Ordem do conselho. Tem troll nas colinas, orc no vale, e a guilda não quer novato morrendo onde ela não pode cobrar o enterro.\n\nEla olha para a sua bolsa de um jeito que diz que regras, em Rookmar, têm preço — e depois para os seus braços, de um jeito que diz que preço nenhum compra passagem para quem ainda não matou nem um rato. Novato de nível um, nas colinas, é só comida de troll com sapato.\n\nMais à direita, onde o muro velho encontra o morro, as pedras estão soltas e há um pé de amora crescendo por cima. Alguém, algum dia, já pulou ali. Provavelmente alguém mais leve."
               }
-            }
-          ]
-        },
-        {
-          "key": "c1_muro",
-          "label": "A queda do muro",
-          "blocks": [
-            {
-              "type": "text",
-              "text": {
-                "pt-BR": "O muro não é alto. O chão do outro lado é que estava mais longe do que parecia, e a amoreira tem mais espinhos do que amoras. Você cai de lado, rola, levanta e descobre que está do lado de dentro, no mesmo lugar, só que {genero|feminino:arranhada|masculino:arranhado|arranhade} e com uma amora esmagada na orelha.\n\nLá do portão, a sentinela assobia. Não se mexe; só assobia, longo e desafinado, que é o jeito dela de rir.\n\nUm menino que vende peixe defumado para no caminho, avalia a sua tentativa com olho crítico e informa que o certo é pisar na pedra com musgo, não na pedra sem musgo. Depois cobra uma moeda pela informação. Você paga, porque a informação parece boa."
-              }
-            }
-          ],
-          "effects": [
-            {
-              "kind": "item",
-              "operation": "take",
-              "itemId": "gold_coin",
-              "quantity": "1"
             }
           ]
         },
@@ -4053,6 +4054,128 @@
         },
         {
           "from": "c1_conves",
+          "to": "c1_amurada",
+          "label": {
+            "pt-BR": "Debruçar-se na amurada antes de descer"
+          },
+          "conditions": [],
+          "effects": [],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_amurada",
+          "to": "c1_cais",
+          "label": {
+            "pt-BR": "Afivelar a espada e o escudo"
+          },
+          "conditions": [
+            {
+              "kind": "item",
+              "itemId": "insignia_cavaleiro",
+              "min": 1
+            }
+          ],
+          "effects": [
+            {
+              "kind": "equip",
+              "itemId": "espada_curta"
+            },
+            {
+              "kind": "equip",
+              "itemId": "escudo_madeira"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_amurada",
+          "to": "c1_cais",
+          "label": {
+            "pt-BR": "Encordoar o arco e pendurar a aljava"
+          },
+          "conditions": [
+            {
+              "kind": "item",
+              "itemId": "insignia_arqueiro",
+              "min": 1
+            }
+          ],
+          "effects": [
+            {
+              "kind": "equip",
+              "itemId": "arco_curto"
+            },
+            {
+              "kind": "equip",
+              "itemId": "aljava"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_amurada",
+          "to": "c1_cais",
+          "label": {
+            "pt-BR": "Acender a varinha de brasa"
+          },
+          "conditions": [
+            {
+              "kind": "item",
+              "itemId": "selo_feiticeiro",
+              "min": 1
+            }
+          ],
+          "effects": [
+            {
+              "kind": "equip",
+              "itemId": "varinha_brasa"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_amurada",
+          "to": "c1_cais",
+          "label": {
+            "pt-BR": "Firmar o cajado de raiz"
+          },
+          "conditions": [
+            {
+              "kind": "item",
+              "itemId": "folha_druida",
+              "min": 1
+            }
+          ],
+          "effects": [
+            {
+              "kind": "equip",
+              "itemId": "cajado_raiz"
+            }
+          ],
+          "mechanics": {
+            "cost": [],
+            "whenUnavailable": "hide",
+            "test": null
+          }
+        },
+        {
+          "from": "c1_amurada",
           "to": "c1_cais",
           "label": {
             "pt-BR": "Pegar uma clava do caixote"
@@ -4735,6 +4858,10 @@
               "kind": "item",
               "itemId": "gold_coin",
               "min": 40
+            },
+            {
+              "kind": "formula",
+              "formula": "nivel >= 2"
             }
           ],
           "effects": [
@@ -4757,26 +4884,37 @@
           "label": {
             "pt-BR": "Pular o muro velho"
           },
-          "conditions": [],
+          "conditions": [
+            {
+              "kind": "formula",
+              "formula": "nivel >= 2"
+            }
+          ],
           "effects": [],
           "mechanics": {
             "cost": [],
-            "whenUnavailable": "hide",
+            "whenUnavailable": "disable",
             "test": {
               "roll": "1d20 + piso(distance / 3) + nivel",
-              "dc": "14",
+              "dc": "13",
               "label": {
                 "pt-BR": "Agilidade"
               },
               "successEffects": [],
               "failure": {
-                "targetSceneId": "c1_muro",
+                "targetSceneId": "c1_portao",
                 "effects": [
                   {
                     "kind": "formula",
                     "target": "hp",
                     "operation": "add",
-                    "formula": "-12"
+                    "formula": "-10"
+                  },
+                  {
+                    "kind": "item",
+                    "operation": "take",
+                    "itemId": "gold_coin",
+                    "quantity": "1"
                   }
                 ]
               },
@@ -4791,55 +4929,6 @@
           "to": "c1_praca",
           "label": {
             "pt-BR": "Voltar à praça"
-          },
-          "conditions": [],
-          "effects": [],
-          "mechanics": {
-            "cost": [],
-            "whenUnavailable": "hide",
-            "test": null
-          }
-        },
-        {
-          "from": "c1_muro",
-          "to": "c1_estrada",
-          "label": {
-            "pt-BR": "Tentar de novo, pisando na pedra com musgo"
-          },
-          "conditions": [],
-          "effects": [],
-          "mechanics": {
-            "cost": [],
-            "whenUnavailable": "hide",
-            "test": {
-              "roll": "1d20 + piso(distance / 3) + nivel",
-              "dc": "11",
-              "label": {
-                "pt-BR": "Agilidade"
-              },
-              "successEffects": [],
-              "failure": {
-                "targetSceneId": "c1_praca",
-                "effects": [
-                  {
-                    "kind": "formula",
-                    "target": "hp",
-                    "operation": "add",
-                    "formula": "-8"
-                  }
-                ]
-              },
-              "critical": null,
-              "fumble": null,
-              "bands": []
-            }
-          }
-        },
-        {
-          "from": "c1_muro",
-          "to": "c1_praca",
-          "label": {
-            "pt-BR": "Desistir e voltar à praça"
           },
           "conditions": [],
           "effects": [],
@@ -4960,6 +5049,12 @@
               "kind": "quest",
               "operation": "advance",
               "questId": "totem_do_cla"
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "25"
             }
           ]
         },
@@ -5268,7 +5363,7 @@
             {
               "type": "text",
               "text": {
-                "pt-BR": "Você ataca primeiro, e o vale responde. Dois batedores saltam a fenda pela corda que restou, com a leveza de quem fez isso a vida inteira, e caem dos dois lados de você. A orc da presa quebrada não se mexe; só assiste, com o arco ainda nas costas, como quem quer ver de que você é feito antes de gastar uma flecha.\n\nAs lanças serrilhadas, de perto, são iguais às dos caixotes. Ou quase."
+                "pt-BR": "Você ataca primeiro, e o vale responde. Um batedor e um xamã de cabelo cheio de ossos saltam a fenda pela corda que restou, com a leveza de quem fez isso a vida inteira, e caem dos dois lados de você. O xamã sopra uma fumaça verde das mãos e sorri. A orc da presa quebrada não se mexe; só assiste, com o arco ainda nas costas, como quem quer ver de que você é feito antes de gastar uma flecha.\n\nAs lanças serrilhadas, de perto, são iguais às dos caixotes. Ou quase."
               }
             }
           ],
@@ -5280,7 +5375,11 @@
               "creatures": [
                 {
                   "creatureId": "orc_batedor",
-                  "count": 2
+                  "count": 1
+                },
+                {
+                  "creatureId": "orc_xama",
+                  "count": 1
                 }
               ],
               "mode": "rounds",
@@ -5448,6 +5547,20 @@
               "text": {
                 "pt-BR": "A noite nas colinas chega de uma vez, como uma tampa. Você acende uma fogueira pequena numa dobra do morro, de costas para o vento, e assa um peixe defumado que já não precisava ser assado. As estrelas são tantas que parecem poeira.\n\nLá embaixo, no vale, as luzes da aldeia orc piscam entre os campos de cevada. Mais longe, para o sul, o farol de Rookmar gira, paciente. E entre os dois, no escuro, há uma coisa que não tem luz nenhuma: uma cicatriz de terra revirada na encosta do vale, com andaimes e guinchos, onde a guilda cavou a sua mina.\n\nPerto da meia-noite, o chão treme. Não é terremoto; é um som, grave demais para ouvido humano, que sobe pelas pedras e entra pelos ossos. Um mugido. Vindo de baixo. Muito de baixo.\n\nVocê não dorme mais. Fica acordad{genero|feminino:a|masculino:o|e} pensando em lanças com nó de marinheiro, em pegadas de casco, em baús que chacoalham papel. De manhã vai ter que escolher um lado. Ou nenhum."
               }
+            }
+          ],
+          "effects": [
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "80"
+            },
+            {
+              "kind": "formula",
+              "target": "mana",
+              "operation": "add",
+              "formula": "60"
             }
           ]
         },
@@ -6341,6 +6454,12 @@
               "variable": "favor_guilda",
               "operation": "add",
               "value": 1
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "50"
             }
           ]
         },
@@ -6466,6 +6585,12 @@
             {
               "kind": "xp",
               "amount": "40"
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "50"
             }
           ]
         },
@@ -6647,6 +6772,12 @@
               "kind": "quest",
               "operation": "start",
               "questId": "labirinto"
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "40"
             }
           ]
         },
@@ -7441,6 +7572,12 @@
             {
               "kind": "xp",
               "amount": "60"
+            },
+            {
+              "kind": "formula",
+              "target": "hp",
+              "operation": "add",
+              "formula": "60"
             }
           ],
           "mechanics": {
