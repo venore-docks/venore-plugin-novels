@@ -214,7 +214,7 @@ export function validateEffect(effect: Effect, input: GameValidationInput, where
       break;
     }
     case "unlock":
-      if (!system.modules.bestiary || !system.encyclopedia.some((entry) => entry.id === effect.entryId)) error("unknown_entry", "verbete da enciclopédia que não existe.");
+      if (!system.encyclopedia.some((entry) => entry.id === effect.entryId)) error("unknown_entry", "verbete da enciclopédia que não existe.");
       break;
     case "loot":
       if (!system.modules.inventory) error("module_off", "saque, mas o inventário está desligado.");
